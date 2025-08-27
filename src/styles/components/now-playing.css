@@ -1,0 +1,306 @@
+/* ===================================
+   NOW PLAYING - BARRE FIXE
+   =================================== */
+
+.now-playing-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-fixed);
+  height: var(--now-playing-height);
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+@media (max-width: 640px) {
+  .now-playing-fixed {
+    height: var(--now-playing-height-mobile);
+  }
+}
+
+/* ===================================
+   CONTENEUR PRINCIPAL
+   =================================== */
+
+.now-playing-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .now-playing-container {
+    padding: 0 var(--space-3);
+    gap: var(--space-2);
+  }
+}
+
+/* ===================================
+   INFORMATIONS DU TRACK
+   =================================== */
+
+.now-playing-track-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: var(--space-3);
+}
+
+/* Artwork */
+.now-playing-artwork {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.now-playing-artwork img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--border-radius-base);
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+.now-playing-artwork .loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: var(--border-radius-base);
+}
+
+.now-playing-artwork .loading-spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-width: 2px;
+  border-color: var(--color-white) transparent var(--color-white) transparent;
+}
+
+/* Détails du track */
+.now-playing-details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Status (En Direct, Live) */
+.now-playing-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 0.125rem;
+}
+
+.now-playing-status-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  background-color: var(--color-primary);
+  border-radius: var(--border-radius-full);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.now-playing-status-text {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Titre et artiste sur une ligne */
+.now-playing-track-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.now-playing-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now-playing-separator {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.now-playing-artist {
+  color: var(--color-text-secondary);
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .now-playing-title {
+    max-width: 8rem;
+  }
+  
+  .now-playing-artist {
+    max-width: 6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .now-playing-title {
+    max-width: 6rem;
+  }
+  
+  .now-playing-artist {
+    max-width: 4rem;
+  }
+}
+
+/* ===================================
+   ACTIONS
+   =================================== */
+
+.now-playing-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .now-playing-actions {
+    display: none; /* Masquer sur très petit écran */
+  }
+}
+
+.now-playing-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-radius: var(--border-radius-full);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  color: var(--color-text-secondary);
+}
+
+.now-playing-action-button:hover {
+  background-color: var(--color-gray-200);
+}
+
+.now-playing-action-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.now-playing-action-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Hover states spécifiques */
+.now-playing-action-button.favorite:hover svg {
+  color: var(--color-primary);
+}
+
+.now-playing-action-button.share:hover svg {
+  color: var(--color-info);
+}
+
+/* ===================================
+   BARRE DE PROGRESSION (si activée)
+   =================================== */
+
+.now-playing-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-gray-200);
+}
+
+.now-playing-progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 1s ease-out;
+  border-radius: 0 1px 1px 0;
+}
+
+/* ===================================
+   ÉTATS D'ERREUR
+   =================================== */
+
+.now-playing-error {
+  padding: var(--space-1) var(--space-4);
+  background-color: #fee2e2; /* red-100 */
+  border-bottom: 1px solid #fecaca; /* red-200 */
+  font-size: var(--font-size-xs);
+  color: #b91c1c; /* red-700 */
+}
+
+.now-playing-error-button {
+  margin-left: var(--space-2);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.now-playing-error-button:hover {
+  text-decoration: none;
+}
+
+/* ===================================
+   VARIANTES (pour autres usages futurs)
+   =================================== */
+
+/* Variante sidebar */
+.now-playing-sidebar {
+  padding: var(--space-4);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-base);
+}
+
+.now-playing-sidebar .now-playing-artwork img {
+  width: 4rem;
+  height: 4rem;
+}
+
+.now-playing-sidebar .now-playing-track-line {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.now-playing-sidebar .now-playing-title,
+.now-playing-sidebar .now-playing-artist {
+  max-width: none;
+  text-align: center;
+}
+
+/* Variante mini */
+.now-playing-mini {
+  padding

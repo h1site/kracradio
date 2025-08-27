@@ -1,17 +1,35 @@
-import Header from '../components/Header';
+'use client';
+
+import React, { useState } from 'react';
+import Header from '@/components/Header';
+
+// Type definitions (make sure these match your Header component)
+interface ChannelConfig {
+  id: string;
+  name: string;
+  streamUrl: string;
+  slug: string;
+  icon: string;
+  isActive: boolean;
+  order: number;
+}
 
 export default function Home() {
+  // Add state for current channel
+  const [currentChannel, setCurrentChannel] = useState<ChannelConfig | null>(null);
+
   return (
     <div>
-      <Header />
+      <Header 
+        currentChannel={currentChannel}
+        setCurrentChannel={setCurrentChannel}
+      />
       <main className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Bienvenue sur KRAC RADIO
+            Welcome to KRAC RADIO
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Votre musique préférée 24h/24, 7j/7
-          </p>
+          {/* Your other content */}
         </div>
       </main>
     </div>

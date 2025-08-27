@@ -1,12 +1,37 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React from 'react';
 import { Play, Pause, Volume2, VolumeX, Menu, X, Heart, Share2 } from 'lucide-react';
 
-const RadioHeader = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(70);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [nowPlaying, setNowPlaying] = useState({
+// Type definitions (add these if they're not already defined elsewhere)
+interface SimpleChannel {
+  id: string;
+  name: string;
+  streamUrl: string;
+}
+
+interface ChannelConfig {
+  id: string;
+  name: string;
+  streamUrl: string;
+  slug: string;
+  icon: string;
+  isActive: boolean;
+  order: number;
+}
+
+interface HeaderProps {
+  setCurrentChannel: (channel: ChannelConfig | null) => void;
+  currentChannel: ChannelConfig | null;
+  // Add other props as needed
+}
+
+const RadioHeader: React.FC<HeaderProps> = ({ setCurrentChannel, currentChannel }) => {
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isMuted, setIsMuted] = React.useState(false);
+  const [volume, setVolume] = React.useState(70);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [nowPlaying, setNowPlaying] = React.useState({
     artist: "Daft Punk",
     title: "Get Lucky",
     album: "Random Access Memories",
@@ -14,7 +39,7 @@ const RadioHeader = () => {
   });
 
   // Simulation du "Now Playing" qui se met à jour
-  useEffect(() => {
+  React.useEffect(() => {
     const tracks = [
       { artist: "Daft Punk", title: "Get Lucky", album: "Random Access Memories" },
       { artist: "The Weeknd", title: "Blinding Lights", album: "After Hours" },
@@ -32,6 +57,21 @@ const RadioHeader = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Transform SimpleChannel to ChannelConfig - THIS FIXES THE ERROR
+  const handleChannelChange = (channel: SimpleChannel) => {
+    const channelConfig: ChannelConfig = {
+      id: channel.id,
+      name: channel.name,
+      streamUrl: channel.streamUrl,
+      slug: channel.name.toLowerCase().replace(/\s+/g, '-'),
+      icon: 'Radio',
+      isActive: true,
+      order: 0
+    };
+    
+    setCurrentChannel(channelConfig);
+  };
+
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
@@ -40,7 +80,7 @@ const RadioHeader = () => {
     setIsMuted(!isMuted);
   };
 
-  const handleVolumeChange = (e) => {
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseInt(e.target.value);
     setVolume(newVolume);
     if (newVolume === 0) {

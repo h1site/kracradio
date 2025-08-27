@@ -1,0 +1,109 @@
+/* Tailwind CSS imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================
+   IMPORTS CSS MODULAIRES
+   =================================== */
+
+/* Layout styles */
+@import '../styles/layout/fixed-elements.css';
+@import '../styles/layout/responsive.css';
+@import '../styles/layout/spacing.css';
+
+/* Component styles */
+@import '../styles/components/header.css';
+@import '../styles/components/now-playing.css';
+@import '../styles/components/audio-player.css';
+@import '../styles/components/channel-selector.css';
+@import '../styles/components/navigation.css';
+
+/* Utility styles */
+@import '../styles/utils/colors.css';
+@import '../styles/utils/animations.css';
+@import '../styles/utils/typography.css';
+
+/* ===================================
+   STYLES GLOBAUX DE BASE
+   =================================== */
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Applique le padding pour la barre fixe */
+body {
+  @apply fixed-top-offset;
+}
+
+/* ===================================
+   VARIABLES CSS PERSONNALISÉES
+   =================================== */
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  
+  /* Couleurs KRAC RADIO */
+  --krac-red: #ef4444;
+  --krac-orange: #f97316;
+  --krac-blue: #3b82f6;
+  --krac-green: #10b981;
+  --krac-purple: #8b5cf6;
+  
+  /* Z-index scale */
+  --z-dropdown: 60;
+  --z-fixed-bar: 50;
+  --z-header: 40;
+  --z-sidebar: 30;
+  --z-content: 10;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* ===================================
+   UTILITAIRES TAILWIND PERSONNALISÉS
+   =================================== */
+
+@layer components {
+  .btn-krac {
+    @apply bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors;
+  }
+  
+  .card-krac {
+    @apply bg-white rounded-lg shadow-md border border-gray-200 p-4;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
