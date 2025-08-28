@@ -15,12 +15,14 @@ interface AudioPlayerProps {
   currentChannel: SimpleChannel;
   onChannelChange?: (channel: SimpleChannel) => void;
   className?: string;
+  autoPlay?: boolean; // Nouvelle prop pour auto-play
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ 
   currentChannel,
   onChannelChange,
-  className = "" 
+  className = "",
+  autoPlay = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -33,9 +35,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   useEffect(() => {
     if (!currentChannel) return;
 
+    // Arrêter l'audio précédent s'il y en a un
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+
     // Créer l'élément audio
     audioRef.current = new Audio(currentChannel.streamUrl);
-    audioRef.current.volume = volume / 100;
+    audioRef.current.volume = isMuted ? 0 : volume / 100;
     audioRef.current.preload = "none";
 
     // Event listeners
@@ -51,6 +59,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     audioRef.current.addEventListener('waiting', handleWaiting);
     audioRef.current.addEventListener('error', handleError);
 
+    // AUTO PLAY: Si autoPlay est activé, démarrer la lecture automatiquement
+    if (autoPlay) {
+      const startPlayback = async () => {
+        try {
+          setIsLoading(true);
+          audioRef.current?.load();
+          await audioRef.current?.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Erreur auto-play:', error);
+          setIsPlaying(false);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Délai court pour permettre l'initialisation
+      setTimeout(startPlayback, 200);
+    }
+
     // Cleanup
     return () => {
       if (audioRef.current) {
@@ -61,7 +89,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         audioRef.current = null;
       }
     };
-  }, [currentChannel?.id]); // Re-run quand la chaîne change
+  }, [currentChannel?.id, autoPlay]); // Re-run quand la chaîne change
 
   // Gestion du volume
   useEffect(() => {
@@ -137,10 +165,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <span className="text-sm text-gray-600 w-8">{isMuted ? 0 : volume}</span>
       </div>
 
-      {/* Bouton Play/Pause principal */}
+      {/* Bouton Play/Pause principal avec attribut data pour auto-trigger */}
       <button
         onClick={togglePlay}
         disabled={isLoading}
+        data-audio-play-button="true"
         className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-105 disabled:hover:scale-100"
         title={isPlaying ? "Pause" : `Lecture ${currentChannel.name}`}
       >

@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 
-// Types
+// Types existants de votre code
 interface SimpleChannel {
   id: string;
   name: string;
@@ -76,14 +76,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }));
     };
 
-    const handleEnded = () => {
-      setState(prev => ({ ...prev, isPlaying: false }));
-    };
-
     audioRef.current.addEventListener('canplay', handleCanPlay);
     audioRef.current.addEventListener('waiting', handleWaiting);
     audioRef.current.addEventListener('error', handleError);
-    audioRef.current.addEventListener('ended', handleEnded);
 
     // Cleanup function
     return () => {
@@ -91,7 +86,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         audioRef.current.removeEventListener('canplay', handleCanPlay);
         audioRef.current.removeEventListener('waiting', handleWaiting);
         audioRef.current.removeEventListener('error', handleError);
-        audioRef.current.removeEventListener('ended', handleEnded);
         audioRef.current.pause();
         audioRef.current = null;
       }
