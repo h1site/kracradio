@@ -6,7 +6,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 interface SimpleChannel {
   id: string;
   name: string;
-  description: string;
+  description: string; // Required pour éviter les conflits de types
   streamUrl: string;
   apiEndpoint: string;
 }

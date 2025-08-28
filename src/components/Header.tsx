@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 interface SimpleChannel {
   id: string;
   name: string;
-  description?: string; // Optionnel pour correspondre à RadioChannel
+  description: string; // Required - pas optionnel pour éviter les conflits de types
   streamUrl: string;
   apiEndpoint: string;
   icon: React.ReactNode;
@@ -77,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({ setCurrentChannel, currentChannel }) =>
       const simpleChannel: SimpleChannel = {
         id: firstActiveChannel.id,
         name: firstActiveChannel.name,
-        description: firstActiveChannel.description || '',
+        description: firstActiveChannel.description || '', // Assurer que description n'est jamais undefined
         streamUrl: firstActiveChannel.streamUrl,
         apiEndpoint: firstActiveChannel.apiEndpoint,
         icon: getChannelIcon(firstActiveChannel.icon)
@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ setCurrentChannel, currentChannel }) =>
   const radioChannels = channels.map(channel => ({
     id: channel.id,
     name: channel.name,
-    description: channel.description || '',
+    description: channel.description || '', // Assurer que description n'est jamais undefined
     streamUrl: channel.streamUrl,
     apiEndpoint: channel.apiEndpoint,
     icon: getChannelIcon(channel.icon),
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ setCurrentChannel, currentChannel }) =>
     const simpleChannel: SimpleChannel = {
       id: channel.id,
       name: channel.name,
-      description: channel.description,
+      description: channel.description || '', // Assurer que description n'est jamais undefined
       streamUrl: channel.streamUrl,
       apiEndpoint: channel.apiEndpoint,
       icon: channel.icon
