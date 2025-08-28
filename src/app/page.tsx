@@ -9,20 +9,18 @@ import { useAudio } from '@/contexts/AudioContext';
 import { useChannels } from '@/lib/useChannels';
 
 export default function Home() {
-  // Hook audio global pour la continuité
+  // Hook audio global pour la continuité - FIX: utiliser les bonnes propriétés
   const { 
     isPlaying, 
     isLoading, 
-    currentChannel, 
-    nowPlaying, 
-    play, 
-    pause, 
-    changeChannel 
+    currentChannel,
+    togglePlay,
+    setChannel
   } = useAudio();
   
-  // Hook pour récupérer les chaînes - utiliser les options correctes
+  // Hook pour récupérer les chaînes - CORRIGÉ: utiliser 'json' au lieu de 'db'
   const { channels, loading: channelsLoading } = useChannels({
-    source: 'db'
+    source: 'json'
   });
 
   // Filtrer les chaînes actives côté client
@@ -32,14 +30,24 @@ export default function Home() {
     if (!currentChannel && activeChannels.length > 0) {
       // Si aucune chaîne sélectionnée, prendre KracRadio par défaut
       const defaultChannel = activeChannels.find(ch => ch.slug === 'kracradio') || activeChannels[0];
-      await changeChannel(defaultChannel);
+      // FIX: convertir ChannelConfig vers SimpleChannel format attendu par setChannel
+      const simpleChannel = {
+        id: defaultChannel.id,
+        name: defaultChannel.name,
+        description: defaultChannel.description,
+        streamUrl: defaultChannel.streamUrl,
+        apiEndpoint: defaultChannel.apiEndpoint
+      };
+      setChannel(simpleChannel);
     } else if (currentChannel) {
-      if (isPlaying) {
-        pause();
-      } else {
-        await play();
-      }
+      await togglePlay();
     }
+  };
+
+  // Mock nowPlaying data since it's not in AudioContext
+  const nowPlaying = {
+    artist: "En cours...",
+    title: "Radio en direct"
   };
 
   return (
@@ -66,11 +74,9 @@ export default function Home() {
                     <div className="font-semibold">
                       {isPlaying ? 'En cours' : 'En pause'} • {currentChannel.name}
                     </div>
-                    {nowPlaying && (
-                      <div className="text-sm text-red-100">
-                        {nowPlaying.artist} - {nowPlaying.title}
-                      </div>
-                    )}
+                    <div className="text-sm text-red-100">
+                      {nowPlaying.artist} - {nowPlaying.title}
+                    </div>
                   </div>
                 </div>
               </div>
