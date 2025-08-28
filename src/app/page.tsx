@@ -1,202 +1,350 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
 import Header from '@/components/Header';
-import AudioPlayer from '@/components/AudioPlayer';
-import NowPlayingAzuraCast from '@/components/NowPlayingAzuraCast';
-import ChannelSelector from '@/components/ChannelSelector';
-import { Radio, Music, Mic, Headphones, Zap, Disc } from 'lucide-react';
-
-// Types
-interface SimpleChannel {
-  id: string;
-  name: string;
-  description: string;
-  streamUrl: string;
-  apiEndpoint: string;
-}
-
-interface ChannelConfig {
-  id: string;
-  name: string;
-  streamUrl: string;
-  slug: string;
-  icon: string;
-  isActive: boolean;
-  order: number;
-}
-
-// Configuration des chaînes AzuraCast
-const AZURACAST_CHANNELS: SimpleChannel[] = [
-  {
-    id: 'main',
-    name: 'KRAC Radio',
-    description: 'Hits du moment et classiques',
-    streamUrl: 'https://your-azuracast.com/radio/8000/stream', // Remplacez par votre URL
-    apiEndpoint: 'https://your-azuracast.com/api/nowplaying/main'
-  },
-  {
-    id: 'rock',
-    name: 'KRAC Rock',
-    description: 'Rock classique et moderne',
-    streamUrl: 'https://your-azuracast.com/radio/8010/stream',
-    apiEndpoint: 'https://your-azuracast.com/api/nowplaying/rock'
-  },
-  {
-    id: 'jazz',
-    name: 'KRAC Jazz',
-    description: 'Jazz et blues',
-    streamUrl: 'https://your-azuracast.com/radio/8020/stream',
-    apiEndpoint: 'https://your-azuracast.com/api/nowplaying/jazz'
-  },
-  {
-    id: 'electro',
-    name: 'KRAC Electro',
-    description: 'Musique électronique',
-    streamUrl: 'https://your-azuracast.com/radio/8030/stream',
-    apiEndpoint: 'https://your-azuracast.com/api/nowplaying/electro'
-  }
-];
-
-// Conversion des chaînes pour le ChannelSelector
-const channelsForSelector = AZURACAST_CHANNELS.map((channel, index) => ({
-  ...channel,
-  slug: channel.name.toLowerCase().replace(/\s+/g, '-'),
-  icon: index === 0 ? <Radio className="w-4 h-4" /> : 
-        index === 1 ? <Music className="w-4 h-4" /> :
-        index === 2 ? <Disc className="w-4 h-4" /> :
-        <Zap className="w-4 h-4" />,
-  color: index === 0 ? 'red' : 
-         index === 1 ? 'blue' : 
-         index === 2 ? 'green' : 
-         'purple',
-  isActive: index === 0,
-  order: index
-}));
+import Footer from '@/components/Footer';
+import { Radio, Music, Clock, Users, Headphones, Play, Star, Calendar, Mic, Volume2 } from 'lucide-react';
+import { useAudio } from '@/contexts/AudioContext';
+import { useChannels } from '@/lib/useChannels';
 
 export default function Home() {
-  // État pour la chaîne courante (format ChannelConfig pour Header)
-  const [currentChannel, setCurrentChannel] = useState<ChannelConfig>({
-    id: AZURACAST_CHANNELS[0].id,
-    name: AZURACAST_CHANNELS[0].name,
-    streamUrl: AZURACAST_CHANNELS[0].streamUrl,
-    slug: AZURACAST_CHANNELS[0].name.toLowerCase().replace(/\s+/g, '-'),
-    icon: 'Radio',
-    isActive: true,
-    order: 0
+  // Hook audio global pour la continuité
+  const { 
+    isPlaying, 
+    isLoading, 
+    currentChannel, 
+    nowPlaying, 
+    play, 
+    pause, 
+    changeChannel 
+  } = useAudio();
+  
+  // Hook pour récupérer les chaînes - utiliser les options correctes
+  const { channels, loading: channelsLoading } = useChannels({
+    source: 'db'
   });
 
-  // Conversion vers SimpleChannel pour AudioPlayer
-  const currentSimpleChannel: SimpleChannel = {
-    id: currentChannel.id,
-    name: currentChannel.name,
-    description: AZURACAST_CHANNELS.find(ch => ch.id === currentChannel.id)?.description || '',
-    streamUrl: currentChannel.streamUrl,
-    apiEndpoint: AZURACAST_CHANNELS.find(ch => ch.id === currentChannel.id)?.apiEndpoint || ''
-  };
+  // Filtrer les chaînes actives côté client
+  const activeChannels = channels.filter(channel => channel.isActive);
 
-  // Handler pour changement de chaîne depuis ChannelSelector
-  const handleChannelChange = (channel: any) => {
-    const channelConfig: ChannelConfig = {
-      id: channel.id,
-      name: channel.name,
-      streamUrl: channel.streamUrl || AZURACAST_CHANNELS.find(ch => ch.id === channel.id)?.streamUrl || '',
-      slug: channel.slug || channel.name.toLowerCase().replace(/\s+/g, '-'),
-      icon: 'Radio',
-      isActive: true,
-      order: channel.order || 0
-    };
-    
-    setCurrentChannel(channelConfig);
+  const handlePlayClick = async () => {
+    if (!currentChannel && activeChannels.length > 0) {
+      // Si aucune chaîne sélectionnée, prendre KracRadio par défaut
+      const defaultChannel = activeChannels.find(ch => ch.slug === 'kracradio') || activeChannels[0];
+      await changeChannel(defaultChannel);
+    } else if (currentChannel) {
+      if (isPlaying) {
+        pause();
+      } else {
+        await play();
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header avec contrôles */}
-      <Header 
-        currentChannel={currentChannel}
-        setCurrentChannel={setCurrentChannel}
-      />
+      <Header />
+      
+      <main>
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-red-500 to-pink-600 text-white py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              Bienvenue sur KracRadio
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 text-red-100">
+              Votre station radio 24/7 - 7 chaînes musicales en direct
+            </p>
+            
+            {/* Status actuel de la radio */}
+            {currentChannel && (
+              <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-6 max-w-md mx-auto">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${isPlaying ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
+                  <div className="text-white">
+                    <div className="font-semibold">
+                      {isPlaying ? 'En cours' : 'En pause'} • {currentChannel.name}
+                    </div>
+                    {nowPlaying && (
+                      <div className="text-sm text-red-100">
+                        {nowPlaying.artist} - {nowPlaying.title}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={handlePlayClick}
+                disabled={isLoading || activeChannels.length === 0}
+                className="bg-white text-red-500 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                    <span>Chargement...</span>
+                  </>
+                ) : isPlaying ? (
+                  <>
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      <div className="w-2 h-4 bg-red-500 mr-1"></div>
+                      <div className="w-2 h-4 bg-red-500"></div>
+                    </div>
+                    <span>En pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5" fill="currentColor" />
+                    <span>Écouter {currentChannel ? currentChannel.name : 'maintenant'}</span>
+                  </>
+                )}
+              </button>
+              <Link 
+                href="/schedule"
+                className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-red-500 transition-colors flex items-center justify-center space-x-2"
+              >
+                <Calendar className="w-5 h-5" />
+                <span>Voir l'horaire</span>
+              </Link>
+            </div>
+          </div>
+        </section>
 
-      {/* Now Playing AzuraCast - Barre fixe sous le header */}
-      <NowPlayingAzuraCast 
-        apiUrl={currentSimpleChannel.apiEndpoint}
-        className="sticky top-0 z-40"
-        variant="header"
-        showActions={true}
-        showListeners={true}
-        onTrackChange={(track) => {
-          console.log('Nouveau titre:', track);
-        }}
-      />
+        {/* Stats Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Radio className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">24/7</h3>
+                <p className="text-gray-600">En direct</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Music className="w-8 h-8 text-blue-500" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">7</h3>
+                <p className="text-gray-600">Chaînes musicales</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">24h</h3>
+                <p className="text-gray-600">Streaming continu</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Volume2 className="w-8 h-8 text-purple-500" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">HD</h3>
+                <p className="text-gray-600">Qualité audio</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {/* Contenu principal */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Sélecteur de chaînes */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Choisissez votre station</h2>
-          
-          {/* Version desktop - tabs */}
-          <ChannelSelector 
-            channels={channelsForSelector}
-            currentChannel={channelsForSelector.find(ch => ch.id === currentChannel.id) || channelsForSelector[0]}
-            onChannelChange={handleChannelChange}
-            variant="tabs"
-            className="mb-4"
-          />
+        {/* Features Section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Pourquoi choisir KracRadio ?
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Découvrez une expérience radio unique avec nos 7 chaînes spécialisées et notre streaming continu
+              </p>
+            </div>
 
-          {/* Version mobile - slider */}
-          <ChannelSelector 
-            channels={channelsForSelector}
-            currentChannel={channelsForSelector.find(ch => ch.id === currentChannel.id) || channelsForSelector[0]}
-            onChannelChange={handleChannelChange}
-            variant="slider"
-            className="lg:hidden"
-          />
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-red-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+                  <Headphones className="w-6 h-6 text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Streaming Continu</h3>
+                <p className="text-gray-600">
+                  Navigation sans interruption - la musique continue même quand vous changez de page sur le site.
+                </p>
+              </div>
 
-        {/* Player audio principal */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">En cours de lecture</h3>
-              <p className="text-gray-600">{currentSimpleChannel.name}</p>
-              <p className="text-sm text-gray-500">{currentSimpleChannel.description}</p>
+              <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+                  <Clock className="w-6 h-6 text-blue-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">7 Chaînes Spécialisées</h3>
+                <p className="text-gray-600">
+                  Rock, Metal, Electro, Jazz, Francophone, EBM Industrial - trouvez votre style musical préféré.
+                </p>
+              </div>
+
+              <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+                  <Star className="w-6 h-6 text-green-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Interface Moderne</h3>
+                <p className="text-gray-600">
+                  Design responsive et intuitif avec contrôles audio avancés et sauvegarde des préférences.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Current Channels Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Nos Chaînes Musicales
+              </h2>
+              <p className="text-xl text-gray-600">
+                Découvrez nos 7 chaînes spécialisées disponibles 24h/24
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-red-500 to-pink-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">KracRadio</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    Principal
+                  </div>
+                </div>
+                <p className="text-red-100 mb-4">
+                  Notre chaîne principale avec un mix éclectique de tous les styles musicaux.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">EBM Industrial</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    Goth
+                  </div>
+                </div>
+                <p className="text-purple-100 mb-4">
+                  Musique industrielle, EBM et darkwave pour les amateurs de sons sombres.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">Francophone</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    🇫🇷
+                  </div>
+                </div>
+                <p className="text-blue-100 mb-4">
+                  La belle francophonie mise à l'honneur avec les meilleurs artistes francophones.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">Métal</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    🤘
+                  </div>
+                </div>
+                <p className="text-orange-100 mb-4">
+                  Du heavy au death metal - garoche ta tête sur les meilleurs riffs !
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">Electro</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    🎛️
+                  </div>
+                </div>
+                <p className="text-cyan-100 mb-4">
+                  Techno, house et électro pour faire danser et vibrer vos soirées.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">Jazz & Rock</h3>
+                  <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                    🎷🎸
+                  </div>
+                </div>
+                <p className="text-amber-100 mb-4">
+                  Jazz pour la détente et Rock qui gaz - deux ambiances complémentaires.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">En direct</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Rejoignez la communauté KracRadio
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Écoutez vos chaînes préférées, découvrez de nouveaux genres et profitez d'une expérience radio moderne et sans interruption.
+            </p>
+            
+            {/* Indication radio continue */}
+            <div className="bg-white bg-opacity-10 rounded-lg p-4 mb-8 max-w-md mx-auto">
+              <div className="flex items-center justify-center space-x-2 text-sm">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>🎵 La radio continue pendant que vous naviguez !</span>
+              </div>
             </div>
             
-            <AudioPlayer 
-              currentChannel={currentSimpleChannel}
-              className="flex-shrink-0"
-            />
-          </div>
-        </div>
-
-        {/* Informations sur les chaînes */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {AZURACAST_CHANNELS.map((channel, index) => (
-            <div key={channel.id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center mb-3">
-                {index === 0 ? <Radio className="w-8 h-8 text-red-500" /> :
-                 index === 1 ? <Music className="w-8 h-8 text-blue-500" /> :
-                 index === 2 ? <Disc className="w-8 h-8 text-green-500" /> :
-                 <Zap className="w-8 h-8 text-purple-500" />}
-                <h3 className="ml-3 font-semibold">{channel.name}</h3>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">{channel.description}</p>
-              <button
-                onClick={() => handleChannelChange({...channel, slug: channel.name.toLowerCase().replace(/\s+/g, '-'), order: index})}
-                className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-                  currentChannel.id === channel.id
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/contact"
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full font-semibold transition-colors"
               >
-                {currentChannel.id === channel.id ? 'En cours' : 'Écouter'}
-              </button>
+                Nous contacter
+              </Link>
+              <Link 
+                href="/about"
+                className="border-2 border-gray-300 text-gray-300 hover:bg-white hover:text-gray-900 px-8 py-4 rounded-full font-semibold transition-colors"
+              >
+                En savoir plus
+              </Link>
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
       </main>
+
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 }
