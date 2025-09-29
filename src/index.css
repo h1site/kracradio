@@ -156,3 +156,17 @@
 .content-shift {
   transition: margin-left 300ms ease-out;
 }
+
+/* === Pas de scroll vertical global === */
+html, body, #root {
+  height: 100%;
+}
+html, body {
+  overflow-y: hidden;           /* enlève la barre verticale */
+  overscroll-behavior: none;    /* pas d'élan qui “dépasse” */
+}
+
+/* Animation quand la sidebar ouvre/ferme */
+.content-shift {
+  transition: margin-left 300ms ease-out;
+}
