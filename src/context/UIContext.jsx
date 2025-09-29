@@ -1,59 +1,64 @@
-// src/context/UIContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React from 'react';
 
-const Ctx = createContext({
-  sidebarOpen: true,
-  isDesktop: true,
-  openSidebar: () => {},
-  closeSidebar: () => {},
-  toggleSidebar: () => {},
-  sidebarWidth: 260,
-});
-
-const KEY = 'kracradio:sidebarOpen';
-
-function getInitialOpen() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === 'true' || raw === 'false') return raw === 'true';
-  } catch {}
-  // par défaut: ouvert sur desktop, fermé sur mobile
-  return window.innerWidth >= 1024;
-}
+const UIContext = React.createContext(null);
 
 export function UIProvider({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(getInitialOpen);
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
+  // Largeur de la sidebar (w-64)
+  const sidebarWidth = 256;
 
-  useEffect(() => {
-    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+  // Desktop ?
+  const getIsDesktop = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(min-width: 1024px)').matches;
+
+  const [isDesktop, setIsDesktop] = React.useState(getIsDesktop);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onChange = (e) => setIsDesktop(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  useEffect(() => {
-    try { localStorage.setItem(KEY, String(sidebarOpen)); } catch {}
+  // Restaurer préférence (ancienne clé : collapsed)
+  const [sidebarOpen, setSidebarOpen] = React.useState(() => {
+    try {
+      const raw = localStorage.getItem('krac.sideCollapsed');
+      const collapsed = raw ? JSON.parse(raw) : false;
+      return !collapsed; // si collapsed => open = false
+    } catch {
+      return true;
+    }
+  });
+
+  // Persister à l’inverse (stocke "collapsed")
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('krac.sideCollapsed', JSON.stringify(!sidebarOpen));
+    } catch {}
   }, [sidebarOpen]);
 
-  const openSidebar = () => setSidebarOpen(true);
+  // API
+  const openSidebar  = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
-  const value = useMemo(
-    () => ({
-      sidebarOpen,
-      isDesktop,
-      openSidebar,
-      closeSidebar,
-      toggleSidebar,
-      sidebarWidth: 260,
-    }),
-    [sidebarOpen, isDesktop]
-  );
+  const value = {
+    isDesktop,
+    sidebarWidth,
+    sidebarOpen: isDesktop ? sidebarOpen : false, // jamais "open" en mobile (pas de sidebar)
+    setSidebarOpen,
+    openSidebar,
+    closeSidebar,
+    toggleSidebar,
+  };
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
 }
 
 export function useUI() {
-  return useContext(Ctx);
+  const ctx = React.useContext(UIContext);
+  if (!ctx) throw new Error('useUI must be used within UIProvider');
+  return ctx;
 }

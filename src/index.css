@@ -152,3 +152,7 @@
 .content-with-sidebar {
   transition: margin-left 300ms ease;
 }
+/* ---- Smooth content shift when sidebar toggles ---- */
+.content-shift {
+  transition: margin-left 300ms ease-out;
+}
