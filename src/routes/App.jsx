@@ -1,3 +1,4 @@
+// src/routes/App.jsx
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
@@ -27,19 +28,34 @@ export default function App() {
 
   const appBg = theme === 'dark' ? 'bg-[#141414] text-white' : 'bg-[#e9eaee] text-black';
 
+  // Home & Channel: pas de pt-16 sous le header
   const noTopPad = location.pathname === '/' || location.pathname.startsWith('/channel/');
-  const mainPaddingTop = noTopPad ? 'pt-0' : 'pt-16';
+  const topPadClass = noTopPad ? 'pt-0' : 'pt-16';
 
-  // Décalage du contenu (animé)
-  const contentStyle = isDesktop && sidebarOpen ? { marginLeft: sidebarWidth } : { marginLeft: 0 };
+  // Réserves fixes
+  const HEADER = 64;  // h-16
+  const PLAYER = 64;  // h-16
+
+  // Si on met un padding-top (pages autres que home/channel), on le soustrait à la hauteur calculée
+  const reservedTop = noTopPad ? 0 : HEADER;
+
+  // Décalage gauche animé quand la sidebar est ouverte en desktop
+  const marginLeft = isDesktop && sidebarOpen ? sidebarWidth : 0;
+
+  // Hauteur stricte : viewport - header - player - (éventuel padding-top)
+  const mainStyle = {
+    marginLeft,
+    height: `calc(100vh - ${HEADER + PLAYER + reservedTop}px)`,
+    overflow: 'hidden', // pas de scroll global ici
+  };
 
   return (
     <div className={`min-h-screen ${appBg}`}>
       <Header theme={theme} setTheme={setTheme} onOpenMenu={() => setMobileMenuOpen(true)} />
       <Sidebar />
 
-      {/* Ajout de 'content-shift' pour animer margin-left */}
-      <main className={`${mainPaddingTop} pb-20 content-shift`} style={contentStyle}>
+      {/* content-shift = transition de margin-left */}
+      <main className={`content-shift ${topPadClass}`} style={mainStyle}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/channel/:key" element={<Channel />} />
