@@ -1,0 +1,20 @@
+{
+  "site": {
+    "title": "KracRadio",
+    "tagline": "Independent radio channels",
+    "tuneIn": "Tune In",
+    "moreInfo": "More info",
+    "channels": "Channels",
+    "channelLabel": "Channel",
+    "nowPlaying": "Now Playing",
+    "lastTracks": "Last 10 Tracks",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "store": "Our Store",
+    "donation": "Donation"
+  },
+  "home": {
+    "channelsHeading": "Our Music Channels"
+  }
+}
