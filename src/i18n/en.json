@@ -16,5 +16,30 @@
   },
   "home": {
     "channelsHeading": "Our Music Channels"
+  },
+  "meta": {
+    "homeTitle": "Listen to the best independent online radio",
+    "homeDesc": "KracRadio: thematic channels (EBM, Electro, Metal, Jazz, Francophonie, Rock). AzuraCast streaming, non-stop."
+  },
+  
+  
+
+
+  "nav": {
+    "home": "Home",
+    "channels": "Channels",
+    "articles": "Articles",
+    "artists": "Artists",
+    "podcasts": "Podcasts",
+    "spotify": "Spotify Playlist",
+    "schedule": "Schedule",
+    "about": "About",
+    "contact": "Contact"
   }
+
+
+
+
+
+
 }

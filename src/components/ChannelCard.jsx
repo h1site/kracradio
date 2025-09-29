@@ -63,19 +63,20 @@ export default function ChannelCard({ channel }) {
         />
       </div>
 
-      {/* Dégradé plein écran — n'intercepte pas les clics */}
+      {/* Dégradé plein écran — n'intercepte jamais les clics */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
         style={{ backgroundImage: HOVER_GRADIENT }}
       />
 
-      {/* OVERLAY CONTENU — maintenant cliquable au hover */}
+      {/* OVERLAY CONTENU — maintenant : invisible → visible (au lieu de pointer-events) */}
       <div
         className="
           absolute inset-0 flex flex-col justify-between
-          opacity-0 group-hover:opacity-100 transition-opacity duration-200
-          pointer-events-none group-hover:pointer-events-auto
+          invisible opacity-0 group-hover:visible group-hover:opacity-100
+          transition-opacity duration-200
         "
+        // on laisse pointer-events par défaut (auto) : dès que visible, 1er clic fonctionne
       >
         {/* TOP: badge */}
         <div className="p-3">
@@ -107,6 +108,7 @@ export default function ChannelCard({ channel }) {
           {/* Actions */}
           <div className="mt-3 flex items-center gap-2">
             <button
+              type="button"
               onClick={onTuneClick}
               className="inline-flex items-center gap-2 pl-2 pr-3 h-10 rounded-full text-white font-medium border border-white/20 hover:bg-white/10"
               aria-label={isPlayingThis ? 'Pause' : (t?.site?.tuneIn || 'Tune In')}
@@ -126,12 +128,16 @@ export default function ChannelCard({ channel }) {
             </button>
 
             <button
+              type="button"
               className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/25 hover:bg-white/10"
               title="J’aime (à venir)"
               aria-label="J’aime (à venir)"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5">
-                <path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/>
+                <path
+                  fill="currentColor"
+                  d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"
+                />
               </svg>
             </button>
           </div>

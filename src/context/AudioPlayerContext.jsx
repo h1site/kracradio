@@ -1,74 +1,126 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+// src/context/AudioPlayerContext.jsx
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { channels } from '../data/channels';
 
-const AudioCtx = createContext();
+const AudioCtx = createContext(null);
 
-const DEFAULT_CHANNEL_KEY = 'kracradio'; // mets la clé que tu veux par défaut
+const DEFAULT_CHANNEL_KEY = 'kracradio'; // <- clé par défaut (assure-toi que ça match dans data/channels)
 
-export function AudioProvider({ children }) {
-  const audioRef = useRef(new Audio());
-  const [current, setCurrent] = useState(() => {
-    const def = channels.find(c => c.key === DEFAULT_CHANNEL_KEY) || channels[0] || null;
-    return def || null;
-  });
+export function AudioPlayerProvider({ children }) {
+  const audioRef = useRef(null);
+  const [current, setCurrent] = useState(null);   // { key, name, streamUrl, apiUrl, image, ... }
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.9);
+  const [volume, setVolume] = useState(0.75);
 
-  // appliquer volume
+  // Crée l'élément <audio> une seule fois
+  if (!audioRef.current) {
+    const a = new Audio();
+    a.preload = 'none';            // on n’auto-buf pas
+    a.crossOrigin = 'anonymous';   // pratique pour certaines métadonnées/canvas
+    audioRef.current = a;
+  }
+
+  // Volume réactif
   useEffect(() => {
     audioRef.current.volume = volume;
   }, [volume]);
 
-  // précharger la source (sans autoplay)
+  // Charger la station par défaut SANS jouer
   useEffect(() => {
-    if (current?.streamUrl) {
-      audioRef.current.src = current.streamUrl;
+    if (current) return; // déjà sélectionné
+    const fallback = channels.find(c => c.key === DEFAULT_CHANNEL_KEY) || channels[0];
+    if (!fallback) return;
+
+    setCurrent(fallback);
+    // Prépare la source mais ne joue pas
+    if (audioRef.current.src !== fallback.streamUrl) {
+      audioRef.current.src = fallback.streamUrl;
+      audioRef.current.preload = 'none'; // on reste “armé” mais silencieux
     }
+    setPlaying(false);
   }, [current]);
 
-  const playStream = useCallback((channel) => {
-    if (!channel) return;
-    const audio = audioRef.current;
-    if (current?.streamUrl !== channel.streamUrl) {
-      audio.src = channel.streamUrl;
-    }
-    setCurrent(channel);
-    audio.play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false));
-  }, [current]);
-
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio.paused) {
-      audio.play().then(() => setPlaying(true)).catch(() => {});
-    } else {
-      audio.pause();
-      setPlaying(false);
-    }
+  // Gestion des events (optionnel mais utile pour garder l’état en phase)
+  useEffect(() => {
+    const a = audioRef.current;
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onEnded = () => setPlaying(false);
+    a.addEventListener('play', onPlay);
+    a.addEventListener('pause', onPause);
+    a.addEventListener('ended', onEnded);
+    return () => {
+      a.removeEventListener('play', onPlay);
+      a.removeEventListener('pause', onPause);
+      a.removeEventListener('ended', onEnded);
+    };
   }, []);
 
-  const value = useMemo(() => ({
-    audioRef,
-    current,
-    playing,
-    volume,
-    setVolume,
-    playStream,
-    togglePlay,
-  }), [current, playing, volume, playStream, togglePlay]);
+  const togglePlay = async () => {
+    if (!current) return;
+    const a = audioRef.current;
+    if (a.paused) {
+      try {
+        await a.play();
+        setPlaying(true);
+      } catch (e) {
+        // autoplay bloqué ou erreur navigateur
+        console.warn('Lecture bloquée:', e);
+      }
+    } else {
+      a.pause();
+      setPlaying(false);
+    }
+  };
+
+  /**
+   * Sélectionne une chaîne et, par défaut, lance la lecture.
+   * Utilisation:
+   *   playStream(channel)                   // joue auto
+   *   playStream(channel, { autoplay:false }) // charge sans jouer
+   */
+  const playStream = async (channel, opts = {}) => {
+    if (!channel) return;
+    setCurrent(channel);
+    const a = audioRef.current;
+    if (a.src !== channel.streamUrl) {
+      a.src = channel.streamUrl;
+    }
+    if (opts.autoplay === false) {
+      // ne pas jouer : on met en pause si besoin
+      a.pause();
+      setPlaying(false);
+      return;
+    }
+    try {
+      await a.play();
+      setPlaying(true);
+    } catch (e) {
+      console.warn('Lecture bloquée:', e);
+      // reste en pause si le navigateur bloque
+      setPlaying(false);
+    }
+  };
+
+  const value = useMemo(
+    () => ({
+      audio: audioRef.current,
+      current,
+      playing,
+      volume,
+      setVolume,
+      togglePlay,
+      playStream,
+      setCurrent, // au cas où tu veux forcer juste la sélection ailleurs
+    }),
+    [current, playing, volume]
+  );
 
   return <AudioCtx.Provider value={value}>{children}</AudioCtx.Provider>;
 }
 
 export function useAudio() {
-  return useContext(AudioCtx);
+  const ctx = useContext(AudioCtx);
+  if (!ctx) throw new Error('useAudio must be used within <AudioPlayerProvider>');
+  return ctx;
 }

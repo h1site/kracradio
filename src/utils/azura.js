@@ -1,29 +1,31 @@
+// src/utils/azura.js
 export async function getNowPlaying(apiUrl) {
-const res = await fetch(apiUrl, { cache: 'no-store' });
-if (!res.ok) throw new Error('AzuraCast API error');
-const data = await res.json();
-// Typical schema: data.now_playing.song.title / artist / art
-const now = data.now_playing || data.nowPlaying || data;
-const song = now.song || {};
-return {
-title: song.title || '—',
-artist: song.artist || '—',
-art: song.art || song.album_art || null,
-listeners: (now.listeners && (now.listeners.total || now.listeners.current)) || null
-};
+  try {
+    const res = await fetch(apiUrl, { cache: 'no-store' });
+    const data = await res.json();
+    // AzuraCast typical shape: { now_playing: { song: { title, artist, art } }, ... }
+    const np = data?.now_playing;
+    const title = np?.song?.title || data?.song?.title || '';
+    const artist = np?.song?.artist || data?.song?.artist || '';
+    const art = np?.song?.art || data?.song?.art || '';
+    return { title, artist, art };
+  } catch {
+    return null;
+  }
 }
 
-
-export async function getHistory(apiUrl, take = 10) {
-const res = await fetch(apiUrl, { cache: 'no-store' });
-if (!res.ok) throw new Error('AzuraCast API error');
-const data = await res.json();
-// Many instances expose recent song history under data.song_history
-const history = data.song_history || data.recent || [];
-return history.slice(0, take).map((h) => ({
-title: h.song?.title || '—',
-artist: h.song?.artist || '—',
-played_at: h.played_at || h.timestamp || null,
-art: h.song?.art || null
-}));
+export async function getRecentTracks(apiUrl, limit = 10) {
+  try {
+    const res = await fetch(apiUrl, { cache: 'no-store' });
+    const data = await res.json();
+    // AzuraCast has "song_history": [{ song: { title, artist, art } }, ...]
+    const arr = data?.song_history || [];
+    return arr.slice(0, limit).map((item) => ({
+      title: item?.song?.title || '',
+      artist: item?.song?.artist || '',
+      art: item?.song?.art || '',
+    }));
+  } catch {
+    return [];
+  }
 }

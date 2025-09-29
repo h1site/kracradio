@@ -148,3 +148,7 @@
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); } /* la seconde copie assure la boucle */
 }
+
+.content-with-sidebar {
+  transition: margin-left 300ms ease;
+}

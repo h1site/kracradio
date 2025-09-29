@@ -1,7 +1,9 @@
+// src/components/PlayerBar.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAudio } from '../context/AudioPlayerContext';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
+import PlayerBarMobile from './PlayerBarMobile';
 
 export default function PlayerBar() {
   const { current, playing, togglePlay, setVolume, volume } = useAudio();
@@ -49,29 +51,36 @@ export default function PlayerBar() {
     return Math.round(p * 100);
   }, [elapsed, duration]);
 
+  // Prépare les infos pour MOBILE
+  const mobileArt = meta?.art || current?.image || '/channels/default.webp';
+  const mobileTitle = meta?.title || '—';
+  const mobileArtist = meta?.artist || current?.name || '—';
+
   // État neutre si aucune chaîne
   if (!current) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-50 bg-[#1e1e1e] text-white">
-        <div className="w-full h-16 flex items-center">
+        {/* MOBILE */}
+        <div className="md:hidden">
+          <PlayerBarMobile art="/channels/default.webp" title="—" artist="—" />
+        </div>
+
+        {/* DESKTOP (inchangé, masqué sur mobile) */}
+        <div className="hidden md:flex w-full h-16 items-center">
           <div className="h-full aspect-square bg-black/30" />
           <div className="flex-1 font-semibold truncate px-3">
             Sélectionne une chaîne — <span className="opacity-70">Clique Écouter</span>
           </div>
           <div className="flex items-center gap-3 min-w-[220px] justify-end pr-2">
-            {/* Like (placeholder) */}
             <button className="icon-btn" title="J’aime (à venir)" aria-label="J’aime (à venir)">
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
             </button>
-            {/* Settings (gear) */}
             <button className="icon-btn" title="Paramètres" aria-label="Paramètres">
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61 1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
+              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
             </button>
-            {/* Share */}
             <button className="icon-btn" title="Partager" aria-label="Partager">
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
-            {/* Volume */}
             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
               <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
             </svg>
@@ -93,7 +102,13 @@ export default function PlayerBar() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 bg-[#1e1e1e] text-white">
-      <div className="relative w-full h-16 flex items-stretch">
+      {/* MOBILE */}
+      <div className="md:hidden">
+        <PlayerBarMobile art={mobileArt} title={mobileTitle} artist={mobileArtist} />
+      </div>
+
+      {/* DESKTOP (ton layout original) */}
+      <div className="hidden md:flex relative w-full h-16 items-stretch">
         {/* Bloc 1 — Image de la chaîne */}
         <div className="h-full aspect-square overflow-hidden">
           <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
@@ -131,10 +146,7 @@ export default function PlayerBar() {
 
         {/* Bloc 6 — Progress + Temps + Like / Settings / Share / Volume */}
         <div className="flex items-center gap-3 min-w-[360px] justify-end pr-2">
-          {/* Temps écoulé */}
           <div className="text-xs tabular-nums opacity-80 w-12 text-right">{mmss(elapsed)}</div>
-
-          {/* Progress */}
           <div className="w-56">
             <div className="h-2 bg-black/30 rounded overflow-hidden">
               {progressPct !== null ? (
@@ -144,26 +156,16 @@ export default function PlayerBar() {
               )}
             </div>
           </div>
-
-          {/* Durée totale (ou --:--) */}
           <div className="text-xs tabular-nums opacity-80 w-12">{duration ? mmss(duration) : '--:--'}</div>
-
-          {/* Like */}
           <button className="icon-btn" title="J’aime (à venir)" aria-label="J’aime (à venir)">
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
           </button>
-
-          {/* Settings (gear) */}
           <button className="icon-btn" title="Paramètres" aria-label="Paramètres">
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
           </button>
-
-          {/* Share */}
           <button className="icon-btn" title="Partager" aria-label="Partager">
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
           </button>
-
-          {/* Volume */}
           <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
             <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
           </svg>
