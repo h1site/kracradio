@@ -2,28 +2,39 @@
   "site": {
     "title": "KracRadio",
     "tagline": "Independent radio channels",
-    "tuneIn": "Tune In",
-    "moreInfo": "More info",
-    "channels": "Channels",
-    "channelLabel": "Channel",
-    "nowPlaying": "Now Playing",
-    "lastTracks": "Last 10 Tracks",
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
+
+    "channels": "Channels",
+    "channelLabel": "Channel",
+
+    "tuneIn": "Tune in",
+    "pause": "Pause",
+    "moreInfo": "More info",
+    "nowPlaying": "Now playing",
+    "lastTracks": "Last 10 tracks",
+
+    "share": "Share",
+    "settings": "Settings",
+    "like": "Like",
+
     "store": "Our Store",
     "donation": "Donation"
   },
+
   "home": {
-    "channelsHeading": "Our Music Channels"
+    "channelsHeading": "Our Music Channels",
+    "channelBadge": "Channel",
+    "moreInfo": "More info"
   },
+
   "meta": {
     "homeTitle": "Listen to the best independent online radio",
-    "homeDesc": "KracRadio: thematic channels (EBM, Electro, Metal, Jazz, Francophonie, Rock). AzuraCast streaming, non-stop."
+    "homeDesc": "KracRadio: thematic channels (EBM, Electro, Metal, Jazz, Francophonie, Rock). AzuraCast streaming, non-stop.",
+    "contactTitle": "Contact us — KracRadio",
+    "contactDesc": "Contact info, music submission, sponsorship, donations and branding logos."
   },
-  
-  
-
 
   "nav": {
     "home": "Home",
@@ -34,12 +45,88 @@
     "spotify": "Spotify Playlist",
     "schedule": "Schedule",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "profile": "Profile"
+  },
+
+  "auth": {
+    "login": "Log in",
+    "register": "Create account",
+    "password": "Password",
+    "email": "Email",
+    "noAccount": "No account?",
+    "already": "Already registered?",
+    "or": "or",
+    "submit": "Submit"
+  },
+
+  "articles": {
+    "title": "Articles",
+    "desc": "Reads & news from KracRadio",
+    "heading": "Articles",
+
+    "editTitle": "Edit article",
+    "newTitle": "New article",
+    "titleLabel": "Title",
+    "titlePh": "Article title",
+    "contentLabel": "Content",
+    "contentPh": "Write your article...",
+    "statusLabel": "Status",
+    "statusDraft": "Draft",
+    "statusPublished": "Published",
+    "save": "Save",
+    "update": "Update",
+    "view": "View"
+  },
+
+  "profile": {
+    "title": "Profile",
+    "myArticles": "My articles",
+    "createArticle": "Create article",
+    "edit": "Edit",
+    "back": "Back",
+    "status": "Status",
+    "published": "Published",
+    "draft": "Draft",
+    "none": "No articles yet."
+  },
+
+  "contact": {
+    "title": "Contact",
+    "infoTitle": "Information",
+    "ownerLabel": "Owner",
+    "ownerName": "Sébastien Ross",
+    "consultantLabel": "Consultant",
+    "consultantName": "Jean Babin",
+    "emailLabel": "Email",
+    "email": "info@kracradio.com",
+    "phoneLabel": "Phone",
+    "addressTitle": "Address",
+    "addressLine1": "108 Claude-Vivier",
+    "addressLine2": "Vaudreuil-Dorion, J7V 0Y9",
+
+    "sendMusic": {
+      "title": "How to send my music?",
+      "desc1": "Write to:",
+      "desc2": "You will receive an email with instructions."
+    },
+    "sponsor": {
+      "title": "How to sponsor the Radio?",
+      "desc1": "Write to:",
+      "desc2": "We offer an affordable package to add your banner and a link to your website on the radio for one year. All funds go to investing in and promoting artists."
+    },
+    "donation": {
+      "title": "Is it possible to donate?",
+      "desc1": "Yes, we added a “DONATE” button.",
+      "desc2": "This helps cover admin costs and invest in cool projects for artists."
+    },
+    "brand": {
+      "title": "Download the logos",
+      "desc": "You can download our logo & brand package.",
+      "button": "Download package"
+    }
   }
-
-
-
-
-
-
 }

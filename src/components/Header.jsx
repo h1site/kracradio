@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import MobileMenu from './MobileMenu';
 
 export default function Header() {
   const { t, lang, setLang } = useI18n();
-  const { isDark, theme, setTheme } = useTheme();
+  const { isDark, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
@@ -15,7 +17,7 @@ export default function Header() {
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 bg-[#1e1e1e] text-white border-b border-[#2a2a2a]">
-        {/* Desktop (≥1024px) : garde ton header existant */}
+        {/* Desktop (≥1024px) */}
         <div className="hidden lg:flex w-full h-16 items-center justify-between px-5">
           <Link to="/" className="flex items-center">
             <img src="/logo-white.png" alt="Logo" className="h-10 w-auto object-contain" />
@@ -49,6 +51,42 @@ export default function Header() {
             >
               KEMP3.app
             </a>
+
+            {/* Auth — même style que les autres boutons, sans changer le look */}
+            {!user ? (
+              <>
+                <Link
+                  to="/auth/login"
+                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                >
+                  {t?.auth?.login ?? 'Connexion'}
+                </Link>
+                <Link
+                  to="/auth/register"
+                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                >
+                  {t?.auth?.register ?? 'Inscription'}
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/profile"
+                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                >
+                  {t?.nav?.profile ?? 'Profil'}
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try { await signOut(); } catch {}
+                  }}
+                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                >
+                  {t?.auth?.logout ?? 'Déconnexion'}
+                </button>
+              </>
+            )}
 
             {/* Langue */}
             <select

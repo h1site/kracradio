@@ -4,12 +4,7 @@
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
   ],
   "routes": [
-    { "src": "/(favicon\\.ico|robots\\.txt|manifest\\.json|asset-manifest\\.json)", "dest": "/$1" },
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/icons/(.*)", "dest": "/icons/$1" },
-    { "src": "/channels/(.*)", "dest": "/channels/$1" },
-    { "src": "/logo-white\\.png", "dest": "/logo-white.png" },
-    { "src": "/logo\\.webp", "dest": "/logo.webp" },
-    { "src": "/(.*)", "dest": "/" }
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }

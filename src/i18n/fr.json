@@ -2,41 +2,131 @@
   "site": {
     "title": "KracRadio",
     "tagline": "Chaînes radio indépendantes",
-    "tuneIn": "Écouter",
-    "moreInfo": "En savoir plus",
-    "channels": "Chaînes",
-    "channelLabel": "Chaîne",
-    "nowPlaying": "En lecture",
-    "lastTracks": "10 dernières chansons",
     "theme": "Thème",
     "light": "Clair",
     "dark": "Sombre",
+
+    "channels": "Chaînes",
+    "channelLabel": "Chaîne",
+
+    "tuneIn": "Écouter",
+    "pause": "Pause",
+    "moreInfo": "Plus d’infos",
+    "nowPlaying": "En lecture",
+    "lastTracks": "10 dernières chansons",
+
+    "share": "Partager",
+    "settings": "Paramètres",
+    "like": "J’aime",
+
     "store": "Notre boutique",
     "donation": "Donation"
   },
+
   "home": {
-    "channelsHeading": "Nos Chaînes Musicaux"
-  },
-  "meta": {
-    "homeTitle": "Écoute la meilleure radio indépendante en ligne",
-    "homeDesc": "KracRadio : chaînes thématiques (EBM, Electro, Metal, Jazz, Francophonie, Rock). Streaming AzuraCast, sans interruption."
+    "channelsHeading": "Nos Chaînes Musicaux",
+    "channelBadge": "Chaîne",
+    "moreInfo": "Plus d’infos"
   },
 
+  "meta": {
+    "homeTitle": "Écoute la meilleure radio indépendante en ligne",
+    "homeDesc": "KracRadio : chaînes thématiques (EBM, Electro, Metal, Jazz, Francophonie, Rock). Streaming AzuraCast, sans interruption.",
+    "contactTitle": "Nous joindre — KracRadio",
+    "contactDesc": "Coordonnées, envoi de musique, commandite, dons et logos de marque."
+  },
 
   "nav": {
     "home": "Accueil",
-    "channels": "Les chaînes",
+    "channels": "Chaînes",
     "articles": "Articles",
     "artists": "Artistes",
     "podcasts": "Podcasts",
-    "spotify": "Spotify Playlist",
+    "spotify": "Playlist Spotify",
     "schedule": "Horaire",
     "about": "À propos",
-    "contact": "Contact"
+    "contact": "Contact",
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "profile": "Profil"
+  },
+
+  "auth": {
+    "login": "Connexion",
+    "register": "Créer un compte",
+    "password": "Mot de passe",
+    "email": "Courriel",
+    "noAccount": "Pas de compte ?",
+    "already": "Déjà inscrit ?",
+    "or": "ou",
+    "submit": "Valider"
+  },
+
+  "articles": {
+    "title": "Articles",
+    "desc": "Lectures & nouvelles de KracRadio",
+    "heading": "Articles",
+
+    "editTitle": "Modifier l'article",
+    "newTitle": "Nouvel article",
+    "titleLabel": "Titre",
+    "titlePh": "Titre de l'article",
+    "contentLabel": "Contenu",
+    "contentPh": "Écris ton article…",
+    "statusLabel": "Statut",
+    "statusDraft": "Brouillon",
+    "statusPublished": "Publié",
+    "save": "Enregistrer",
+    "update": "Mettre à jour",
+    "view": "Voir"
+  },
+
+  "profile": {
+    "title": "Profil",
+    "myArticles": "Mes articles",
+    "createArticle": "Créer un article",
+    "edit": "Modifier",
+    "back": "Retour",
+    "status": "Statut",
+    "published": "Publié",
+    "draft": "Brouillon",
+    "none": "Aucun article pour le moment."
+  },
+
+  "contact": {
+    "title": "Contact",
+    "infoTitle": "Informations",
+    "ownerLabel": "Propriétaire",
+    "ownerName": "Sébastien Ross",
+    "consultantLabel": "Consultant",
+    "consultantName": "Jean Babin",
+    "emailLabel": "Courriel",
+    "email": "info@kracradio.com",
+    "phoneLabel": "Téléphone",
+    "addressTitle": "Adresse",
+    "addressLine1": "108 Claude-Vivier",
+    "addressLine2": "Vaudreuil-Dorion, J7V 0Y9",
+
+    "sendMusic": {
+      "title": "Comment envoyer ma musique ?",
+      "desc1": "Écrire à :",
+      "desc2": "Vous allez recevoir un courriel avec les instructions."
+    },
+    "sponsor": {
+      "title": "Comment commanditer la Radio ?",
+      "desc1": "Écrire à :",
+      "desc2": "Nous offrons un forfait abordable pour ajouter votre bannière et un lien vers votre site à la radio pendant un an. Tout l’argent sert à investir et promouvoir les artistes."
+    },
+    "donation": {
+      "title": "Possible de faire un don ?",
+      "desc1": "Oui, nous avons ajouté un bouton « FAIRE UN DON ».",
+      "desc2": "Cela nous aide à payer les frais administratifs et à investir dans des projets vraiment « cool » pour les artistes."
+    },
+    "brand": {
+      "title": "Télécharger les logos",
+      "desc": "Vous pouvez télécharger notre package de logos et éléments de marque.",
+      "button": "Télécharger le package"
+    }
   }
-
-
-
-
-
 }
