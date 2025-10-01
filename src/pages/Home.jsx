@@ -33,6 +33,7 @@ export default function Home() {
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
 
+  // Segments du jour depuis le JSON
   const segments = useMemo(() => {
     const arr = (daily || []).map((it, idx) => {
       const start = toTodayDate(it.start);
@@ -48,6 +49,7 @@ export default function Home() {
     return arr;
   }, [kracImage]);
 
+  // Déterminer En lecture / À suivre
   const { current, next } = useMemo(() => {
     const now = Date.now();
     let cur = null;
@@ -78,15 +80,11 @@ export default function Home() {
         alternates
       />
 
-      {/* HERO funky: full width, bg noir jusqu’au bouton */}
-      <section className="w-full pt-14 px-0 bg-[#000] pb-5">
-        <h2 className="px-5 text-xl font-semibold text-white mb-3 uppercase">
-          {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
-        </h2>
-
+      {/* HERO: full width, fond noir, bouton en bas à droite */}
+      <section className="w-full px-0 bg-[#000] pb-5">
         <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-neutral-800">
-            {/* En lecture */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
+            {/* Bloc 1 — En lecture (avec label + image à l’intérieur) */}
             <div
               className="relative h-64 lg:h-80"
               style={{
@@ -95,8 +93,18 @@ export default function Home() {
                 backgroundPosition: 'center'
               }}
             >
+              {/* overlays */}
               <div className="absolute inset-0 bg-black/30" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+              {/* Libellé “Présentement sur KracRadio” à l’intérieur, même lettrage que titre */}
+              <div className="absolute left-5 right-5 top-4 flex items-center gap-2">
+                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow uppercase">
+                  {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
+                </div>
+              </div>
+
+              {/* Contenu titre + plage horaire (en bas) */}
               <div className="absolute left-5 right-5 bottom-5">
                 <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
                   {t?.site?.nowPlaying || 'En lecture'}
@@ -110,7 +118,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* À suivre */}
+            {/* Bloc 2 — À suivre */}
             <div
               className="relative h-64 lg:h-80"
               style={{
@@ -135,11 +143,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* CTA en bas à droite */}
+          {/* CTA en bas à droite — fond rouge */}
           <div className="flex justify-end">
             <a
               href="/schedule"
-              className="mt-3 mr-5 inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-neutral-700 bg-white/5 text-white hover:bg-white/10 transition"
+              className="mt-3 mr-5 inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
             >
               {t.home?.viewScheduleCta || 'Consulter notre horaire'}
             </a>
@@ -147,14 +155,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Carrousel des chaînes */}
-      <section className="w-full">
+      {/* Carrousel des chaînes — éviter le “cut” sur mobile */}
+      <section className="w-full relative z-10 overflow-visible">
         <div className="px-5 pt-10">
           <h2 className="text-xl font-semibold text-black dark:text-white mb-3 uppercase">
             {t.home?.channelsHeading}
           </h2>
         </div>
-        <ChannelCarousel channels={channels} />
+        <div className="overflow-visible">
+          <ChannelCarousel channels={channels} />
+        </div>
       </section>
     </div>
   );
