@@ -269,7 +269,7 @@ export default function Home() {
          remets à 40 quand c'est bon */}
       <div
         className="sm:hidden"
-        style={{ height: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+        style={{ height: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
       />
     </div>
   );
