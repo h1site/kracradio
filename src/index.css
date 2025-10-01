@@ -183,3 +183,8 @@ html, body {
   overscroll-behavior: contain;      /* évite de “tirer” le body */
   -webkit-overflow-scrolling: touch; /* fluide sur mobile */
 }
+/* Ajoute 40px d'espace en bas seulement en mobile */
+@media (max-width: 640px) {
+  html, body, #root { min-height: 100%; }
+  body { padding-bottom: 40px; }
+}
