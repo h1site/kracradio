@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
@@ -32,6 +32,9 @@ export default function Home() {
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
+
+  const kracStreamUrl =
+    krac?.streamUrl || krac?.stream_url || krac?.stream || krac?.urlStream || '/stream/kracradio';
 
   const segments = useMemo(() => {
     const arr = (daily || []).map((it, idx) => {
@@ -67,6 +70,75 @@ export default function Home() {
     return { current: cur, next: nxt };
   }, [segments]);
 
+  // --- État Play/Pause pour l’icône ---
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Écoute les events du player global ET du <audio> fallback
+  useEffect(() => {
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    window.addEventListener('player:play', onPlay);
+    window.addEventListener('player:pause', onPause);
+
+    const audioEl = document.getElementById('krac-audio');
+    if (audioEl) {
+      audioEl.addEventListener('play', onPlay);
+      audioEl.addEventListener('pause', onPause);
+    }
+
+    return () => {
+      window.removeEventListener('player:play', onPlay);
+      window.removeEventListener('player:pause', onPause);
+      if (audioEl) {
+        audioEl.removeEventListener('play', onPlay);
+        audioEl.removeEventListener('pause', onPause);
+      }
+    };
+  }, []);
+
+  function ensureAudioEl() {
+    let audio = document.getElementById('krac-audio');
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.id = 'krac-audio';
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'none';
+      audio.style.display = 'none';
+      document.body.appendChild(audio);
+    }
+    return /** @type {HTMLAudioElement} */ (audio);
+  }
+
+  // Toggle lecture/pause
+  function toggleKrac() {
+    const src = kracStreamUrl;
+    const audio = ensureAudioEl();
+
+    // Comparaison robuste (audio.src devient absolu)
+    const abs = audio.src || '';
+    const sameSrc = abs === src || abs.endsWith(src);
+
+    if (sameSrc && !audio.paused) {
+      window.dispatchEvent(new CustomEvent('player:pause'));
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (!sameSrc) audio.src = src;
+
+    window.dispatchEvent(
+      new CustomEvent('player:set-src', { detail: { src, autoplay: true, meta: { channel: KRAC_KEY } } })
+    );
+    window.dispatchEvent(new CustomEvent('player:play'));
+
+    audio.autoplay = true;
+    audio.play()
+      .then(() => setIsPlaying(true))
+      .catch(() => setIsPlaying(true)); // le player global peut déjà jouer
+  }
+
   return (
     <div className="page-scroll">
       <Seo
@@ -78,8 +150,8 @@ export default function Home() {
         alternates
       />
 
-      {/* HERO: full width, SANS fond noir */}
-      <section className="w-full px-0 pb-0">
+      {/* HERO: full width, fond noir — sans espace dessous */}
+      <section className="w-full px-0 bg-[#000] pb-0">
         <div className="relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
             {/* Bloc 1 — En lecture */}
@@ -91,18 +163,15 @@ export default function Home() {
                 backgroundPosition: 'center'
               }}
             >
-              {/* overlays sur l'image (gardés pour la lisibilité) */}
               <div className="absolute inset-0 bg-black/30" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-              {/* Libellé */}
               <div className="absolute left-5 right-5 top-4 flex items-center gap-2">
                 <div className="text-white text-2xl font-extrabold leading-tight drop-shadow uppercase">
                   {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
                 </div>
               </div>
 
-              {/* Contenu */}
               <div className="absolute left-5 right-5 bottom-5">
                 <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
                   {t?.site?.nowPlaying || 'En lecture'}
@@ -115,10 +184,37 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Bouton Écouter retiré comme demandé */}
+              {/* BOUTON ÉCOUTER — compact, mobile + desktop, toggle */}
+              <div className="absolute right-5 bottom-5">
+                <button
+                  type="button"
+                  aria-label={t.home?.listenCta || 'Écouter'}
+                  aria-pressed={isPlaying}
+                  className="transition duration-200 focus:outline-none"
+                  onClick={toggleKrac}
+                >
+                  <span className="inline-flex items-center rounded-full border border-white/30 bg-black/70 backdrop-blur px-3 pr-4 py-2 text-white shadow-sm hover:bg-black/80 hover:border-white/50 focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-black">
+                    <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-600">
+                      {isPlaying ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+                          <rect x="6" y="5" width="4" height="14" rx="1" />
+                          <rect x="14" y="5" width="4" height="14" rx="1" />
+                        </svg>
+                      ) : (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {t.home?.listenCta || 'Écouter'}
+                    </span>
+                  </span>
+                </button>
+              </div>
             </div>
 
-            {/* Bloc 2 — À suivre + CTA horaire dans l’image (droite) */}
+            {/* Bloc 2 — À suivre + CTA horaire à l’intérieur (compact) */}
             <div
               className="relative h-64 lg:h-80"
               style={{
@@ -140,11 +236,10 @@ export default function Home() {
                   {next ? fmtRange(next.start, next.end, lang) : '—'}
                 </div>
 
-                {/* CTA horaire placé dans l'image droite, aligné à droite */}
                 <div className="w-full flex justify-end">
                   <a
                     href="/schedule"
-                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
                   >
                     {t.home?.viewScheduleCta || 'Consulter notre horaire'}
                   </a>
@@ -153,13 +248,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* aucun CTA externe ni espace supplémentaire ici */}
+          {/* pas d’espace sous le hero */}
         </div>
       </section>
 
-      {/* Carrousel — DESCENDU */}
+      {/* Carrousel — aucune marge au-dessus */}
       <section className="w-full relative z-10 overflow-visible">
-        <div className="px-5 pt-12">
+        <div className="px-5 pt-0">
           <h2 className="text-xl font-semibold text-black dark:text-white mb-3 uppercase">
             {t.home?.channelsHeading}
           </h2>
