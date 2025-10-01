@@ -22,6 +22,7 @@ function toTodayDate(timeStr) {
   }
   return d;
 }
+
 function fmtRange(start, end, lang) {
   const opt = { hour: '2-digit', minute: '2-digit' };
   return `${new Intl.DateTimeFormat(lang, opt).format(start)} — ${new Intl.DateTimeFormat(lang, opt).format(end)}`;
@@ -263,6 +264,13 @@ export default function Home() {
           <ChannelCarousel channels={channels} />
         </div>
       </section>
+
+      {/* Cale mobile pour le player fixe — 160px pour tests, 
+         remets à 40 quand c'est bon */}
+      <div
+        className="sm:hidden"
+        style={{ height: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+      />
     </div>
   );
 }
