@@ -21,7 +21,7 @@ export default function Contact() {
       />
 
       {/* Titre */}
-      <h1 className="text-2xl font-extrabold mb-4">
+      <h1 className="text-2xl font-extrabold mb-4 pt-14">
         {t.contact.title}
       </h1>
 
