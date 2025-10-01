@@ -33,7 +33,6 @@ export default function Home() {
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
 
-  // Segments du jour depuis le JSON
   const segments = useMemo(() => {
     const arr = (daily || []).map((it, idx) => {
       const start = toTodayDate(it.start);
@@ -49,7 +48,6 @@ export default function Home() {
     return arr;
   }, [kracImage]);
 
-  // Déterminer En lecture / À suivre
   const { current, next } = useMemo(() => {
     const now = Date.now();
     let cur = null;
@@ -80,31 +78,31 @@ export default function Home() {
         alternates
       />
 
-      {/* HERO: full width, fond noir, bouton en bas à droite */}
-      <section className="w-full px-0 bg-[#000] pb-5">
+      {/* HERO: full width, SANS fond noir */}
+      <section className="w-full px-0 pb-0">
         <div className="relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
-            {/* Bloc 1 — En lecture (avec label + image à l’intérieur) */}
+            {/* Bloc 1 — En lecture */}
             <div
-              className="relative h-64 lg:h-80"
+              className="group relative h-64 lg:h-80"
               style={{
                 backgroundImage: `url(${current?.image || kracImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
             >
-              {/* overlays */}
+              {/* overlays sur l'image (gardés pour la lisibilité) */}
               <div className="absolute inset-0 bg-black/30" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-              {/* Libellé “Présentement sur KracRadio” à l’intérieur, même lettrage que titre */}
+              {/* Libellé */}
               <div className="absolute left-5 right-5 top-4 flex items-center gap-2">
                 <div className="text-white text-2xl font-extrabold leading-tight drop-shadow uppercase">
                   {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
                 </div>
               </div>
 
-              {/* Contenu titre + plage horaire (en bas) */}
+              {/* Contenu */}
               <div className="absolute left-5 right-5 bottom-5">
                 <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
                   {t?.site?.nowPlaying || 'En lecture'}
@@ -116,9 +114,11 @@ export default function Home() {
                   {current ? fmtRange(current.start, current.end, lang) : '—'}
                 </div>
               </div>
+
+              {/* Bouton Écouter retiré comme demandé */}
             </div>
 
-            {/* Bloc 2 — À suivre */}
+            {/* Bloc 2 — À suivre + CTA horaire dans l’image (droite) */}
             <div
               className="relative h-64 lg:h-80"
               style={{
@@ -136,28 +136,30 @@ export default function Home() {
                 <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
                   {next?.title || '—'}
                 </div>
-                <div className="text-white/90 text-sm font-medium mt-1">
+                <div className="text-white/90 text-sm font-medium mt-1 mb-3">
                   {next ? fmtRange(next.start, next.end, lang) : '—'}
+                </div>
+
+                {/* CTA horaire placé dans l'image droite, aligné à droite */}
+                <div className="w-full flex justify-end">
+                  <a
+                    href="/schedule"
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
+                  >
+                    {t.home?.viewScheduleCta || 'Consulter notre horaire'}
+                  </a>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* CTA en bas à droite — fond rouge */}
-          <div className="flex justify-end">
-            <a
-              href="/schedule"
-              className="mt-3 mr-5 inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
-            >
-              {t.home?.viewScheduleCta || 'Consulter notre horaire'}
-            </a>
-          </div>
+          {/* aucun CTA externe ni espace supplémentaire ici */}
         </div>
       </section>
 
-      {/* Carrousel des chaînes — éviter le “cut” sur mobile */}
+      {/* Carrousel — DESCENDU */}
       <section className="w-full relative z-10 overflow-visible">
-        <div className="px-5 pt-10">
+        <div className="px-5 pt-12">
           <h2 className="text-xl font-semibold text-black dark:text-white mb-3 uppercase">
             {t.home?.channelsHeading}
           </h2>
