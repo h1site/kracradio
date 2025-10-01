@@ -255,7 +255,7 @@ export default function Home() {
       {/* Carrousel — aucune marge au-dessus */}
       <section className="w-full relative z-10 overflow-visible">
         <div className="px-5 pt-0">
-          <h2 className="text-xl font-semibold text-black dark:text-white mb-3 uppercase">
+          <h2 className="text-xl font-semibold text-black dark:text-white mb-3 pt-5 uppercase">
             {t.home?.channelsHeading}
           </h2>
         </div>
