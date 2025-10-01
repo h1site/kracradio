@@ -83,7 +83,7 @@ export default function Schedule() {
   }, [lang]);
 
   return (
-    <div className="page-scroll pl-5 pr-5 pt-14">
+    <div className="page-scroll pl-14 pr-2 pt-4">
       {/* En-tête brandée KracRadio */}
       <div className="mb-6 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10">
         <div
