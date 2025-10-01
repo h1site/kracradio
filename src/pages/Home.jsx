@@ -204,7 +204,7 @@ export default function Home() {
       {/* Cale mobile pour le player fixe */}
       <div
         className="sm:hidden"
-        style={{ height: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+        style={{ height: 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
       />
     </div>
   );
