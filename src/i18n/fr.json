@@ -1,3 +1,4 @@
+
 {
   "site": {
     "title": "KracRadio",
@@ -5,37 +6,33 @@
     "theme": "Thème",
     "light": "Clair",
     "dark": "Sombre",
-
     "channels": "Chaînes",
     "channelLabel": "Chaîne",
-
     "tuneIn": "Écouter",
     "pause": "Pause",
     "moreInfo": "Plus d’infos",
     "nowPlaying": "En lecture",
     "lastTracks": "10 dernières chansons",
-
     "share": "Partager",
     "settings": "Paramètres",
     "like": "J’aime",
-
     "store": "Notre boutique",
     "donation": "Donation"
   },
-
   "home": {
     "channelsHeading": "Nos Chaînes Musicales",
     "channelBadge": "Chaîne",
-    "moreInfo": "Plus d’infos"
+    "moreInfo": "Plus d’infos",
+    "nowOnKrac": "Présentement sur KracRadio",
+    "listenCta": "Écouter",
+    "viewScheduleCta": "Consulter notre horaire"
   },
-
   "meta": {
     "homeTitle": "Écoute la meilleure radio indépendante en ligne",
     "homeDesc": "KracRadio : chaînes thématiques (EBM, Electro, Metal, Jazz, Francophonie, Rock). Streaming AzuraCast, sans interruption.",
     "contactTitle": "Nous joindre — KracRadio",
     "contactDesc": "Coordonnées, envoi de musique, commandite, dons et logos de marque."
   },
-
   "nav": {
     "home": "Accueil",
     "channels": "Chaînes",
@@ -51,7 +48,6 @@
     "logout": "Déconnexion",
     "profile": "Profil"
   },
-
   "auth": {
     "login": "Connexion",
     "register": "Créer un compte",
@@ -62,12 +58,10 @@
     "or": "ou",
     "submit": "Valider"
   },
-
   "articles": {
     "title": "Articles",
     "desc": "Lectures & nouvelles de KracRadio",
     "heading": "Articles",
-
     "editTitle": "Modifier l'article",
     "newTitle": "Nouvel article",
     "titleLabel": "Titre",
@@ -81,7 +75,6 @@
     "update": "Mettre à jour",
     "view": "Voir"
   },
-
   "profile": {
     "title": "Profil",
     "myArticles": "Mes articles",
@@ -93,7 +86,6 @@
     "draft": "Brouillon",
     "none": "Aucun article pour le moment."
   },
-
   "contact": {
     "title": "Contact",
     "infoTitle": "Informations",
@@ -107,7 +99,6 @@
     "addressTitle": "Adresse",
     "addressLine1": "108 Claude-Vivier",
     "addressLine2": "Vaudreuil-Dorion, J7V 0Y9",
-
     "sendMusic": {
       "title": "Comment envoyer ma musique ?",
       "desc1": "Écrire à :",
@@ -127,8 +118,8 @@
       "title": "Télécharger les logos",
       "desc": "Vous pouvez télécharger notre package de logos et éléments de marque.",
       "button": "Télécharger le package"
-    },
-    
+    }
+  },
   "schedule": {
     "title": "Horaire",
     "noData": "Horaire non disponible via l’API. Utilisez le lien ci-dessus pour la page publique.",
@@ -137,8 +128,5 @@
   },
   "common": {
     "loading": "Chargement…"
-  }
-
-
   }
 }

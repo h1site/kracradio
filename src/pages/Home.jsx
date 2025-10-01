@@ -1,24 +1,25 @@
 // src/pages/Home.jsx
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
 import ChannelCarousel from '../components/ChannelCarousel';
 import daily from '../data/daily-schedule.json';
+import { useAudio } from '../context/AudioPlayerContext';
 
 const KRAC_KEY = 'kracradio';
 
 function toTodayDate(timeStr) {
   const [hhRaw, mmRaw] = (timeStr || '00:00').split(':');
   const hh = parseInt(hhRaw, 10);
-  const mm = parseInt(mmRaw, 10);
+  const mm = parseInt(mmRaw, 10) || 0;
   const now = new Date();
   const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  if (hh >= 24) {
+  if (Number.isFinite(hh) && hh >= 24) {
     d.setDate(d.getDate() + 1);
-    d.setHours(0, mm || 0, 0, 0);
+    d.setHours(0, mm, 0, 0);
   } else {
-    d.setHours(hh, mm || 0, 0, 0);
+    d.setHours(Number.isFinite(hh) ? hh : 0, mm, 0, 0);
   }
   return d;
 }
@@ -30,29 +31,29 @@ function fmtRange(start, end, lang) {
 
 export default function Home() {
   const { t, lang } = useI18n();
+  const { current, playing, playChannel, togglePlay } = useAudio();
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
 
-  const kracStreamUrl =
-    krac?.streamUrl || krac?.stream_url || krac?.stream || krac?.urlStream || '/stream/kracradio';
-
   const segments = useMemo(() => {
-    const arr = (daily || []).map((it, idx) => {
-      const start = toTodayDate(it.start);
-      const end = toTodayDate(it.end);
-      return {
-        id: `${start.toISOString()}-${idx}`,
-        title: (it.title || '').trim(),
-        start,
-        end,
-        image: it.image || kracImage
-      };
-    }).sort((a, b) => a.start - b.start);
+    const arr = (daily || [])
+      .map((it, idx) => {
+        const start = toTodayDate(it.start);
+        const end = toTodayDate(it.end);
+        return {
+          id: `${start.toISOString()}-${idx}`,
+          title: (it.title || '').trim(),
+          start,
+          end,
+          image: it.image || kracImage
+        };
+      })
+      .sort((a, b) => a.start - b.start);
     return arr;
   }, [kracImage]);
 
-  const { current, next } = useMemo(() => {
+  const { currentSeg, nextSeg } = useMemo(() => {
     const now = Date.now();
     let cur = null;
     let nxt = null;
@@ -68,77 +69,10 @@ export default function Home() {
       const after = segments.find((s) => s.start.getTime() > now);
       nxt = after || segments[0];
     }
-    return { current: cur, next: nxt };
+    return { currentSeg: cur, nextSeg: nxt };
   }, [segments]);
 
-  // --- État Play/Pause pour l’icône ---
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Écoute les events du player global ET du <audio> fallback
-  useEffect(() => {
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-
-    window.addEventListener('player:play', onPlay);
-    window.addEventListener('player:pause', onPause);
-
-    const audioEl = document.getElementById('krac-audio');
-    if (audioEl) {
-      audioEl.addEventListener('play', onPlay);
-      audioEl.addEventListener('pause', onPause);
-    }
-
-    return () => {
-      window.removeEventListener('player:play', onPlay);
-      window.removeEventListener('player:pause', onPause);
-      if (audioEl) {
-        audioEl.removeEventListener('play', onPlay);
-        audioEl.removeEventListener('pause', onPause);
-      }
-    };
-  }, []);
-
-  function ensureAudioEl() {
-    let audio = document.getElementById('krac-audio');
-    if (!audio) {
-      audio = document.createElement('audio');
-      audio.id = 'krac-audio';
-      audio.crossOrigin = 'anonymous';
-      audio.preload = 'none';
-      audio.style.display = 'none';
-      document.body.appendChild(audio);
-    }
-    return /** @type {HTMLAudioElement} */ (audio);
-  }
-
-  // Toggle lecture/pause
-  function toggleKrac() {
-    const src = kracStreamUrl;
-    const audio = ensureAudioEl();
-
-    // Comparaison robuste (audio.src devient absolu)
-    const abs = audio.src || '';
-    const sameSrc = abs === src || abs.endsWith(src);
-
-    if (sameSrc && !audio.paused) {
-      window.dispatchEvent(new CustomEvent('player:pause'));
-      audio.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    if (!sameSrc) audio.src = src;
-
-    window.dispatchEvent(
-      new CustomEvent('player:set-src', { detail: { src, autoplay: true, meta: { channel: KRAC_KEY } } })
-    );
-    window.dispatchEvent(new CustomEvent('player:play'));
-
-    audio.autoplay = true;
-    audio.play()
-      .then(() => setIsPlaying(true))
-      .catch(() => setIsPlaying(true)); // le player global peut déjà jouer
-  }
+  const isKracPlaying = playing && current?.key === KRAC_KEY;
 
   return (
     <div className="page-scroll">
@@ -151,7 +85,7 @@ export default function Home() {
         alternates
       />
 
-      {/* HERO: full width, fond noir — sans espace dessous */}
+      {/* HERO */}
       <section className="w-full px-0 bg-[#000] pb-0">
         <div className="relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
@@ -159,7 +93,7 @@ export default function Home() {
             <div
               className="group relative h-64 lg:h-80"
               style={{
-                backgroundImage: `url(${current?.image || kracImage})`,
+                backgroundImage: `url(${currentSeg?.image || kracImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
@@ -178,25 +112,27 @@ export default function Home() {
                   {t?.site?.nowPlaying || 'En lecture'}
                 </div>
                 <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {current?.title || '—'}
+                  {currentSeg?.title || '—'}
                 </div>
                 <div className="text-white/90 text-sm font-medium mt-1">
-                  {current ? fmtRange(current.start, current.end, lang) : '—'}
+                  {currentSeg ? fmtRange(currentSeg.start, currentSeg.end, lang) : '—'}
                 </div>
               </div>
 
-              {/* BOUTON ÉCOUTER — compact, mobile + desktop, toggle */}
+              {/* BOUTON ÉCOUTER */}
               <div className="absolute right-5 bottom-5">
                 <button
                   type="button"
                   aria-label={t.home?.listenCta || 'Écouter'}
-                  aria-pressed={isPlaying}
+                  aria-pressed={isKracPlaying}
                   className="transition duration-200 focus:outline-none"
-                  onClick={toggleKrac}
+                  onClick={() =>
+                    (current?.key === KRAC_KEY ? togglePlay() : playChannel(KRAC_KEY))
+                  }
                 >
                   <span className="inline-flex items-center rounded-full border border-white/30 bg-black/70 backdrop-blur px-3 pr-4 py-2 text-white shadow-sm hover:bg-black/80 hover:border-white/50 focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-black">
                     <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-600">
-                      {isPlaying ? (
+                      {isKracPlaying ? (
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
                           <rect x="6" y="5" width="4" height="14" rx="1" />
                           <rect x="14" y="5" width="4" height="14" rx="1" />
@@ -215,11 +151,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Bloc 2 — À suivre + CTA horaire à l’intérieur (compact) */}
+            {/* Bloc 2 — À suivre */}
             <div
               className="relative h-64 lg:h-80"
               style={{
-                backgroundImage: `url(${next?.image || kracImage})`,
+                backgroundImage: `url(${nextSeg?.image || kracImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
@@ -231,10 +167,10 @@ export default function Home() {
                   {t?.schedule?.upNext || 'À suivre'}
                 </div>
                 <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {next?.title || '—'}
+                  {nextSeg?.title || '—'}
                 </div>
                 <div className="text-white/90 text-sm font-medium mt-1 mb-3">
-                  {next ? fmtRange(next.start, next.end, lang) : '—'}
+                  {nextSeg ? fmtRange(nextSeg.start, nextSeg.end, lang) : '—'}
                 </div>
 
                 <div className="w-full flex justify-end">
@@ -253,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Carrousel — aucune marge au-dessus */}
+      {/* Carrousel */}
       <section className="w-full relative z-10 overflow-visible">
         <div className="px-5 pt-0">
           <h2 className="text-xl font-semibold text-black dark:text-white mb-3 pt-5 uppercase">
@@ -265,11 +201,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Cale mobile pour le player fixe — 160px pour tests, 
-         remets à 40 quand c'est bon */}
+      {/* Cale mobile pour le player fixe */}
       <div
         className="sm:hidden"
-        style={{ height: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
+        style={{ height: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
       />
     </div>
   );

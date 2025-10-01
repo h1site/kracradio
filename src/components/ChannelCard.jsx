@@ -25,7 +25,15 @@ const HOVER_GRADIENT =
 export default function ChannelCard({ channel }) {
   const { current, playing, playStream, togglePlay } = useAudio();
   const { t } = useI18n();
-  const isCurrent = current?.key === channel.key;
+
+  // ✅ Gardes de sécurité pour éviter toute lecture de props undefined
+  const hasChannel = !!(channel && (channel.key || channel.streamUrl || channel.apiUrl));
+  const key = channel?.key ?? '';
+  const name = channel?.name ?? '—';
+  const image = channel?.image ?? '/channels/default.webp';
+  const apiUrl = channel?.apiUrl ?? null;
+
+  const isCurrent = current?.key === key;
   const isPlayingThis = isCurrent && playing;
 
   const [meta, setMeta] = useState(null);
@@ -33,16 +41,26 @@ export default function ChannelCard({ channel }) {
   useEffect(() => {
     let timer;
     async function load() {
-      try { setMeta(await getNowPlaying(channel.apiUrl)); } catch {}
+      if (!apiUrl) {
+        setMeta(null);
+        return;
+      }
+      try {
+        const np = await getNowPlaying(apiUrl);
+        setMeta(np || null);
+      } catch {
+        // silencieux
+      }
     }
     load();
-    timer = setInterval(load, 30000);
+    if (apiUrl) timer = setInterval(load, 30000);
     return () => clearInterval(timer);
-  }, [channel.apiUrl]);
+  }, [apiUrl]);
 
   const onTuneClick = () => {
+    if (!hasChannel) return;          // rien à faire si data incomplète
     if (isCurrent) togglePlay();
-    else playStream(channel);
+    else playStream(channel);         // garde le même look & logique
   };
 
   const CHANNEL_BADGE = (t?.site?.channelLabel || 'Channel').toUpperCase();
@@ -55,8 +73,8 @@ export default function ChannelCard({ channel }) {
       {/* Image (visible au repos) */}
       <div className="aspect-[4/5] overflow-hidden">
         <img
-          src={channel.image || '/channels/default.webp'}
-          alt={channel.name}
+          src={image}
+          alt={name}
           loading="lazy"
           draggable={false}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
@@ -76,7 +94,6 @@ export default function ChannelCard({ channel }) {
           invisible opacity-0 group-hover:visible group-hover:opacity-100
           transition-opacity duration-200
         "
-        // on laisse pointer-events par défaut (auto) : dès que visible, 1er clic fonctionne
       >
         {/* TOP: badge */}
         <div className="p-3">
@@ -92,7 +109,7 @@ export default function ChannelCard({ channel }) {
         <div className="relative p-4">
           {/* Titre */}
           <h3 className="text-2xl font-bold text-white drop-shadow-sm">
-            {channel.name}
+            {name}
           </h3>
 
           {/* Now Playing (défilement auto si trop long) */}
@@ -145,8 +162,10 @@ export default function ChannelCard({ channel }) {
           {/* More info ▾ */}
           <div className="mt-4 border-t border-white/10 pt-2">
             <Link
-              to={`/channel/${channel.key}`}
+              to={key ? `/channel/${key}` : '#'}
               className="inline-flex items-center gap-1 text-white/90 hover:text-white text-sm"
+              // si la clé est vide, on ne rend pas le lien cliquable
+              onClick={(e) => { if (!key) e.preventDefault(); }}
             >
               <span>{t?.site?.moreInfo || 'More info'}</span>
               <svg viewBox="0 0 24 24" className="w-4 h-4"><path fill="currentColor" d="M7 10l5 5l5-5H7z"/></svg>

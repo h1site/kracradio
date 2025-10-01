@@ -1,3 +1,4 @@
+
 {
   "site": {
     "title": "KracRadio",
@@ -5,37 +6,33 @@
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
-
     "channels": "Channels",
     "channelLabel": "Channel",
-
     "tuneIn": "Tune in",
     "pause": "Pause",
     "moreInfo": "More info",
     "nowPlaying": "Now playing",
     "lastTracks": "Last 10 tracks",
-
     "share": "Share",
     "settings": "Settings",
     "like": "Like",
-
     "store": "Our Store",
     "donation": "Donation"
   },
-
   "home": {
     "channelsHeading": "Our Music Channels",
     "channelBadge": "Channel",
-    "moreInfo": "More info"
+    "moreInfo": "More info",
+    "nowOnKrac": "Now on KracRadio",
+    "listenCta": "Listen",
+    "viewScheduleCta": "View our schedule"
   },
-
   "meta": {
     "homeTitle": "Listen to the best independent online radio",
     "homeDesc": "KracRadio: thematic channels (EBM, Electro, Metal, Jazz, Francophonie, Rock). AzuraCast streaming, non-stop.",
     "contactTitle": "Contact us — KracRadio",
     "contactDesc": "Contact info, music submission, sponsorship, donations and branding logos."
   },
-
   "nav": {
     "home": "Home",
     "channels": "Channels",
@@ -51,7 +48,6 @@
     "logout": "Log out",
     "profile": "Profile"
   },
-
   "auth": {
     "login": "Log in",
     "register": "Create account",
@@ -62,12 +58,10 @@
     "or": "or",
     "submit": "Submit"
   },
-
   "articles": {
     "title": "Articles",
     "desc": "Reads & news from KracRadio",
     "heading": "Articles",
-
     "editTitle": "Edit article",
     "newTitle": "New article",
     "titleLabel": "Title",
@@ -81,7 +75,6 @@
     "update": "Update",
     "view": "View"
   },
-
   "profile": {
     "title": "Profile",
     "myArticles": "My articles",
@@ -93,7 +86,6 @@
     "draft": "Draft",
     "none": "No articles yet."
   },
-
   "contact": {
     "title": "Contact",
     "infoTitle": "Information",
@@ -107,7 +99,6 @@
     "addressTitle": "Address",
     "addressLine1": "108 Claude-Vivier",
     "addressLine2": "Vaudreuil-Dorion, J7V 0Y9",
-
     "sendMusic": {
       "title": "How to send my music?",
       "desc1": "Write to:",
@@ -127,8 +118,8 @@
       "title": "Download the logos",
       "desc": "You can download our logo & brand package.",
       "button": "Download package"
-    },
-    
+    }
+  },
   "schedule": {
     "title": "Schedule",
     "noData": "Schedule not available via API. Use the public page link above.",
@@ -137,8 +128,5 @@
   },
   "common": {
     "loading": "Loading…"
-  }
-
-
   }
 }
