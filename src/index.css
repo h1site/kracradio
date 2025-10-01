@@ -176,3 +176,10 @@ html, body {
 .content-shift {
   transition: margin-left 300ms ease-out;
 }
+/* --- Zone de page scrollable entre header (64) et player (64) --- */
+.page-scroll {
+  height: calc(100vh - 128px);      /* 64 + 64 */
+  overflow-y: auto;                  /* défilement vertical */
+  overscroll-behavior: contain;      /* évite de “tirer” le body */
+  -webkit-overflow-scrolling: touch; /* fluide sur mobile */
+}

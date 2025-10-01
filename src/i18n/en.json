@@ -127,6 +127,18 @@
       "title": "Download the logos",
       "desc": "You can download our logo & brand package.",
       "button": "Download package"
-    }
+    },
+    
+  "schedule": {
+    "title": "Schedule",
+    "noData": "Schedule not available via API. Use the public page link above.",
+    "rotation24": "24/7 music rotation (no specific timed programs).",
+    "viewPublic": "View full schedule"
+  },
+  "common": {
+    "loading": "Loading…"
+  }
+
+
   }
 }

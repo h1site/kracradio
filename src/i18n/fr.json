@@ -127,6 +127,18 @@
       "title": "Télécharger les logos",
       "desc": "Vous pouvez télécharger notre package de logos et éléments de marque.",
       "button": "Télécharger le package"
-    }
+    },
+    
+  "schedule": {
+    "title": "Horaire",
+    "noData": "Horaire non disponible via l’API. Utilisez le lien ci-dessus pour la page publique.",
+    "rotation24": "Rotation musicale 24/24 (sans programmation horaire spécifique).",
+    "viewPublic": "Voir l’horaire complet"
+  },
+  "common": {
+    "loading": "Chargement…"
+  }
+
+
   }
 }
