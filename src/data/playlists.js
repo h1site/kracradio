@@ -1,8 +1,8 @@
-// src/data/spotify.js
-// Tes 3 playlists Spotify
+// src/data/playlists.js
+// Liste des playlists Spotify (tu peux en ajouter)
 export const spotifyItems = [
   {
-    key: 'mix-1',
+    key: 'tabarnak', // ex. Tabarnak de Playlist
     url: 'https://open.spotify.com/playlist/5kpNtVHlJweiibnBmd49Qo'
   },
   {
@@ -34,6 +34,8 @@ export function toSpotifyHref(u) {
 export function toSpotifyEmbedSrc(u) {
   const { type, id } = parseSpotifyIdFromUrl(u);
   if (!type || !id) return '';
+  // L'iframe occupe 100% de la hauteur du conteneur,
+  // et c'est l'embed Spotify qui scrolle (pas coupé).
   return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator`;
 }
 
