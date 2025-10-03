@@ -6,14 +6,19 @@ import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
 
 export default function PlayerBar() {
-  const { current, playing, togglePlay, setVolume, volume } = useAudio();
+  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume } = useAudio();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const tickRef = useRef(null);
 
-  // Poll AzuraCast toutes les 15s
+  // Poll AzuraCast toutes les 15s (seulement pour radio)
   useEffect(() => {
+    if (currentType !== 'radio') {
+      setMeta(null);
+      return;
+    }
+
     let poll;
     async function load() {
       if (!current?.apiUrl) return;
@@ -21,7 +26,7 @@ export default function PlayerBar() {
         const np = await getNowPlaying(current.apiUrl);
         setMeta(np);
 
-        // Essayer d’obtenir elapsed/duration si dispo
+        // Essayer d'obtenir elapsed/duration si dispo
         const res = await fetch(current.apiUrl, { cache: 'no-store' });
         const json = await res.json();
         const now = json.now_playing || json.nowPlaying || {};
@@ -35,7 +40,15 @@ export default function PlayerBar() {
     load();
     if (current?.apiUrl) poll = setInterval(load, 15000);
     return () => clearInterval(poll);
-  }, [current]);
+  }, [current, currentType]);
+
+  // Pour les podcasts, utiliser les métadonnées fournies
+  useEffect(() => {
+    if (currentType === 'podcast' && podcastMeta) {
+      setElapsed(0);
+      setDuration(podcastMeta.duration || null);
+    }
+  }, [currentType, podcastMeta]);
 
   // Tick local pour animer la progression
   useEffect(() => {
@@ -51,13 +64,20 @@ export default function PlayerBar() {
     return Math.round(p * 100);
   }, [elapsed, duration]);
 
-  // Prépare les infos pour MOBILE
-  const mobileArt = meta?.art || current?.image || '/channels/default.webp';
-  const mobileTitle = meta?.title || '—';
-  const mobileArtist = meta?.artist || current?.name || '—';
+  // Prépare les infos selon le type (radio ou podcast)
+  const isPodcast = currentType === 'podcast';
+  const mobileArt = isPodcast
+    ? (podcastMeta?.image || podcastMeta?.podcastImage || '/channels/default.webp')
+    : (meta?.art || current?.image || '/channels/default.webp');
+  const mobileTitle = isPodcast
+    ? (podcastMeta?.title || '—')
+    : (meta?.title || '—');
+  const mobileArtist = isPodcast
+    ? (podcastMeta?.podcastTitle || '—')
+    : (meta?.artist || current?.name || '—');
 
-  // État neutre si aucune chaîne
-  if (!current) {
+  // État neutre si aucune chaîne ni podcast
+  if (!current && !isPodcast) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-50 bg-[#1e1e1e] text-white">
         {/* MOBILE */}
@@ -109,23 +129,41 @@ export default function PlayerBar() {
 
       {/* DESKTOP (ton layout original) */}
       <div className="hidden md:flex relative w-full h-16 items-stretch">
-        {/* Bloc 1 — Image de la chaîne */}
+        {/* Bloc 1 — Image de la chaîne OU image principale podcast */}
         <div className="h-full aspect-square overflow-hidden">
-          <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
+          {isPodcast ? (
+            podcastMeta?.podcastImage ? (
+              <img src={podcastMeta.podcastImage} alt={podcastMeta.podcastTitle} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-black/30" />
+            )
+          ) : (
+            <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
+          )}
         </div>
 
-        {/* Bloc 2 — Label + nom du channel */}
+        {/* Bloc 2 — Label + nom du channel OU nom du podcast */}
         <div className="flex flex-col justify-center min-w-[140px] px-2">
-          <div className="text-[10px] uppercase opacity-70 leading-none">Channel</div>
-          <div className="font-bold text-base leading-tight truncate">{current?.name}</div>
+          <div className="text-[10px] uppercase opacity-70 leading-none">
+            {isPodcast ? 'Podcast' : 'Channel'}
+          </div>
+          <div className="font-bold text-base leading-tight truncate">
+            {isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
+          </div>
         </div>
 
-        {/* Bloc 4 — Cover du morceau */}
+        {/* Bloc 4 — Cover du morceau OU image épisode */}
         <div className="h-full aspect-square overflow-hidden bg-black/30">
-          {meta?.art ? <img src={meta.art} alt="art" className="w-full h-full object-cover" /> : null}
+          {isPodcast ? (
+            podcastMeta?.image ? (
+              <img src={podcastMeta.image} alt="episode" className="w-full h-full object-cover" />
+            ) : null
+          ) : (
+            meta?.art ? <img src={meta.art} alt="art" className="w-full h-full object-cover" /> : null
+          )}
         </div>
 
-        {/* Bloc 5 — Play/Pause + Titre - Artiste */}
+        {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={togglePlay}
@@ -140,7 +178,13 @@ export default function PlayerBar() {
             )}
           </button>
           <div className="font-bold truncate">
-            {meta?.title || '—'} <span className="opacity-70">-</span> {meta?.artist || '—'}
+            {isPodcast ? (
+              podcastMeta?.title || '—'
+            ) : (
+              <>
+                {meta?.title || '—'} <span className="opacity-70">-</span> {meta?.artist || '—'}
+              </>
+            )}
           </div>
         </div>
 

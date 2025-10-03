@@ -89,7 +89,7 @@
   .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
   /* Progress bar générique */
-  .progress-track { height: 0.5rem; border-radius: 9999px; background: rgba(0,0,0,0.25); overflow: hidden; }
+  .progress-track { height: 0.5rem; border-radius: 9999px; background: rgba(0,0,0,0.25); }
   .dark .progress-track { background: rgba(255,255,255,0.15); }
   .progress-fill  { height: 100%; background: #fff; }
 }
@@ -163,23 +163,24 @@
   transition: margin-left 300ms ease-out;
 }
 
-/* === Pas de scroll vertical global === */
+/* === Scroll vertical global (activé) === */
 html, body, #root {
   height: 100%;
 }
 html, body {
-  overflow-y: hidden;           /* enlève la barre verticale */
-  overscroll-behavior: none;    /* pas d'élan qui “dépasse” */
+  overflow-y: auto;            /* (corrigé) permet le scroll vertical global */
+  overscroll-behavior: auto;   /* (corrigé) comportement par défaut */
 }
 
 /* Animation quand la sidebar ouvre/ferme */
 .content-shift {
   transition: margin-left 300ms ease-out;
 }
+
 /* --- Zone de page scrollable entre header (64) et player (64) --- */
 .page-scroll {
   height: calc(100vh - 128px);      /* 64 + 64 */
-  overflow-y: auto;                  /* défilement vertical */
+  overflow-y: auto;                  /* défilement vertical local (home/schedule) */
   overscroll-behavior: contain;      /* évite de “tirer” le body */
   -webkit-overflow-scrolling: touch; /* fluide sur mobile */
 }

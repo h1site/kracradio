@@ -20,6 +20,9 @@ import ProtectedRoute from '../components/ProtectedRoute';
 // Menu
 import Artists from '../pages/Artists';
 import Podcasts from '../pages/Podcasts';
+import PodcastsNew from '../pages/PodcastsNew';
+import PodcastDetail from '../pages/PodcastDetail';
+import Dashboard from '../pages/Dashboard';
 import Spotify from '../pages/Spotify';
 import Schedule from '../pages/Schedule';
 import About from '../pages/About';
@@ -98,7 +101,17 @@ export default function App() {
 
           {/* Autres pages */}
           <Route path="/artists" element={<Artists />} />
-          <Route path="/podcasts" element={<Podcasts />} />
+          <Route path="/podcasts" element={<PodcastsNew />} />
+          <Route path="/podcasts/submit" element={<Podcasts />} />
+          <Route path="/podcast/:id" element={<PodcastDetail />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/spotify" element={<Spotify />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/about" element={<About />} />

@@ -1,235 +1,311 @@
-// src/pages/Schedule.jsx
-import React, { useMemo } from 'react';
+// src/pages/Spotify.jsx
+import React, { useEffect, useMemo, useState } from 'react';
+import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
-import { channels } from '../data/channels';
-import daily from '../data/daily-schedule.json';
-import { useAudio } from '../context/AudioPlayerContext';
 
-const KRAC_KEY = 'kracradio';
+import {
+  spotifyItems,
+  toSpotifyHref,
+  toSpotifyEmbedSrc,
+  toOEmbedUrl
+} from '../data/playlists.js';
 
-function toTodayDate(timeStr) {
-  const [hhRaw, mmRaw] = (timeStr || '00:00').split(':');
-  const hh = parseInt(hhRaw, 10);
-  const mm = parseInt(mmRaw, 10) || 0;
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  if (Number.isFinite(hh) && hh >= 24) {
-    d.setDate(d.getDate() + 1);
-    d.setHours(0, mm, 0, 0);
-  } else {
-    d.setHours(Number.isFinite(hh) ? hh : 0, mm, 0, 0);
-  }
-  return d;
-}
+// --- oEmbed pour récupérer title/thumbnail/author sans token ---
+function useOEmbedData(items) {
+  const [meta, setMeta] = useState(() =>
+    Object.fromEntries((items || []).map((i) => [i.key, { loading: true }]))
+  );
 
-function fmtRange(start, end, lang) {
-  const opt = { hour: '2-digit', minute: '2-digit' };
-  return `${new Intl.DateTimeFormat(lang, opt).format(start)} — ${new Intl.DateTimeFormat(lang, opt).format(end)}`;
-}
+  useEffect(() => {
+    let aborted = false;
 
-export default function Schedule() {
-  const { lang, t } = useI18n();
-  const { current, playing, playChannel, togglePlay } = useAudio();
-
-  const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
-  const kracImage = krac?.image || '/channels/kracradio.webp';
-
-  // Segments de la journée
-  const segments = useMemo(() => {
-    const arr = (daily || [])
-      .map((it, idx) => {
-        const start = toTodayDate(it.start);
-        const end = toTodayDate(it.end);
-        return {
-          id: `${start.toISOString()}-${idx}`,
-          title: (it.title || '').trim(),
-          start,
-          end,
-          image: it.image || kracImage
-        };
-      })
-      .sort((a, b) => a.start - b.start);
-    return arr;
-  }, [kracImage]);
-
-  // Now & Next (mêmes règles que Home)
-  const { currentSeg, nextSeg } = useMemo(() => {
-    const now = Date.now();
-    let cur = null;
-    let nxt = null;
-    for (let i = 0; i < segments.length; i++) {
-      const s = segments[i];
-      if (now >= s.start.getTime() && now < s.end.getTime()) {
-        cur = s;
-        nxt = segments[(i + 1) % segments.length] || null;
-        break;
+    async function load() {
+      const entries = await Promise.all(
+        (items || []).map(async (it) => {
+          try {
+            const res = await fetch(toOEmbedUrl(it.url), { cache: 'no-store' });
+            const data = await res.json();
+            return [it.key, { loading: false, ok: true, data }];
+          } catch (e) {
+            return [it.key, { loading: false, ok: false, error: String(e) }];
+          }
+        })
+      );
+      if (!aborted) {
+        setMeta((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
       }
     }
-    if (!cur && segments.length) {
-      const after = segments.find((s) => s.start.getTime() > now);
-      nxt = after || segments[0];
-    }
-    return { currentSeg: cur, nextSeg: nxt };
-  }, [segments]);
 
-  const isKracPlaying = playing && current?.key === KRAC_KEY;
+    load();
+    return () => { aborted = true; };
+  }, [items]);
 
-  const todayLabel = useMemo(() => {
-    return new Intl.DateTimeFormat(lang, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    }).format(new Date());
+  return meta;
+}
+
+function SidebarItem({ active, meta, onClick }) {
+  const title = meta?.data?.title || 'Spotify';
+  const author = meta?.data?.author_name || '';
+  const thumb = meta?.data?.thumbnail_url || '';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'w-full text-left px-3 py-2 rounded-lg transition',
+        active
+          ? 'bg-black/5 dark:bg-white/10'
+          : 'hover:bg-black/5 dark:hover:bg-white/5'
+      ].join(' ')}
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-md overflow-hidden bg-black/5 dark:bg-white/5 shrink-0">
+          {thumb ? (
+            <img
+              src={thumb}
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold truncate">{title}</div>
+          {author ? (
+            <div className="text-xs opacity-70 truncate">{author}</div>
+          ) : null}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export default function SpotifyPage() {
+  const { lang } = useI18n();
+
+  const L = useMemo(() => {
+    const fr = {
+      title: 'Playlists',
+      subtitle: 'Suivez et partagez nos playlists Spotify.',
+      open: 'Ouvrir dans Spotify',
+      share: 'Partager',
+      empty: 'Aucune playlist à afficher.'
+    };
+    const en = {
+      title: 'Playlists',
+      subtitle: 'Follow and share our Spotify playlists.',
+      open: 'Open in Spotify',
+      share: 'Share',
+      empty: 'No playlist to display.'
+    };
+    return lang === 'fr' ? fr : en;
   }, [lang]);
+
+  const list = Array.isArray(spotifyItems) ? spotifyItems : [];
+  const metaMap = useOEmbedData(list);
+
+  // Sélection desktop (par défaut la première)
+  const [selectedKey, setSelectedKey] = useState(() => list[0]?.key || '');
+  useEffect(() => {
+    if (!list.find((x) => x.key === selectedKey)) {
+      setSelectedKey(list[0]?.key || '');
+    }
+  }, [list, selectedKey]);
+
+  const selected = list.find((x) => x.key === selectedKey) || null;
+  const embedSrc = selected ? toSpotifyEmbedSrc(selected.url) : '';
 
   return (
     <div className="page-scroll pl-14 pr-2 pt-0">
-      {/* === SECTION IDENTIQUE À HOME : Now Playing + À suivre === */}
-      <section className="w-full px-0 bg-[#] pb-0">
-        <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
-            {/* Bloc 1 — En lecture (Now Playing) */}
-            <div
-              className="group relative h-64 lg:h-80"
-              style={{
-                backgroundImage: `url(${currentSeg?.image || kracImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      <Seo title={L.title} description={L.subtitle} />
 
-              <div className="absolute left-5 right-5 top-4 flex items-center gap-2">
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow uppercase">
-                  {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
-                </div>
-              </div>
+      {/* en-tête identique à Horaire (s’appuie sur pl-14 global pour le chevron) */}
+      <header className="mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight uppercase">
+          {L.title}
+        </h1>
+        <p className="mt-1 text-sm opacity-80">{L.subtitle}</p>
+      </header>
 
-              <div className="absolute left-5 right-5 bottom-5">
-                <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
-                  {t?.site?.nowPlaying || 'En lecture'}
-                </div>
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {currentSeg?.title || '—'}
-                </div>
-                <div className="text-white/90 text-sm font-medium mt-1">
-                  {currentSeg ? fmtRange(currentSeg.start, currentSeg.end, lang) : '—'}
-                </div>
-              </div>
+      {list.length === 0 ? (
+        <div className="text-sm opacity-70">{L.empty}</div>
+      ) : (
+        <>
+          {/* ====== MOBILE & TABLET (lg:hidden) — LISTE SANS SÉLECTEUR ====== */}
+          <div className="lg:hidden space-y-5">
+            {list.map((it) => {
+              const m = metaMap[it.key];
+              const title = m?.data?.title || 'Spotify';
+              const author = m?.data?.author_name || '';
+              const href = toSpotifyHref(it.url);
+              const src = toSpotifyEmbedSrc(it.url);
 
-              {/* Bouton Écouter (même logique que Home) */}
-              <div className="absolute right-5 bottom-5">
-                <button
-                  type="button"
-                  aria-label={t.home?.listenCta || 'Écouter'}
-                  aria-pressed={isKracPlaying}
-                  className="transition duration-200 focus:outline-none"
-                  onClick={() =>
-                    (current?.key === KRAC_KEY ? togglePlay() : playChannel(KRAC_KEY))
-                  }
+              return (
+                <section
+                  key={it.key}
+                  className="
+                    rounded-2xl border border-black/10 dark:border-white/10
+                    bg-white/80 dark:bg-zinc-900/70 backdrop-blur
+                    shadow-sm overflow-hidden
+                  "
                 >
-                  <span className="inline-flex items-center rounded-full border border-white/30 bg-black/70 backdrop-blur px-3 pr-4 py-2 text-white shadow-sm hover:bg-black/80 hover:border-white/50 focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-black">
-                    <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-600">
-                      {isKracPlaying ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-                          <rect x="6" y="5" width="4" height="14" rx="1" />
-                          <rect x="14" y="5" width="4" height="14" rx="1" />
-                        </svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {t.home?.listenCta || 'Écouter'}
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
+                  {/* En-tête compact */}
+                  <div className="px-4 pt-4 pb-2">
+                    <div className="text-base font-semibold">{title}</div>
+                    {author ? (
+                      <div className="text-xs opacity-70">{author}</div>
+                    ) : null}
+                  </div>
 
-            {/* Bloc 2 — À suivre (Up next) */}
-            <div
-              className="relative h-64 lg:h-80"
-              style={{
-                backgroundImage: `url(${nextSeg?.image || kracImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute left-5 right-5 bottom-5">
-                <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
-                  {t?.schedule?.upNext || 'À suivre'}
-                </div>
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {nextSeg?.title || '—'}
-                </div>
-                <div className="text-white/90 text-sm font-medium mt-1 mb-3">
-                  {nextSeg ? fmtRange(nextSeg.start, nextSeg.end, lang) : '—'}
-                </div>
+                  {/* Iframe : hauteur fixe confortable */}
+                  <div className="w-full">
+                    <iframe
+                      title={`Spotify ${title}`}
+                      src={src}
+                      className="w-full"
+                      style={{ height: 560, border: 0 }}
+                      frameBorder="0"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                    />
+                  </div>
 
-                {/* ⬇️ CTA retiré comme demandé */}
-                {/* <div className="w-full flex justify-end">
-                  <a ...>{t.home?.viewScheduleCta}</a>
-                </div> */}
-              </div>
-            </div>
+                  {/* Actions — espace au-dessus conforme à ta demande précédente */}
+                  <div className="px-4 pb-4 mt-3 flex items-center gap-3">
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-emerald-400/30 hover:bg-emerald-400/10 transition"
+                    >
+                      {L.open}
+                    </a>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition"
+                      onClick={async () => {
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({
+                              title,
+                              text: author || 'Spotify',
+                              url: href
+                            });
+                          } else {
+                            await navigator.clipboard.writeText(href);
+                            alert('Lien copié dans le presse-papiers.');
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }}
+                    >
+                      {L.share}
+                    </button>
+                  </div>
+                </section>
+              );
+            })}
           </div>
-        </div>
-      </section>
 
-{/* === PHOTO + TEXTE (sans arrondis, gauche flat) === */}
-<div className="mb-6 pt-4">
-  <div className="grid grid-cols-1 sm:grid-cols-2 items-left">
-    {/* Bloc 1 : photo de la station — FLAT (aucun bg/border) */}
-    <div className="p-4 sm:p-0 flex items-center justify-left bg-transparent">
-      
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-black dark:text-white uppercase">
-        
-      
-       <span className="mt-2 inline-block text-[11px] sm:text-xs px-2 py-1 bg-black/90 text-white dark:bg-white/90 dark:text-black font-semibold uppercase">
-        {t?.nav?.schedule || 'Horaire'} — 24 h 
-      </span> </h1>
-    </div>
-  </div>
-</div>
-
-
-
-      {/* === Capsules de l’horaire (grid) === */}
-      <section className="mb-6">
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {segments.map((it) => (
-            <article
-              key={it.id}
-              className="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-neutral-900"
+          {/* ====== DESKTOP (lg:flex) — 2 BLOCS PLEIN ÉCRAN (comme Horaire) ====== */}
+          <div className="hidden lg:flex flex-row gap-4">
+            {/* BLOC 1 : Sidebar listes (scrollable vertical) */}
+            <aside
+              className="
+                lg:w-80
+                rounded-2xl border border-neutral-800
+                bg-white/80 dark:bg-zinc-900/70 backdrop-blur
+                shadow-sm
+                h-[calc(100vh-128px)] overflow-y-auto
+                p-3
+              "
             >
-              <img
-                src={it.image}
-                alt={it.title || '—'}
-                className="w-full h-44 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute left-3 right-3 bottom-3">
-                <div className="text-white font-extrabold tracking-wide uppercase drop-shadow">
-                  {it.title || '—'}
-                </div>
-                <div className="text-white/90 text-xs font-semibold drop-shadow">
-                  {fmtRange(it.start, it.end, lang)}
-                </div>
+              <div className="space-y-2">
+                {list.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    active={item.key === selectedKey}
+                    meta={metaMap[item.key]}
+                    onClick={() => setSelectedKey(item.key)}
+                  />
+                ))}
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
+            </aside>
 
-      {/* Espace bas pour un player fixe */}
-      <div className="pb-14" aria-hidden="true" />
+            {/* BLOC 2 : Contenu principal (iframe pleine hauteur, pas coupée) */}
+            <main className="flex-1 min-w-0">
+              <div
+                className="
+                  rounded-2xl border border-neutral-800
+                  bg-white/80 dark:bg-zinc-900/70 backdrop-blur
+                  shadow-sm
+                  h-[calc(100vh-128px)] overflow-hidden
+                "
+              >
+                {embedSrc ? (
+                  <iframe
+                    title="Spotify Playlist"
+                    src={embedSrc}
+                    className="w-full h-full"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    style={{ border: 0 }}
+                  />
+                ) : null}
+              </div>
+
+              {/* Actions sous le player */}
+              {selected ? (
+                <div className="mt-3 flex items-center gap-2">
+                  <a
+                    href={toSpotifyHref(selected.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-emerald-400/30 hover:bg-emerald-400/10 transition"
+                  >
+                    {L.open}
+                  </a>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition"
+                    onClick={async () => {
+                      try {
+                        const meta = metaMap[selected.key]?.data;
+                        const title = meta?.title || 'Spotify';
+                        const author = meta?.author_name || 'Spotify';
+                        const url = toSpotifyHref(selected.url);
+
+                        if (navigator.share) {
+                          await navigator.share({
+                            title,
+                            text: author,
+                            url
+                          });
+                        } else {
+                          await navigator.clipboard.writeText(url);
+                          alert('Lien copié dans le presse-papiers.');
+                        }
+                      } catch {
+                        // ignore
+                      }
+                    }}
+                  >
+                    {L.share}
+                  </button>
+                </div>
+              ) : null}
+            </main>
+          </div>
+
+          {/* Espace bas pour un player fixe */}
+          <div className="pb-14" aria-hidden="true" />
+        </>
+      )}
     </div>
   );
 }
