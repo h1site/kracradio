@@ -48,7 +48,22 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
         .from('kracradio')
         .getPublicUrl(filePath);
 
-      editor.chain().focus().setImage({ src: publicUrl }).run();
+      console.log('Image uploaded, URL:', publicUrl);
+      console.log('Editor exists:', !!editor);
+
+      if (editor && !editor.isDestroyed) {
+        // Insert as HTML string
+        const imageHtml = `<img src="${publicUrl}" alt="Uploaded image" class="max-w-full h-auto rounded-lg" />`;
+
+        editor.chain()
+          .focus()
+          .insertContent(imageHtml)
+          .run();
+
+        console.log('Image HTML inserted:', imageHtml);
+      } else {
+        console.error('Editor not available or destroyed');
+      }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Erreur lors du téléversement de l\'image: ' + error.message);
@@ -527,7 +542,12 @@ export default function TipTapEditor({ content, onChange }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image,
+      Image.configure({
+        inline: false,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg',
+        },
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {

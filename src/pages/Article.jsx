@@ -94,10 +94,11 @@ export default function Article() {
         <p className="text-base mb-4 opacity-90">{langContent.excerpt}</p>
       ) : null}
 
-      {/* contenu markdown (respecte le style actuel - pas de look nouveau) */}
-      <div className="prose dark:prose-invert max-w-none">
-        <ReactMarkdown>{langContent.content}</ReactMarkdown>
-      </div>
+      {/* contenu HTML de TipTap */}
+      <div
+        className="prose dark:prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: langContent.content }}
+      />
     </article>
   );
 }
