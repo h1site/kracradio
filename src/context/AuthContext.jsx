@@ -9,80 +9,48 @@ export function AuthProvider({ children }) {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);   // gate rendering until we know
 
-  // Fetch user role from user_profiles table
-  const fetchUserRole = async (userId) => {
-    if (!userId) {
-      setUserRole(null);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors
-
-      if (error) {
-        // If table doesn't exist or other error, default to null (no role)
-        console.warn('[Auth] Could not fetch user role. Setting role to null. Error:', error.message);
-        setUserRole(null);
-        return;
-      }
-
-      if (!data) {
-        // User has no profile yet, default to creator
-        console.warn('[Auth] User profile not found. Defaulting to creator role.');
-        setUserRole('creator');
-        return;
-      }
-
-      setUserRole(data.role || 'creator');
-    } catch (e) {
-      // Catch any unexpected errors and don't crash the app
-      console.warn('[Auth] Exception fetching user role. Defaulting to creator:', e.message);
-      setUserRole('creator'); // Default to creator instead of admin
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
 
     async function init() {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('[Auth] getSession error:', error);
-        }
+        const { data } = await supabase.auth.getSession();
         if (!mounted) return;
+
         const currentUser = data?.session?.user ?? null;
         setUser(currentUser);
+
         if (currentUser) {
-          await fetchUserRole(currentUser.id);
+          // Set role to creator by default without fetching
+          setUserRole('creator');
         } else {
-          setUserRole(null); // Important: reset role when no user
+          setUserRole(null);
         }
       } catch (e) {
-        console.error('[Auth] init exception:', e);
+        console.error('[Auth] init error:', e);
         if (mounted) {
           setUser(null);
           setUserRole(null);
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     init();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserRole(null);
+        return;
+      }
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        await fetchUserRole(currentUser.id);
-      } else {
-        setUserRole(null);
-      }
+      setUserRole(currentUser ? 'creator' : null);
     });
 
     return () => {
@@ -104,11 +72,17 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw new Error(error.message || 'Sign-out failed');
-    // Réinitialiser manuellement les états
-    setUser(null);
-    setUserRole(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('[Auth] signOut error, forcing cleanup:', e);
+    } finally {
+      // Force cleanup local
+      setUser(null);
+      setUserRole(null);
+      localStorage.clear();
+      sessionStorage.clear();
+    }
   };
 
   // Helper functions to check user roles

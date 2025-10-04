@@ -60,15 +60,22 @@ export default function Podcasts() {
 
   const loadPodcasts = async () => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
       const { data, error } = await supabase
         .from('podcasts_with_stats')
         .select('*')
-        .order('latest_episode_date', { ascending: false, nullsFirst: false });
+        .order('latest_episode_date', { ascending: false, nullsFirst: false })
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeoutId);
 
       if (error) throw error;
       setPodcasts(data || []);
     } catch (error) {
       console.error('Error loading podcasts:', error);
+      setPodcasts([]);
     } finally {
       setLoading(false);
     }

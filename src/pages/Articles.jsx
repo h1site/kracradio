@@ -129,7 +129,7 @@ export default function Articles() {
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-black dark:text-white mb-3">
                     <Link
-                      to={`/articles/${article.slug}`}
+                      to={`/article/${article.slug}`}
                       className="hover:text-red-600 dark:hover:text-red-400 transition"
                     >
                       {article.title}
@@ -157,7 +157,7 @@ export default function Articles() {
                     )}
 
                     <Link
-                      to={`/articles/${article.slug}`}
+                      to={`/article/${article.slug}`}
                       className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
                     >
                       {L.readMore}

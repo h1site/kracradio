@@ -123,18 +123,31 @@ export async function fetchArticleBySlug(slug) {
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
+
+  console.log('fetchArticleBySlug - slug:', slug, 'data:', data, 'error:', error);
   if (error) throw error;
   return data;
 }
 
 /** Lister les articles publiés (pour /articles) */
 export async function listPublishedArticles({ limit = 24, offset = 0 } = {}) {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('id, slug, title, excerpt, cover_url, published_at, author_id')
-    .eq('status', 'published')
-    .order('published_at', { ascending: false, nullsFirst: false })
-    .range(offset, offset + limit - 1);
-  if (error) throw error;
-  return data || [];
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, slug, title, excerpt, cover_url, published_at, author_id')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .range(offset, offset + limit - 1)
+      .abortSignal(controller.signal);
+
+    clearTimeout(timeoutId);
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }

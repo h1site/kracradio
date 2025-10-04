@@ -33,6 +33,7 @@ import Contact from '../pages/Contact';
 import Profile from '../pages/Profile';
 import MyArticles from '../pages/MyArticles';
 import AdminPanel from '../pages/AdminPanel';
+import PodcastEditor from '../pages/PodcastEditor';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -44,7 +45,7 @@ export default function App() {
 
   // Pages pleine largeur sans marge (Schedule uniquement)
   const fullWidthPages = ['/schedule'];
-  const isFullWidth = fullWidthPages.includes(location.pathname);
+  const isFullWidth = fullWidthPages.includes(location.pathname) || location.pathname.startsWith('/article/');
 
   const mainStyle = {
     paddingTop: isFullWidth ? '0px' : '20px',
@@ -106,6 +107,24 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ArticleEditor />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Podcasts - Création et édition */}
+          <Route
+            path="/dashboard/podcasts/edit"
+            element={
+              <ProtectedRoute>
+                <PodcastEditor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/podcasts/edit/:id"
+            element={
+              <ProtectedRoute>
+                <PodcastEditor />
               </ProtectedRoute>
             }
           />

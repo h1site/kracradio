@@ -658,7 +658,7 @@ export default function AdminPanel() {
                           👁️ {L.view}
                         </Link>
                         <Link
-                          to={`/dashboard/articles/edit?id=${article.id}`}
+                          to={`/dashboard/articles/edit/${article.id}`}
                           className="rounded bg-gray-600 px-3 py-1 text-xs font-semibold text-white hover:bg-gray-700"
                         >
                           ✏️ {L.edit}

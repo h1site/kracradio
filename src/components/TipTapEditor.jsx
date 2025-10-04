@@ -572,6 +572,13 @@ export default function TipTapEditor({ content, onChange }) {
     },
   });
 
+  // Mettre à jour le contenu quand il change
+  React.useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   return (
     <div className={`overflow-hidden rounded-xl border shadow-2xl ${isDarkMode ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-white'}`}>
       <MenuBar editor={editor} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />

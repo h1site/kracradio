@@ -187,38 +187,36 @@ export default function Dashboard() {
   const loadPodcasts = async () => {
     try {
       setLoading(true);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const { data, error } = await supabase
         .from('user_podcasts')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeoutId);
 
       if (error) throw error;
       setPodcasts(data || []);
     } catch (error) {
       console.error('Error loading podcasts:', error);
       setMessage({ type: 'error', text: error.message });
+      setPodcasts([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = (podcast) => {
-    setEditing(podcast);
-    setFormData({
-      title: podcast.title,
-      rss_url: podcast.rss_url,
-      description: podcast.description || '',
-      image_url: podcast.image_url || '',
-      website_url: podcast.website_url || '',
-      author: podcast.author || '',
-    });
+    navigate(`/dashboard/podcasts/edit/${podcast.id}`);
   };
 
   const handleAdd = () => {
-    setEditing({ id: null });
-    setFormData(blankPodcast);
+    navigate('/dashboard/podcasts/edit');
   };
 
   const handleCancel = () => {
@@ -469,7 +467,7 @@ export default function Dashboard() {
                       {L.viewArticle}
                     </Link>
                     <Link
-                      to={`/dashboard/articles/edit?id=${article.id}`}
+                      to={`/dashboard/articles/edit/${article.id}`}
                       className="flex-1 rounded-lg bg-gradient-to-r from-gray-700 to-gray-600 px-3 py-2 text-center text-sm font-semibold text-white transition hover:from-gray-600 hover:to-gray-500"
                     >
                       {L.editArticle}
@@ -535,8 +533,64 @@ export default function Dashboard() {
           </div>
         )}
 
+        {loading ? (
+          <p className="text-center text-gray-600 dark:text-gray-400">{L.loading}</p>
+        ) : podcasts.length === 0 && !editing ? (
+          <div className="rounded-3xl border border-gray-200 bg-white p-12 text-center shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <p className="text-gray-600 dark:text-gray-400">{L.noPodcasts}</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {podcasts.map((podcast) => (
+              <article
+                key={podcast.id}
+                className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-950"
+              >
+                {podcast.image_url && (
+                  <img
+                    src={podcast.image_url}
+                    alt={podcast.title}
+                    className="mb-4 aspect-square w-full rounded-2xl object-cover"
+                  />
+                )}
+                <h3 className="text-xl font-semibold text-black dark:text-white">{podcast.title}</h3>
+                {podcast.author && (
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{podcast.author}</p>
+                )}
+                {podcast.description && (
+                  <p className="mt-2 line-clamp-3 text-sm text-gray-700 dark:text-gray-300">
+                    {podcast.description}
+                  </p>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => handleImportOne(podcast)}
+                    disabled={importing}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {L.importThis}
+                  </button>
+                  <button
+                    onClick={() => handleEdit(podcast)}
+                    className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900"
+                  >
+                    {L.edit}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(podcast.id)}
+                    className="rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-900/30"
+                  >
+                    {L.delete}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {/* Formulaire d'édition/ajout - APRÈS la liste */}
         {editing && (
-          <form onSubmit={handleSave} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          <form onSubmit={handleSave} className="mt-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
             <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
               {editing.id ? L.edit : L.addPodcast}
             </h3>
@@ -636,61 +690,6 @@ export default function Dashboard() {
               </button>
             </div>
           </form>
-        )}
-
-        {loading ? (
-          <p className="text-center text-gray-600 dark:text-gray-400">{L.loading}</p>
-        ) : podcasts.length === 0 && !editing ? (
-          <div className="rounded-3xl border border-gray-200 bg-white p-12 text-center shadow-sm dark:border-gray-800 dark:bg-gray-950">
-            <p className="text-gray-600 dark:text-gray-400">{L.noPodcasts}</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {podcasts.map((podcast) => (
-              <article
-                key={podcast.id}
-                className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-950"
-              >
-                {podcast.image_url && (
-                  <img
-                    src={podcast.image_url}
-                    alt={podcast.title}
-                    className="mb-4 aspect-square w-full rounded-2xl object-cover"
-                  />
-                )}
-                <h3 className="text-xl font-semibold text-black dark:text-white">{podcast.title}</h3>
-                {podcast.author && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{podcast.author}</p>
-                )}
-                {podcast.description && (
-                  <p className="mt-2 line-clamp-3 text-sm text-gray-700 dark:text-gray-300">
-                    {podcast.description}
-                  </p>
-                )}
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => handleImportOne(podcast)}
-                    disabled={importing}
-                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {L.importThis}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(podcast)}
-                    className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900"
-                  >
-                    {L.edit}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(podcast.id)}
-                    className="rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-900/30"
-                  >
-                    {L.delete}
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
         )}
       </section>
     </main>

@@ -79,7 +79,15 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={async () => {
-                    try { await signOut(); } catch {}
+                    try {
+                      await signOut();
+                    } catch (e) {
+                      console.error('Logout error, forcing cleanup:', e);
+                      // Force cleanup en cas d'erreur
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      window.location.href = '/';
+                    }
                   }}
                   className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
                 >

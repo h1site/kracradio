@@ -48,24 +48,30 @@ export default function ArticleEditor() {
     async function load() {
       if (!isEdit) return;
       setBusy(true);
-      const { data, error } = await fetchArticleById(id);
-      if (mounted) {
-        if (error) setErr(error.message || 'Error');
-        if (data) {
-          setTitle(data.title || '');
-          setContent(data.content || '');
-          setStatus(data.status || 'draft');
-          setExcerpt(data.excerpt || '');
-          setFeaturedImage(data.featured_image || '');
-          setMetaTitle(data.meta_title || '');
-          setMetaDescription(data.meta_description || '');
-          setCategories(data.categories ? data.categories.join(', ') : '');
-          setTags(data.tags ? data.tags.join(', ') : '');
-          setCustomSlug(data.custom_slug || '');
-          setAllowComments(data.allow_comments !== false);
-          setIsSticky(data.is_sticky || false);
+      try {
+        const result = await fetchArticleById(id);
+        console.log('fetchArticleById result:', result);
+        console.log('Article keys:', Object.keys(result));
+        console.log('Content field:', result.content, result.body, result.text);
+        if (mounted && result) {
+          setTitle(result.title || '');
+          setContent(result.content || result.body || '');
+          setStatus(result.status || 'draft');
+          setExcerpt(result.excerpt || '');
+          setFeaturedImage(result.featured_image || result.cover_url || '');
+          setMetaTitle(result.meta_title || '');
+          setMetaDescription(result.meta_description || '');
+          setCategories(result.categories ? result.categories.join(', ') : '');
+          setTags(result.tags ? result.tags.join(', ') : '');
+          setCustomSlug(result.custom_slug || '');
+          setAllowComments(result.allow_comments !== false);
+          setIsSticky(result.is_sticky || false);
         }
-        setBusy(false);
+      } catch (e) {
+        console.error('Load error:', e);
+        if (mounted) setErr(e.message || 'Error');
+      } finally {
+        if (mounted) setBusy(false);
       }
     }
     load();
@@ -97,22 +103,14 @@ export default function ArticleEditor() {
       if (isEdit) {
         const { data, error } = await updateArticleById(id, articleData);
         if (error) throw error;
-        if (data?.slug && data?.status === 'published') {
-          navigate(`/article/${data.slug}`, { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+        navigate('/dashboard', { replace: true });
       } else {
         const { data, error } = await createArticle({
           ...articleData,
           author_id: user.id,
         });
         if (error) throw error;
-        if (data?.slug && data?.status === 'published') {
-          navigate(`/article/${data.slug}`, { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+        navigate('/dashboard', { replace: true });
       }
     } catch (e2) {
       setErr(e2.message || 'Error');
@@ -158,7 +156,7 @@ export default function ArticleEditor() {
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              Contenu
+              {A.tabContent || 'Contenu'}
             </button>
             <button
               type="button"
@@ -169,7 +167,7 @@ export default function ArticleEditor() {
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              SEO & Médias
+              {A.tabSeo || 'SEO & Médias'}
             </button>
             <button
               type="button"
@@ -180,7 +178,7 @@ export default function ArticleEditor() {
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              Paramètres
+              {A.tabSettings || 'Paramètres'}
             </button>
           </div>
 
@@ -189,7 +187,7 @@ export default function ArticleEditor() {
             <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Titre de l'article *
+                  {A.titleLabel || 'Titre de l\'article'} *
                 </label>
                 <input
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-lg font-semibold transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
@@ -203,27 +201,48 @@ export default function ArticleEditor() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Contenu *
+                  {A.contentLabel || 'Contenu'} *
                 </label>
                 <TipTapEditor
                   content={content}
                   onChange={setContent}
                 />
-                <p className="mt-1 text-xs text-gray-500">Éditeur de blocs WYSIWYG avec support images, liens, YouTube, tableaux, et plus.</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Extrait (Excerpt)
+                  {A.excerpt || 'Extrait'}
                 </label>
                 <textarea
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 min-h-[100px] transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
-                  placeholder="Résumé court pour les listes et archives (recommandé 120-155 caractères)..."
+                  placeholder={A.excerptPh || 'Un court résumé de votre article...'}
                   maxLength={300}
                 />
-                <p className="mt-1 text-xs text-gray-500">{excerpt.length}/300 caractères</p>
+                <p className="mt-1 text-xs text-gray-500">{excerpt.length}/300</p>
+              </div>
+
+              {/* Bouton Enregistrer dans l'onglet */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.statusLabel || 'Statut'}:</span>
+                  <select
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="draft">{A.statusDraft || '📝 Brouillon'}</option>
+                    <option value="published">{A.statusPublished || '🌍 Publié'}</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {busy ? (A.saving || 'Enregistrement...') : (isEdit ? (A.update || 'Mettre à jour') : (A.save || 'Publier'))}
+                </button>
               </div>
             </div>
           )}
@@ -232,62 +251,84 @@ export default function ArticleEditor() {
           {activeTab === 'seo' && (
             <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
               <div className="border-b border-gray-200 pb-4 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-black dark:text-white">Image mise en avant</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">L'image principale de votre article</p>
+                <h3 className="text-lg font-bold text-black dark:text-white">{A.featuredImage || 'Image mise en avant'}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{A.featuredImageDesc || 'L\'image principale de votre article'}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  URL de l'image
+                  {A.imageUrl || 'URL de l\'image'}
                 </label>
                 <input
                   type="url"
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={featuredImage}
                   onChange={(e) => setFeaturedImage(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
+                  placeholder={A.imageUrlPh || 'https://example.com/image.jpg'}
                 />
-                <p className="mt-1 text-xs text-gray-500">Téléversez votre image sur Supabase Storage et collez l'URL ici</p>
+                <p className="mt-1 text-xs text-gray-500">{A.imageUrlHint || 'Téléversez votre image sur Supabase Storage et collez l\'URL ici'}</p>
               </div>
 
               {featuredImage && (
                 <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                  <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Aperçu:</p>
+                  <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{A.imagePreview || 'Aperçu'}:</p>
                   <img src={featuredImage} alt="Preview" className="max-h-64 rounded-lg object-cover" />
                 </div>
               )}
 
               <div className="border-b border-gray-200 pb-4 pt-6 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-black dark:text-white">SEO (Référencement)</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Optimisez pour les moteurs de recherche</p>
+                <h3 className="text-lg font-bold text-black dark:text-white">{A.seoTitle || 'SEO (Référencement)'}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{A.seoDesc || 'Optimisez pour les moteurs de recherche'}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Titre SEO (Meta Title)
+                  {A.metaTitle || 'Titre SEO (Meta Title)'}
                 </label>
                 <input
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
-                  placeholder={title || "Titre personnalisé pour Google (55-60 caractères)"}
+                  placeholder={title || (A.metaTitlePh || 'Titre personnalisé pour Google (55-60 caractères)')}
                   maxLength={60}
                 />
-                <p className="mt-1 text-xs text-gray-500">{metaTitle.length}/60 caractères • Laissez vide pour utiliser le titre de l'article</p>
+                <p className="mt-1 text-xs text-gray-500">{metaTitle.length}/60 • {A.metaTitleHint || 'Laissez vide pour utiliser le titre de l\'article'}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Description SEO (Meta Description)
+                  {A.metaDescription || 'Description SEO (Meta Description)'}
                 </label>
                 <textarea
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 min-h-[100px] transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
-                  placeholder="Description pour les résultats de recherche (120-155 caractères)..."
+                  placeholder={A.metaDescPh || 'Description pour les résultats de recherche (120-155 caractères)...'}
                   maxLength={160}
                 />
-                <p className="mt-1 text-xs text-gray-500">{metaDescription.length}/160 caractères • Laissez vide pour utiliser l'extrait</p>
+                <p className="mt-1 text-xs text-gray-500">{metaDescription.length}/160 • {A.metaDescHint || 'Laissez vide pour utiliser l\'extrait'}</p>
+              </div>
+
+              {/* Bouton Enregistrer dans l'onglet SEO */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.statusLabel || 'Statut'}:</span>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  >
+                    <option value="draft">{A.statusDraft || '📝 Brouillon'}</option>
+                    <option value="published">{A.statusPublished || '🌍 Publié'}</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {busy ? (A.saving || 'Enregistrement...') : (isEdit ? (A.update || 'Mettre à jour') : (A.save || 'Publier'))}
+                </button>
               </div>
             </div>
           )}
@@ -296,54 +337,54 @@ export default function ArticleEditor() {
           {activeTab === 'settings' && (
             <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
               <div className="border-b border-gray-200 pb-4 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-black dark:text-white">Taxonomies</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Organisez votre contenu</p>
+                <h3 className="text-lg font-bold text-black dark:text-white">{A.taxonomiesTitle || 'Taxonomies'}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{A.taxonomiesDesc || 'Organisez votre contenu'}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Catégories
+                  {A.categories || 'Catégories'}
                 </label>
                 <input
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={categories}
                   onChange={(e) => setCategories(e.target.value)}
-                  placeholder="Ex: Technologie, Musique (séparées par des virgules)"
+                  placeholder={A.categoriesPh || 'Ex: Technologie, Musique (séparées par des virgules)'}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Étiquettes (Tags)
+                  {A.tags || 'Étiquettes (Tags)'}
                 </label>
                 <input
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  placeholder="Ex: react, javascript, tutorial (séparées par des virgules)"
+                  placeholder={A.tagsPh || 'Ex: react, javascript, tutorial (séparées par des virgules)'}
                 />
               </div>
 
               <div className="border-b border-gray-200 pb-4 pt-6 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-black dark:text-white">Permalien</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Personnalisez l'URL de l'article</p>
+                <h3 className="text-lg font-bold text-black dark:text-white">{A.permalinkTitle || 'Permalien'}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{A.permalinkDesc || 'Personnalisez l\'URL de l\'article'}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Slug personnalisé
+                  {A.customSlug || 'Slug personnalisé'}
                 </label>
                 <input
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-sm transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   value={customSlug}
                   onChange={(e) => setCustomSlug(e.target.value)}
-                  placeholder="mon-article-personnalise"
+                  placeholder={A.customSlugPh || 'mon-article-personnalise'}
                 />
-                <p className="mt-1 text-xs text-gray-500">Laissez vide pour générer automatiquement depuis le titre</p>
+                <p className="mt-1 text-xs text-gray-500">{A.customSlugHint || 'Laissez vide pour générer automatiquement depuis le titre'}</p>
               </div>
 
               <div className="border-b border-gray-200 pb-4 pt-6 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-black dark:text-white">Options</h3>
+                <h3 className="text-lg font-bold text-black dark:text-white">{A.optionsTitle || 'Options'}</h3>
               </div>
 
               <div className="space-y-3">
@@ -355,8 +396,8 @@ export default function ArticleEditor() {
                     className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-600"
                   />
                   <div>
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Autoriser les commentaires</div>
-                    <div className="text-xs text-gray-500">Les lecteurs pourront commenter cet article</div>
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.allowComments || 'Autoriser les commentaires'}</div>
+                    <div className="text-xs text-gray-500">{A.allowCommentsDesc || 'Les lecteurs pourront commenter cet article'}</div>
                   </div>
                 </label>
 
@@ -368,10 +409,32 @@ export default function ArticleEditor() {
                     className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-600"
                   />
                   <div>
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Épingler en haut du blog</div>
-                    <div className="text-xs text-gray-500">Cet article restera en haut de la liste</div>
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.isSticky || 'Épingler en haut du blog'}</div>
+                    <div className="text-xs text-gray-500">{A.isStickyDesc || 'Cet article restera en haut de la liste'}</div>
                   </div>
                 </label>
+              </div>
+
+              {/* Bouton Enregistrer dans l'onglet Paramètres */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.statusLabel || 'Statut'}:</span>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  >
+                    <option value="draft">{A.statusDraft || '📝 Brouillon'}</option>
+                    <option value="published">{A.statusPublished || '🌍 Publié'}</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {busy ? (A.saving || 'Enregistrement...') : (isEdit ? (A.update || 'Mettre à jour') : (A.save || 'Publier'))}
+                </button>
               </div>
             </div>
           )}

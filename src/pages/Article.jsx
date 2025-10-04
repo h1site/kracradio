@@ -4,10 +4,12 @@ import { useParams, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { fetchArticleBySlug } from '../lib/articles';
 import { useI18n } from '../i18n';
+import { useUI } from '../context/UIContext';
 
 export default function Article() {
   const { slug } = useParams();
   const { lang } = useI18n();
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
   const [article, setArticle] = useState(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -61,8 +63,16 @@ export default function Article() {
     );
   }
 
+  const articleStyle = {
+    paddingTop: '20px',
+    paddingLeft: '30px',
+    paddingRight: '30px',
+    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
+    transition: 'margin-left 300ms ease',
+  };
+
   return (
-    <article className="container mx-auto px-4 py-6">
+    <article style={articleStyle}>
       <h1 className="text-2xl font-bold mb-2">{langContent.title}</h1>
 
       {article.published_at ? (

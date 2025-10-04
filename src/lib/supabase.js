@@ -51,32 +51,32 @@ export async function fetchArticleBySlug(slug) {
 export async function fetchArticleById(id) {
   const { data, error } = await supabase
     .from('articles')
-    .select('id, slug, title, content, status, created_at, updated_at, user_id')
+    .select('*')
     .eq('id', id)
     .single();
 
+  console.log('fetchArticleById - id:', id, 'data:', data, 'error:', error);
   if (error) throw error;
   return data || null;
 }
 
-export async function createArticle({ userId, title, content = '', status = 'draft' }) {
-  const slug = slugify(title);
+export async function createArticle(articleData) {
+  const slug = articleData.custom_slug || slugify(articleData.title);
   const { data, error } = await supabase
     .from('articles')
-    .insert([{ user_id: userId, title, content, slug, status }])
+    .insert([{ ...articleData, slug, user_id: articleData.author_id }])
     .select()
     .single();
 
-  if (error) throw error;
-  return data;
+  if (error) return { data: null, error };
+  return { data, error: null };
 }
 
-export async function updateArticleById(id, { title, content, status }) {
-  const patch = {};
-  if (title != null) patch.title = title;
-  if (content != null) patch.content = content;
-  if (status != null) patch.status = status;
-  if (title != null) patch.slug = slugify(title);
+export async function updateArticleById(id, articleData) {
+  const slug = articleData.custom_slug || (articleData.title ? slugify(articleData.title) : undefined);
+  const patch = { ...articleData };
+  if (slug) patch.slug = slug;
+  delete patch.author_id; // Ne pas modifier author_id lors de l'update
 
   const { data, error } = await supabase
     .from('articles')
@@ -85,8 +85,8 @@ export async function updateArticleById(id, { title, content, status }) {
     .select()
     .single();
 
-  if (error) throw error;
-  return data;
+  if (error) return { data: null, error };
+  return { data, error: null };
 }
 
 export async function deleteArticleById(id) {
