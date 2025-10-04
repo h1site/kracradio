@@ -6,7 +6,7 @@ import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
 
 export default function PlayerBar() {
-  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume } = useAudio();
+  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
@@ -50,19 +50,55 @@ export default function PlayerBar() {
     }
   }, [currentType, podcastMeta]);
 
-  // Tick local pour animer la progression
+  // Synchroniser elapsed avec audio.currentTime pour les podcasts
+  useEffect(() => {
+    if (currentType !== 'podcast' || !audio) return;
+
+    const updateTime = () => {
+      setElapsed(audio.currentTime || 0);
+      setDuration(audio.duration || null);
+    };
+
+    // Mettre à jour immédiatement
+    updateTime();
+
+    // Écouter les événements timeupdate et loadedmetadata
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateTime);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateTime);
+    };
+  }, [currentType, audio, podcastMeta]);
+
+  // Tick local pour animer la progression (radio seulement)
   useEffect(() => {
     clearInterval(tickRef.current);
-    if (!playing) return;
+    if (!playing || currentType === 'podcast') return; // Ne pas utiliser tick pour podcast
     tickRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(tickRef.current);
-  }, [playing]);
+  }, [playing, currentType]);
 
   const progressPct = useMemo(() => {
     if (!duration || duration <= 0) return null; // live
     const p = Math.max(0, Math.min(1, elapsed / duration));
     return Math.round(p * 100);
   }, [elapsed, duration]);
+
+  // Fonction pour gérer le clic sur la barre de progression
+  const handleProgressClick = (e) => {
+    // Seulement pour les podcasts avec durée connue
+    if (currentType !== 'podcast' || !duration || !seek) return;
+
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickRatio = clickX / rect.width;
+    const targetTime = clickRatio * duration;
+
+    seek(targetTime);
+  };
 
   // Prépare les infos selon le type (radio ou podcast)
   const isPodcast = currentType === 'podcast';
@@ -192,7 +228,12 @@ export default function PlayerBar() {
         <div className="flex items-center gap-3 min-w-[360px] justify-end pr-2">
           <div className="text-xs tabular-nums opacity-80 w-12 text-right">{mmss(elapsed)}</div>
           <div className="w-56">
-            <div className="h-2 bg-black/30 rounded overflow-hidden">
+            <div
+              className={`h-2 bg-black/30 rounded overflow-hidden ${isPodcast && duration ? 'cursor-pointer hover:h-3 transition-all' : ''}`}
+              onClick={handleProgressClick}
+              role={isPodcast && duration ? 'slider' : undefined}
+              aria-label={isPodcast && duration ? 'Progress bar - click to seek' : undefined}
+            >
               {progressPct !== null ? (
                 <div className="h-full bg-white" style={{ width: `${progressPct}%` }} />
               ) : (

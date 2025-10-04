@@ -115,128 +115,95 @@ export default function SpotifyPage() {
   const embedSrc = selected ? toSpotifyEmbedSrc(selected.url) : '';
 
   return (
-    <div className="page-scroll lg:pl-14 pr-2 pt-0">
-      <Seo title={L.title} description={L.subtitle} />
+    <main className="container-max pr-[30px]">
+      <Seo
+        lang={lang}
+        title={`${L.title} — KracRadio`}
+        description={L.subtitle}
+        path="/spotify"
+        type="website"
+      />
 
-      <div className="flex flex-col h-full min-h-0 pt-2">
-        <header className="mb-4 md:mb-6 shrink-0">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight uppercase">
-            {L.title}
-          </h1>
-          <p className="mt-1 text-sm opacity-80">{L.subtitle}</p>
-        </header>
+      <header className="pb-12">
+        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+          Playlists
+        </span>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
+          {L.title}
+        </h1>
+        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
+          {L.subtitle}
+        </p>
+      </header>
 
-        <div className="flex-1 min-h-0">
-          {list.length === 0 ? (
-            <div className="text-sm opacity-70">{L.empty}</div>
-          ) : (
-            <>
-              {/* ====== MOBILE & TABLET — LISTE SANS SÉLECTEUR & SANS BOUTONS ====== */}
-              <div className="lg:hidden space-y-5">
-                {list.map((it) => {
-                  const m = metaMap[it.key];
-                  const title = m?.data?.title || 'Spotify';
-                  const src = toSpotifyEmbedSrc(it.url);
-
-                  return (
-                    <section
-                      key={it.key}
-                      className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/70 backdrop-blur shadow-sm overflow-hidden"
-                    >
-                      <div className="px-4 pt-4 pb-2">
-                        <div className="text-base font-semibold">{title}</div>
-                      </div>
-                      <div className="w-full">
-                        <iframe
-                          title={`Spotify ${title}`}
-                          src={src}
-                          className="w-full"
-                          style={{ height: 560, border: 0 }}
-                          frameBorder="0"
-                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                          loading="lazy"
-                        />
-                      </div>
-                      {/* ⬇️ Boutons retirés sur mobile */}
-                      {/* (aucune section actions ici) */}
-                    </section>
-                  );
-                })}
-              </div>
-
-              {/* ====== DESKTOP — 2 BLOCS PLEIN ÉCRAN AVEC BOUTONS ====== */}
-              <div className="hidden lg:flex flex-row gap-4 h-full">
-                <aside className="lg:w-80 rounded-2xl border border-neutral-800 bg-white/80 dark:bg-zinc-900/70 backdrop-blur shadow-sm h-full overflow-y-auto p-3">
-                  <div className="space-y-2">
-                    {list.map((item) => (
-                      <SidebarItem
-                        key={item.key}
-                        active={item.key === selectedKey}
-                        meta={metaMap[item.key]}
-                        onClick={() => setSelectedKey(item.key)}
-                      />
-                    ))}
-                  </div>
-                </aside>
-
-                <main className="flex-1 min-w-0 h-full">
-                  <div className="rounded-2xl border border-neutral-800 bg-white/80 dark:bg-zinc-900/70 backdrop-blur shadow-sm h-full overflow-hidden">
-                    {embedSrc ? (
-                      <iframe
-                        title="Spotify Playlist"
-                        src={embedSrc}
-                        className="w-full h-full"
-                        frameBorder="0"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                        style={{ border: 0 }}
-                      />
-                    ) : null}
-                  </div>
-
-                  {/* Boutons (DESKTOP SEULEMENT) */}
-                  {selected ? (
-                    <div className="mt-3 flex items-center gap-2">
-                      <a
-                        href={toSpotifyHref(selected.url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-emerald-400/30 hover:bg-emerald-400/10 transition"
-                      >
-                        {L.open}
-                      </a>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition"
-                        onClick={async () => {
-                          try {
-                            const meta = metaMap[selected.key]?.data;
-                            const title = meta?.title || 'Spotify';
-                            const author = meta?.author_name || 'Spotify';
-                            const url = toSpotifyHref(selected.url);
-
-                            if (navigator.share) {
-                              await navigator.share({ title, text: author, url });
-                            } else {
-                              await navigator.clipboard.writeText(url);
-                              alert('Lien copié dans le presse-papiers.');
-                            }
-                          } catch {}
-                        }}
-                      >
-                        {L.share}
-                      </button>
-                    </div>
-                  ) : null}
-                </main>
-              </div>
-            </>
-          )}
+      {list.length === 0 ? (
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          <p className="text-base text-gray-600 dark:text-gray-400">{L.empty}</p>
         </div>
+      ) : (
+        <>
+          {/* ====== MOBILE & TABLET — LISTE SANS SÉLECTEUR ====== */}
+          <div className="lg:hidden space-y-5">
+            {list.map((it) => {
+              const m = metaMap[it.key];
+              const title = m?.data?.title || 'Spotify';
+              const src = toSpotifyEmbedSrc(it.url);
 
-        {/* espace pour le player fixe */}
-        <div className="pb-14 shrink-0" aria-hidden="true" />
-      </div>
-    </div>
+              return (
+                <section
+                  key={it.key}
+                  className="rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950 overflow-hidden"
+                >
+                  <div className="px-4 pt-4 pb-2">
+                    <div className="text-base font-semibold text-black dark:text-white">{title}</div>
+                  </div>
+                  <div className="w-full">
+                    <iframe
+                      title={`Spotify ${title}`}
+                      src={src}
+                      className="w-full"
+                      style={{ height: 560, border: 0 }}
+                      frameBorder="0"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                    />
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
+          {/* ====== DESKTOP — 2 BLOCS ====== */}
+          <div className="hidden lg:grid lg:grid-cols-[320px,1fr] gap-6">
+            <aside className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="space-y-2">
+                {list.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    active={item.key === selectedKey}
+                    meta={metaMap[item.key]}
+                    onClick={() => setSelectedKey(item.key)}
+                  />
+                ))}
+              </div>
+            </aside>
+
+            <div className="rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950 overflow-hidden">
+              {embedSrc ? (
+                <iframe
+                  title="Spotify Playlist"
+                  src={embedSrc}
+                  className="w-full h-[calc(100vh-200px)]"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style={{ border: 0 }}
+                />
+              ) : null}
+            </div>
+          </div>
+        </>
+      )}
+    </main>
   );
 }

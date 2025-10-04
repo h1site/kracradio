@@ -88,3 +88,15 @@ export async function updateArticleById(id, { title, content, status }) {
   if (error) throw error;
   return data;
 }
+
+export async function deleteArticleById(id) {
+  const { data, error } = await supabase
+    .from('articles')
+    .delete()
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

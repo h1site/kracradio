@@ -288,7 +288,7 @@ export default function Podcasts() {
   };
 
   return (
-    <main className="container-max px-5 pb-16">
+    <main className="container-max">
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -297,7 +297,7 @@ export default function Podcasts() {
         type="website"
       />
 
-      <header className="pt-16 pb-12">
+      <header className="pt-0 pb-12">
         <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
           {L.heroBadge}
         </span>

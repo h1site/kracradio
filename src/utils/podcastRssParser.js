@@ -1,4 +1,21 @@
 // src/utils/podcastRssParser.js
+import { SUPABASE_FUNCTIONS_URL } from '../lib/supabaseClient';
+
+/**
+ * Enveloppe une URL audio avec le proxy Supabase pour contourner CORS
+ */
+function wrapWithProxy(audioUrl) {
+  if (!audioUrl || !SUPABASE_FUNCTIONS_URL) {
+    return audioUrl;
+  }
+
+  // Si l'URL est déjà un proxy, ne pas la wrapper à nouveau
+  if (audioUrl.includes('/functions/v1/audio-proxy')) {
+    return audioUrl;
+  }
+
+  return `${SUPABASE_FUNCTIONS_URL}/audio-proxy?url=${encodeURIComponent(audioUrl)}`;
+}
 
 /**
  * Nettoie le HTML d'une description
@@ -34,9 +51,21 @@ export async function parseRssFeed(rssUrl) {
     const channelImage = xmlDoc.querySelector('channel > image > url')?.textContent?.trim() ||
                          xmlDoc.getElementsByTagNameNS('*', 'image')[0]?.getAttribute('href') || '';
 
+    // Extraire la description du podcast (channel level)
+    let channelDescription = xmlDoc.querySelector('channel > description')?.textContent?.trim() || '';
+    if (!channelDescription) {
+      channelDescription = xmlDoc.querySelector('channel')?.getElementsByTagNameNS('*', 'summary')[0]?.textContent?.trim() || '';
+    }
+    if (!channelDescription) {
+      channelDescription = xmlDoc.querySelector('channel')?.getElementsByTagNameNS('*', 'subtitle')[0]?.textContent?.trim() || '';
+    }
+    // Nettoyer le HTML de la description
+    channelDescription = stripHtml(channelDescription);
+
     const items = xmlDoc.querySelectorAll('item');
     console.log('[RSS Parser] Found items:', items.length);
     console.log('[RSS Parser] Channel image:', channelImage);
+    console.log('[RSS Parser] Channel description:', channelDescription?.substring(0, 100) + '...');
     const episodes = [];
 
     items.forEach((item) => {
@@ -103,7 +132,7 @@ export async function parseRssFeed(rssUrl) {
         episodes.push({
           title,
           description,
-          audio_url: audioUrl,
+          audio_url: wrapWithProxy(audioUrl), // ← Wrapper l'URL avec le proxy
           image_url: imageUrl || null,
           duration_seconds: durationSeconds || null,
           pub_date: pubDate,
@@ -117,7 +146,7 @@ export async function parseRssFeed(rssUrl) {
     });
 
     console.log('[RSS Parser] Total episodes parsed:', episodes.length);
-    return { episodes, channelImage };
+    return { episodes, channelImage, channelDescription };
   } catch (error) {
     console.error('Erreur parsing RSS:', error);
     throw error;
@@ -129,25 +158,35 @@ export async function parseRssFeed(rssUrl) {
  */
 export async function importPodcastEpisodes(supabase, podcastId, rssUrl) {
   try {
-    const { episodes, channelImage } = await parseRssFeed(rssUrl);
+    const { episodes, channelImage, channelDescription } = await parseRssFeed(rssUrl);
 
     let imported = 0;
     let skipped = 0;
     const errors = [];
 
-    // Mettre à jour l'image du podcast si elle n'existe pas
-    if (channelImage) {
-      const { data: podcast } = await supabase
-        .from('user_podcasts')
-        .select('image_url')
-        .eq('id', podcastId)
-        .single();
+    // Mettre à jour l'image et la description du podcast si elles n'existent pas
+    const { data: podcast } = await supabase
+      .from('user_podcasts')
+      .select('image_url, description')
+      .eq('id', podcastId)
+      .single();
 
-      if (podcast && !podcast.image_url) {
+    if (podcast) {
+      const updates = {};
+      if (channelImage && !podcast.image_url) {
+        updates.image_url = channelImage;
+      }
+      if (channelDescription && !podcast.description) {
+        updates.description = channelDescription;
+      }
+
+      if (Object.keys(updates).length > 0) {
         await supabase
           .from('user_podcasts')
-          .update({ image_url: channelImage })
+          .update(updates)
           .eq('id', podcastId);
+
+        console.log('[RSS Parser] Updated podcast metadata:', updates);
       }
     }
 

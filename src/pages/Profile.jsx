@@ -1,39 +1,18 @@
 // src/pages/Profile.jsx
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
-import { listUserArticles } from '../lib/supabase';
 
 export default function Profile() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [params] = useSearchParams(); // optional if you want to read something
-  const [articles, setArticles] = useState([]);
-  const [error, setError] = useState('');
-
-  // Load my articles safely
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      if (!user?.id) return;
-      try {
-        const data = await listUserArticles(user.id);
-        if (mounted) setArticles(data);
-      } catch (e) {
-        console.error('[Profile] listUserArticles error:', e);
-        if (mounted) setError(e?.message || 'Failed to load articles');
-      }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [user?.id]);
 
   const onLogout = async () => {
     try {
       await signOut();
-      navigate('/'); // back to home
+      navigate('/');
     } catch (e) {
       console.error('[Profile] signOut error:', e);
       alert(e?.message || 'Logout failed');
@@ -41,69 +20,57 @@ export default function Profile() {
   };
 
   return (
-    <div className="px-5">
-      {/* Header line */}
-      <div className="flex items-center justify-between py-4">
-        <h1 className="text-xl font-bold">{t?.profile?.title || 'Profile'}</h1>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/dashboard/articles/edit"
-            className="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm font-semibold hover:opacity-90"
-          >
-            {t?.profile?.createArticle || 'Create article'}
-          </Link>
+    <div className="container-max px-5 pb-16">
+      <header className="pt-16 pb-12">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
+              {t?.profile?.title || 'Profile'}
+            </h1>
+            <p className="mt-4 text-base text-gray-700 dark:text-gray-300 md:text-lg">
+              {user?.email || 'Gérez votre compte'}
+            </p>
+          </div>
           <button
             onClick={onLogout}
-            className="px-3 py-1.5 rounded-md border border-black/15 dark:border-white/15 text-sm hover:bg-black/5 dark:hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-900/30"
           >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+            </svg>
             {t?.nav?.logout || 'Log out'}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* My Articles */}
-      <section className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">{t?.profile?.myArticles || 'My articles'}</h2>
+      {/* Dashboard Card */}
+      <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+        <div className="flex flex-col items-center justify-center gap-6 text-center md:flex-row md:text-left">
+          <div className="flex-shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 text-white" fill="currentColor">
+                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-black dark:text-white">
+              {t?.profile?.dashboard || 'Dashboard'}
+            </h2>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Gérez vos podcasts et articles de blog
+            </p>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
+          >
+            Accéder au Dashboard
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </Link>
         </div>
-
-        {error && (
-          <div className="mb-3 text-sm text-red-600">{error}</div>
-        )}
-
-        {articles.length === 0 ? (
-          <p className="text-sm opacity-80">{t?.profile?.none || 'No articles yet.'}</p>
-        ) : (
-          <ul className="divide-y divide-black/10 dark:divide-white/10">
-            {articles.map((a) => (
-              <li key={a.id} className="py-3 flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="font-medium truncate">{a.title}</div>
-                  <div className="text-xs opacity-70">
-                    {t?.profile?.status || 'Status'}:{' '}
-                    {a.status === 'published'
-                      ? (t?.profile?.published || 'Published')
-                      : (t?.profile?.draft || 'Draft')}
-                  </div>
-                </div>
-                <div className="shrink-0 flex items-center gap-2">
-                  <Link
-                    to={`/article/${a.slug}`}
-                    className="px-2 py-1 text-sm underline"
-                  >
-                    {t?.articles?.view || 'View'}
-                  </Link>
-                  <Link
-                    to={`/dashboard/articles/edit?id=${a.id}`}
-                    className="px-3 py-1.5 rounded-md border border-black/15 dark:border-white/15 text-sm hover:bg-black/5 dark:hover:bg-white/10"
-                  >
-                    {t?.profile?.edit || 'Edit'}
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
     </div>
   );

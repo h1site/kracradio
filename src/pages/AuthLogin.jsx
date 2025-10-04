@@ -45,6 +45,17 @@ export default function AuthLogin() {
       />
 
       <div className="max-w-md mx-auto card p-5 dark:bg-[#1e1e1e]">
+        {/* Logo */}
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-md">
+            <img
+              src="/favicon.ico"
+              alt="Logo"
+              className="w-16 h-16"
+            />
+          </div>
+        </div>
+
         <h1 className="text-2xl font-extrabold mb-4">{T.login || 'Log in'}</h1>
 
         <form onSubmit={onSubmit} className="space-y-3">

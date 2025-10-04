@@ -5,6 +5,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import PlayerBar from '../components/PlayerBar';
+import Footer from '../components/Footer';
 
 import Home from '../pages/Home';
 import Channel from '../pages/Channel';
@@ -14,6 +15,7 @@ import Articles from '../pages/Articles';
 import Article from '../pages/Article';
 import AuthLogin from '../pages/AuthLogin';
 import AuthRegister from '../pages/AuthRegister';
+import AuthConfirmEmail from '../pages/AuthConfirmEmail';
 import ArticleEditor from '../pages/ArticleEditor';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -30,17 +32,25 @@ import Contact from '../pages/Contact';
 
 import Profile from '../pages/Profile';
 import MyArticles from '../pages/MyArticles';
+import AdminPanel from '../pages/AdminPanel';
 
 import { useUI } from '../context/UIContext';
+import { useLocation } from 'react-router-dom';
 
 export default function App() {
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+  const location = useLocation();
   const PLAYER_H = 64;
 
+  // Pages pleine largeur sans marge (Schedule uniquement)
+  const fullWidthPages = ['/schedule'];
+  const isFullWidth = fullWidthPages.includes(location.pathname);
+
   const mainStyle = {
-    paddingTop: 0,
+    paddingTop: isFullWidth ? '0px' : '20px',
+    paddingLeft: isFullWidth ? '0px' : '30px',
     paddingBottom: PLAYER_H,
-    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 0) : 0,
+    marginLeft: isFullWidth ? 0 : (isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0),
     transition: 'margin-left 300ms ease',
     minHeight: '100vh',
   };
@@ -63,6 +73,7 @@ export default function App() {
           {/* Auth */}
           <Route path="/auth/login" element={<AuthLogin />} />
           <Route path="/auth/register" element={<AuthRegister />} />
+          <Route path="/auth/confirm-email" element={<AuthConfirmEmail />} />
 
           {/* Profil & dashboard (protégés) */}
           <Route
@@ -112,6 +123,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/spotify" element={<Spotify />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/about" element={<About />} />
@@ -122,6 +141,7 @@ export default function App() {
         </Routes>
       </main>
 
+      <Footer />
       <PlayerBar />
     </div>
   );

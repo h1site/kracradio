@@ -316,24 +316,30 @@ export default function About() {
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
 
   return (
-    <>
-      <Seo title={L.metaTitle} description={L.metaDesc} />
+    <main className="container-max pr-[30px]">
+      <Seo
+        lang={lang}
+        title={L.metaTitle}
+        description={L.metaDesc}
+        path="/about"
+        type="website"
+      />
       <FaviconLinks />
 
-      {/* HERO pleine hauteur */}
-      <header className="bg-gray-100 dark:bg-red-900 border-b border-gray-200 dark:border-gray-800 h-[300px] flex items-center">
-        <div className="w-full">
-          <div className="  py-10">
-            <h1 className="text-3xl md:text-5xl pl-24 font-extrabold tracking-tight text-black dark:text-white">
-              {L.heroTitle}
-            </h1>
-            <p className="mt-3 text-lg md:text-xl text-gray-700 pl-24 dark:text-gray-300">
-              {L.heroSubtitle}
-            </p>
-          </div>
+      <header className="pb-12">
+        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+          À propos
+        </span>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
+          {L.heroTitle}
+        </h1>
+        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
+          {L.heroSubtitle}
+        </p>
 
-          {/* Bannière pleine largeur avec bande rouge + chevron + texte collé */}
-          <NoticeBanner text={L.bannerText} />
+        {/* Bannière info */}
+        <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40">
+          <p className="text-sm text-gray-700 dark:text-gray-300">{L.bannerText}</p>
         </div>
       </header>
 
@@ -384,11 +390,11 @@ export default function About() {
 
       {/* CTA */}
       <Section>
-        <div className="rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-gray-900 p-6 text-center shadow">
-          <h3 className="text-xl md:text-2xl font-bold mb-2">{L.ctaTitle}</h3>
-          <p className="opacity-90">{L.ctaBody}</p>
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          <h3 className="text-xl md:text-2xl font-bold mb-2 text-black dark:text-white">{L.ctaTitle}</h3>
+          <p className="text-gray-700 dark:text-gray-300">{L.ctaBody}</p>
         </div>
       </Section>
-    </>
+    </main>
   );
 }

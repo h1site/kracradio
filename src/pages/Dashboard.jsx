@@ -1,18 +1,26 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
-import { supabase } from '../lib/supabase';
+import { supabase, listUserArticles, deleteArticleById } from '../lib/supabase';
 import { importAllUserPodcasts, importPodcastEpisodes } from '../utils/podcastRssParser';
 
 const STRINGS = {
   fr: {
     metaTitle: 'Mon tableau de bord — KracRadio',
-    metaDesc: 'Gérez vos podcasts sur KracRadio',
+    metaDesc: 'Gérez vos podcasts et articles sur KracRadio',
     title: 'Mon tableau de bord',
-    subtitle: 'Gérez vos podcasts (maximum 3)',
+    subtitle: 'Gérez vos podcasts et articles',
+    myBlog: 'Mes articles de blog',
+    createArticle: 'Créer un article',
+    viewArticle: 'Voir',
+    editArticle: 'Modifier',
+    noArticles: 'Aucun article',
+    status: 'Statut',
+    published: 'Publié',
+    draft: 'Brouillon',
     myPodcasts: 'Mes podcasts',
     addPodcast: 'Ajouter un podcast',
     noPodcasts: 'Vous n\'avez aucun podcast enregistré',
@@ -45,9 +53,17 @@ const STRINGS = {
   },
   en: {
     metaTitle: 'My Dashboard — KracRadio',
-    metaDesc: 'Manage your podcasts on KracRadio',
+    metaDesc: 'Manage your podcasts and articles on KracRadio',
     title: 'My Dashboard',
-    subtitle: 'Manage your podcasts (maximum 3)',
+    subtitle: 'Manage your podcasts and articles',
+    myBlog: 'My blog articles',
+    createArticle: 'Create article',
+    viewArticle: 'View',
+    editArticle: 'Edit',
+    noArticles: 'No articles',
+    status: 'Status',
+    published: 'Published',
+    draft: 'Draft',
     myPodcasts: 'My podcasts',
     addPodcast: 'Add a podcast',
     noPodcasts: 'You have no registered podcasts',
@@ -80,9 +96,17 @@ const STRINGS = {
   },
   es: {
     metaTitle: 'Mi panel — KracRadio',
-    metaDesc: 'Administra tus podcasts en KracRadio',
+    metaDesc: 'Administra tus podcasts y artículos en KracRadio',
     title: 'Mi panel',
-    subtitle: 'Administra tus podcasts (máximo 3)',
+    subtitle: 'Administra tus podcasts y artículos',
+    myBlog: 'Mis artículos de blog',
+    createArticle: 'Crear artículo',
+    viewArticle: 'Ver',
+    editArticle: 'Editar',
+    noArticles: 'Sin artículos',
+    status: 'Estado',
+    published: 'Publicado',
+    draft: 'Borrador',
     myPodcasts: 'Mis podcasts',
     addPodcast: 'Agregar un podcast',
     noPodcasts: 'No tienes podcasts registrados',
@@ -127,10 +151,11 @@ const blankPodcast = {
 export default function Dashboard() {
   const { lang } = useI18n();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
-  const { user, loading: authLoading } = useAuth();
+  const { user, userRole, isCreator, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [podcasts, setPodcasts] = useState([]);
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null or podcast object
   const [formData, setFormData] = useState(blankPodcast);
@@ -146,8 +171,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadPodcasts();
+      loadArticles();
     }
   }, [user]);
+
+  const loadArticles = async () => {
+    try {
+      const data = await listUserArticles(user.id);
+      setArticles(data || []);
+    } catch (error) {
+      console.error('Error loading articles:', error);
+    }
+  };
 
   const loadPodcasts = async () => {
     try {
@@ -189,6 +224,22 @@ export default function Dashboard() {
   const handleCancel = () => {
     setEditing(null);
     setFormData(blankPodcast);
+  };
+
+  const handleDeleteArticle = async (articleId, articleTitle) => {
+    if (!window.confirm(L.confirmDelete || 'Are you sure you want to delete this article?')) {
+      return;
+    }
+
+    try {
+      await deleteArticleById(articleId);
+      // Refresh articles list
+      await loadArticles();
+      setMessage({ type: 'success', text: 'Article deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
   };
 
   const handleSave = async (e) => {
@@ -311,13 +362,45 @@ export default function Dashboard() {
         type="website"
       />
 
-      <header className="pt-16 pb-12">
-        <h1 className="text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-          {L.title}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-          {L.subtitle}
-        </p>
+      <header className="relative pt-6 pb-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex-1">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-100 to-orange-100 px-3 py-1 text-xs font-semibold text-red-700 dark:from-red-900/30 dark:to-orange-900/30 dark:text-red-300">
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              Content Hub
+            </div>
+            <h1 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-3xl font-bold tracking-tight text-transparent dark:from-white dark:to-gray-300 md:text-4xl">
+              {L.title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+              {L.subtitle}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:shadow dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+              </svg>
+              Profile
+            </Link>
+            {userRole === 'admin' && (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-2 rounded-lg border border-red-600 bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-700 hover:border-red-700"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                Admin
+              </Link>
+            )}
+          </div>
+        </div>
       </header>
 
       {message && (
@@ -330,15 +413,101 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Section Blog */}
+      <section className="mb-12 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg">
+              <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-black dark:text-white">{L.myBlog}</h2>
+          </div>
+          {isCreator() && (
+            <Link
+              to="/dashboard/articles/edit"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z" />
+              </svg>
+              {L.createArticle}
+            </Link>
+          )}
+        </div>
+
+        {articles.length === 0 ? (
+          <div className="relative overflow-hidden rounded-3xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-white p-12 text-center shadow-sm dark:border-gray-700 dark:from-gray-900 dark:to-gray-950">
+            <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-red-500/5 blur-2xl"></div>
+            <svg viewBox="0 0 24 24" className="mx-auto mb-4 h-16 w-16 text-gray-300 dark:text-gray-700" fill="currentColor">
+              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+            <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{L.noArticles}</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {articles.map((article) => (
+              <div
+                key={article.id}
+                className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-xl dark:border-gray-800 dark:bg-gray-950"
+              >
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-red-500/10 to-orange-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                <div className="relative">
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold dark:bg-gray-800">
+                    <span className={`h-2 w-2 rounded-full ${article.status === 'published' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                    {article.status === 'published' ? L.published : L.draft}
+                  </div>
+                  <h3 className="mb-4 text-xl font-bold text-black dark:text-white line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/article/${article.slug}`}
+                      className="flex-1 rounded-lg border-2 border-gray-200 px-3 py-2 text-center text-sm font-semibold transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-900"
+                    >
+                      {L.viewArticle}
+                    </Link>
+                    <Link
+                      to={`/dashboard/articles/edit?id=${article.id}`}
+                      className="flex-1 rounded-lg bg-gradient-to-r from-gray-700 to-gray-600 px-3 py-2 text-center text-sm font-semibold text-white transition hover:from-gray-600 hover:to-gray-500"
+                    >
+                      {L.editArticle}
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteArticle(article.id, article.title)}
+                      className="rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:from-red-700 hover:to-red-800"
+                      title={L.delete || 'Delete'}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Section Podcasts */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-black dark:text-white">{L.myPodcasts}</h2>
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
+              <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="currentColor">
+                <path d="M12 2a9 9 0 0 0-9 9v7.5A2.5 2.5 0 0 0 5.5 21h1a2.5 2.5 0 0 0 2.5-2.5V15a2.5 2.5 0 0 0-2.5-2.5h-.5v-1A7 7 0 0 1 19 11.5v1h-.5A2.5 2.5 0 0 0 16 15v3.5a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 0 2.5-2.5V11a9 9 0 0 0-9-9z"/>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-black dark:text-white">{L.myPodcasts}</h2>
+          </div>
           <div className="flex gap-3">
             {!editing && podcasts.length > 0 && (
               <button
                 onClick={handleImportAll}
                 disabled={importing}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
                   <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
@@ -346,10 +515,10 @@ export default function Dashboard() {
                 {importing ? L.importing : L.importAll}
               </button>
             )}
-            {!editing && podcasts.length < 3 && (
+            {!editing && podcasts.length < 3 && isCreator() && (
               <button
                 onClick={handleAdd}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z" />

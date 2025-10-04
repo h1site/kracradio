@@ -3,7 +3,6 @@ import React from 'react';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 
-const RED = '#E50914';
 const LOGO_ZIP_URL =
   'https://www.dropbox.com/scl/fi/n0hat7f6m2k9p1rbo5j5l/package.zip?rlkey=yscogkwugmuyvma79n6pt71pv&st=7ztg6xkg&dl=0';
 
@@ -11,7 +10,7 @@ export default function Contact() {
   const { t, lang } = useI18n();
 
   return (
-    <main className="container-max px-5 pb-5">
+    <main className="container-max pr-[30px]">
       <Seo
         lang={lang}
         title={t.meta.contactTitle}
@@ -20,16 +19,20 @@ export default function Contact() {
         type="website"
       />
 
-      {/* Titre */}
-      <h1 className="text-2xl font-extrabold mb-4 pt-14">
-        {t.contact.title}
-      </h1>
+      <header className="pb-12">
+        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+          Contact
+        </span>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
+          {t.contact.title}
+        </h1>
+      </header>
 
       {/* Grille 2 colonnes (1 sur mobile) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Colonne gauche — Infos */}
-        <section className="card dark:bg-[#1e1e1e] p-4">
-          <h2 className="text-lg font-semibold mb-3" style={{ color: RED }}>
+        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          <h2 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">
             {t.contact.infoTitle}
           </h2>
 
@@ -73,30 +76,30 @@ export default function Contact() {
         {/* Colonne droite — Blocs */}
         <section className="lg:col-span-2 space-y-5">
           {/* Envoyer musique */}
-          <div className="card dark:bg-[#1e1e1e] p-4">
-            <h2 className="text-lg font-semibold mb-2">{t.contact.sendMusic.title}</h2>
-            <p className="text-sm mb-1">
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h2 className="text-lg font-semibold mb-2 text-black dark:text-white">{t.contact.sendMusic.title}</h2>
+            <p className="text-sm mb-1 text-gray-700 dark:text-gray-300">
               {t.contact.sendMusic.desc1}{' '}
-              <a href={`mailto:${t.contact.email}`} className="underline">{t.contact.email}</a>
+              <a href={`mailto:${t.contact.email}`} className="underline text-red-600 dark:text-red-400">{t.contact.email}</a>
             </p>
-            <p className="text-sm opacity-90">{t.contact.sendMusic.desc2}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t.contact.sendMusic.desc2}</p>
           </div>
 
           {/* Commandite */}
-          <div className="card dark:bg-[#1e1e1e] p-4">
-            <h2 className="text-lg font-semibold mb-2">{t.contact.sponsor.title}</h2>
-            <p className="text-sm mb-1">
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h2 className="text-lg font-semibold mb-2 text-black dark:text-white">{t.contact.sponsor.title}</h2>
+            <p className="text-sm mb-1 text-gray-700 dark:text-gray-300">
               {t.contact.sponsor.desc1}{' '}
-              <a href={`mailto:${t.contact.email}`} className="underline">{t.contact.email}</a>
+              <a href={`mailto:${t.contact.email}`} className="underline text-red-600 dark:text-red-400">{t.contact.email}</a>
             </p>
-            <p className="text-sm opacity-90">{t.contact.sponsor.desc2}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t.contact.sponsor.desc2}</p>
           </div>
 
           {/* Don */}
-          <div className="card dark:bg-[#1e1e1e] p-4">
-            <h2 className="text-lg font-semibold mb-2">{t.contact.donation.title}</h2>
-            <p className="text-sm opacity-90 mb-3">{t.contact.donation.desc1}</p>
-            <p className="text-sm opacity-90 mb-4">{t.contact.donation.desc2}</p>
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h2 className="text-lg font-semibold mb-2 text-black dark:text-white">{t.contact.donation.title}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{t.contact.donation.desc1}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t.contact.donation.desc2}</p>
             <a
               href="https://www.paypal.com/donate/?hosted_button_id=GUPL4K5WR3ZG4"
               target="_blank" rel="noopener noreferrer"
@@ -107,15 +110,14 @@ export default function Contact() {
           </div>
 
           {/* Logos / Branding */}
-          <div className="card dark:bg-[#1e1e1e] p-4">
-            <h2 className="text-lg font-semibold mb-2">{t.contact.brand.title}</h2>
-            <p className="text-sm opacity-90 mb-4">{t.contact.brand.desc}</p>
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h2 className="text-lg font-semibold mb-2 text-black dark:text-white">{t.contact.brand.title}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t.contact.brand.desc}</p>
             <a
               href={LOGO_ZIP_URL}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl border border-black/15 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition"
             >
-              {/* icône téléchargement simple */}
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true">
                 <path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7Z"/>
               </svg>

@@ -60,7 +60,9 @@ export function AudioPlayerProvider({ children }) {
   }, []);
 
   const togglePlay = async () => {
-    if (!current) return;
+    // Autoriser toggle pour radio (current) ou podcast (podcastMeta)
+    if (!current && currentType !== 'podcast') return;
+
     const a = audioRef.current;
     if (a.paused) {
       try {
@@ -199,6 +201,19 @@ export function AudioPlayerProvider({ children }) {
     await playStream(ch, opts);
   };
 
+  /**
+   * Seek to a specific time in seconds (pour podcasts)
+   */
+  const seek = (timeInSeconds) => {
+    const a = audioRef.current;
+    if (!a || isNaN(timeInSeconds)) return;
+
+    // Clamp entre 0 et duration
+    const targetTime = Math.max(0, Math.min(timeInSeconds, a.duration || 0));
+    a.currentTime = targetTime;
+    console.log('[AudioPlayer] Seeked to:', targetTime);
+  };
+
   const value = useMemo(
     () => ({
       audio: audioRef.current,
@@ -212,6 +227,7 @@ export function AudioPlayerProvider({ children }) {
       playStream,
       playChannel,
       playPodcast,
+      seek,
       setCurrent
     }),
     [current, currentType, podcastMeta, playing, volume]

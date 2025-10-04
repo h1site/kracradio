@@ -248,11 +248,6 @@ export default function PodcastDetail() {
             {podcast.author && (
               <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">{podcast.author}</p>
             )}
-            {podcast.description && (
-              <p className="mt-4 text-base leading-relaxed text-gray-700 dark:text-gray-300">
-                {podcast.description}
-              </p>
-            )}
 
             <div className="mt-6 flex flex-wrap gap-4">
               {podcast.website_url && (
@@ -282,6 +277,14 @@ export default function PodcastDetail() {
                 </a>
               )}
             </div>
+
+            {podcast.description && (
+              <div className="mt-6 rounded-xl bg-gray-50 p-4 dark:bg-gray-900/50">
+                <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300">
+                  {podcast.description}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

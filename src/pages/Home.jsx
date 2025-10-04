@@ -75,7 +75,7 @@ export default function Home() {
   const isKracPlaying = playing && current?.key === KRAC_KEY;
 
   return (
-    <div className="page-scroll">
+    <div className="page-scroll -mt-5">
       <Seo
         lang={lang}
         title={t.meta?.homeTitle}
@@ -86,7 +86,7 @@ export default function Home() {
       />
 
       {/* HERO */}
-      <section className="w-full px-0 bg-[#000] pb-0">
+      <section className="w-full px-0 pb-0">
         <div className="relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
             {/* Bloc 1 — En lecture */}

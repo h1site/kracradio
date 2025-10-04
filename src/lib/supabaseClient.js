@@ -13,3 +13,8 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Export Supabase URL for audio proxy
+export const SUPABASE_FUNCTIONS_URL = SUPABASE_URL
+  ? `${SUPABASE_URL}/functions/v1`
+  : null;
