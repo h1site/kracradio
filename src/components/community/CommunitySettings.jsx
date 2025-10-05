@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/useCommunity';
+import { supabase } from '../../lib/supabase';
 
 export default function CommunitySettings() {
   const { user } = useAuth();
@@ -18,6 +19,8 @@ export default function CommunitySettings() {
 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [slugPreview, setSlugPreview] = useState('');
+  const [slugStatus, setSlugStatus] = useState(null); // 'available', 'taken', 'checking'
+  const [slugError, setSlugError] = useState('');
 
   // Charger les settings du profil
   useEffect(() => {
@@ -45,15 +48,84 @@ export default function CommunitySettings() {
       .replace(/^_|_$/g, ''); // Retire _ début/fin
   };
 
+  // Vérifier la disponibilité du slug
+  const checkSlugAvailability = async (slug) => {
+    if (!slug || slug.length < 3) {
+      setSlugStatus(null);
+      setSlugError('Le nom d\'artiste doit contenir au moins 3 caractères');
+      return;
+    }
+
+    // Si c'est le slug actuel de l'utilisateur, pas besoin de vérifier
+    if (slug === profile?.artist_slug) {
+      setSlugStatus('available');
+      setSlugError('');
+      return;
+    }
+
+    setSlugStatus('checking');
+    setSlugError('');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('artist_slug', slug)
+        .limit(1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setSlugStatus('taken');
+        setSlugError('Ce nom d\'artiste est déjà pris');
+      } else {
+        setSlugStatus('available');
+        setSlugError('');
+      }
+    } catch (error) {
+      console.error('Error checking slug:', error);
+      setSlugStatus(null);
+      setSlugError('Erreur lors de la vérification');
+    }
+  };
+
   const handleSlugChange = (e) => {
     const slug = generateSlug(e.target.value);
     setSettings(prev => ({ ...prev, artist_slug: slug }));
     setSlugPreview(slug);
+
+    // Vérifier la disponibilité après un petit délai (debounce)
+    if (slug) {
+      setTimeout(() => checkSlugAvailability(slug), 500);
+    } else {
+      setSlugStatus(null);
+      setSlugError('');
+    }
   };
 
   const handleTogglePublic = async () => {
     try {
       const newValue = !settings.is_public;
+
+      // Si on veut rendre le profil public, vérifier que le slug est valide
+      if (newValue && (!settings.artist_slug || settings.artist_slug.length < 3)) {
+        setMessage({
+          type: 'error',
+          text: '❌ Vous devez définir un nom d\'artiste (min. 3 caractères) pour rendre votre profil public'
+        });
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+        return;
+      }
+
+      if (newValue && slugStatus === 'taken') {
+        setMessage({
+          type: 'error',
+          text: '❌ Le nom d\'artiste choisi est déjà pris. Veuillez en choisir un autre.'
+        });
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+        return;
+      }
+
       await updateProfile(user.id, { is_public: newValue });
       setSettings(prev => ({ ...prev, is_public: newValue }));
 
@@ -208,20 +280,49 @@ export default function CommunitySettings() {
         {/* Nom d'artiste / Slug */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            🎤 Nom d'artiste (pour URL publique)
+            🎤 Nom d'artiste (pour URL publique) {settings.is_public && <span className="text-red-500">*</span>}
           </label>
-          <input
-            type="text"
-            value={settings.artist_slug}
-            onChange={handleSlugChange}
-            placeholder="mon_nom_artiste"
-            className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
-                     text-text-primary placeholder-text-secondary
-                     focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-          {slugPreview && (
-            <div className="mt-2 p-3 bg-accent/10 rounded-lg border border-accent/20">
-              <p className="text-sm text-text-secondary">
+          <div className="relative">
+            <input
+              type="text"
+              value={settings.artist_slug}
+              onChange={handleSlugChange}
+              placeholder="mon_nom_artiste"
+              className={`w-full px-4 py-2 pr-10 bg-bg-tertiary border rounded-lg
+                       text-text-primary placeholder-text-secondary
+                       focus:outline-none focus:ring-2 focus:ring-accent
+                       ${slugStatus === 'available' ? 'border-green-500' : ''}
+                       ${slugStatus === 'taken' ? 'border-red-500' : 'border-border'}`}
+            />
+            {/* Indicateur de statut */}
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {slugStatus === 'checking' && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent"></div>
+              )}
+              {slugStatus === 'available' && (
+                <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              )}
+              {slugStatus === 'taken' && (
+                <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+          </div>
+          {/* Messages d'erreur */}
+          {slugError && (
+            <p className="text-xs text-red-500 mt-1">
+              {slugError}
+            </p>
+          )}
+          {slugStatus === 'available' && slugPreview && (
+            <div className="mt-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <p className="text-sm text-green-400 flex items-center gap-2">
+                ✓ Nom d'artiste disponible
+              </p>
+              <p className="text-xs text-text-secondary mt-1">
                 🔗 Votre URL publique:
               </p>
               <p className="text-accent font-mono text-sm mt-1">
@@ -229,9 +330,11 @@ export default function CommunitySettings() {
               </p>
             </div>
           )}
-          <p className="text-xs text-text-secondary mt-1">
-            Les espaces seront remplacés par des underscores (_)
-          </p>
+          {!slugError && (
+            <p className="text-xs text-text-secondary mt-1">
+              Les espaces seront remplacés par des underscores (_). Minimum 3 caractères.
+            </p>
+          )}
         </div>
 
         {/* Bio */}

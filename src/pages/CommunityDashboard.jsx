@@ -60,7 +60,7 @@ export default function CommunityDashboard() {
               {t.community.viewProfile}
             </button>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/settings')}
               className="px-4 py-2 bg-bg-secondary hover:bg-bg-tertiary border border-border rounded-lg text-text-primary font-medium transition-colors flex items-center gap-2"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">

@@ -51,7 +51,7 @@ export default function App() {
 
   const mainStyle = {
     paddingTop: isFullWidth ? '0px' : '20px',
-    paddingLeft: isFullWidth ? '0px' : '30px',
+    paddingLeft: isFullWidth ? '0px' : (isDesktop ? '30px' : '0px'),
     paddingBottom: PLAYER_H,
     marginLeft: isFullWidth ? 0 : (isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0),
     transition: 'margin-left 300ms ease',
@@ -81,6 +81,15 @@ export default function App() {
           {/* Profil personnel (protégé, route exacte) */}
           <Route
             path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          {/* Alias /settings vers /profile */}
+          <Route
+            path="/settings"
             element={
               <ProtectedRoute>
                 <Profile />

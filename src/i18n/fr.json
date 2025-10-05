@@ -329,18 +329,28 @@
     }
   },
   "publicProfile": {
-    "settings": "Settings",
+    "settings": "Paramètres",
     "message": "Message",
-    "followers": "Followers",
-    "following": "Following",
-    "joined": "Joined",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "joined": "Membre depuis",
     "privateProfile": "Profil privé",
     "privateProfileDesc": "Ce profil n'est visible que par les connexions de l'artiste",
     "notFound": "Profil introuvable",
     "error": "Erreur",
     "errorResolving": "Erreur lors de la résolution du profil",
     "slugSearched": "Slug recherché:",
-    "noSlug": "Aucun profil avec le slug:"
+    "noSlug": "Aucun profil avec le slug:",
+    "posts": "Posts",
+    "blog": "Blog",
+    "podcasts": "Podcasts",
+    "connections": "Connexions",
+    "blogContent": "Les articles de blog de {username}",
+    "podcastsContent": "Les podcasts de {username}",
+    "connectionsContent": "{count} connexions",
+    "postsContent": "Les posts de {username} apparaîtront ici",
+    "toImplement": "À implémenter - Phase 3",
+    "toConnect": "À connecter avec {type} existants"
   },
   "artists": {
     "title": "Artistes",

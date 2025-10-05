@@ -340,7 +340,17 @@
     "error": "Error",
     "errorResolving": "Error resolving profile",
     "slugSearched": "Slug searched:",
-    "noSlug": "No profile with slug:"
+    "noSlug": "No profile with slug:",
+    "posts": "Posts",
+    "blog": "Blog",
+    "podcasts": "Podcasts",
+    "connections": "Connections",
+    "blogContent": "{username}'s blog articles",
+    "podcastsContent": "{username}'s podcasts",
+    "connectionsContent": "{count} connections",
+    "postsContent": "{username}'s posts will appear here",
+    "toImplement": "To implement - Phase 3",
+    "toConnect": "To connect with existing {type}"
   },
   "artists": {
     "title": "Artists",
