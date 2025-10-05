@@ -203,7 +203,7 @@ export default function PlayerBar() {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={togglePlay}
-            className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition"
+            className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0"
             aria-label={playing ? 'Pause' : 'Play'}
             title={playing ? 'Pause' : 'Play'}
           >
@@ -225,7 +225,7 @@ export default function PlayerBar() {
         </div>
 
         {/* Bloc 6 — Progress + Temps + Like / Settings / Share / Volume */}
-        <div className="flex items-center gap-3 min-w-[360px] justify-end pr-2">
+        <div className="flex items-center gap-3 min-w-[360px]" style={{ paddingRight: '40px' }}>
           <div className="text-xs tabular-nums opacity-80 w-12 text-right">{mmss(elapsed)}</div>
           <div className="w-56">
             <div

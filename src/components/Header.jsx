@@ -4,15 +4,20 @@ import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../hooks/useCommunity';
 import MobileMenu from './MobileMenu';
 
 export default function Header() {
   const { t, lang, setLang } = useI18n();
   const { isDark, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { profile } = useProfile(user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+
+  // Lien du profil: si slug configuré → profil public, sinon → dashboard perso
+  const profileLink = profile?.artist_slug ? `/profile/${profile.artist_slug}` : '/profile';
 
   return (
     <>
@@ -71,7 +76,7 @@ export default function Header() {
             ) : (
               <>
                 <Link
-                  to="/profile"
+                  to={profileLink}
                   className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
                 >
                   {t?.nav?.profile ?? 'Profil'}

@@ -34,6 +34,8 @@ import Profile from '../pages/Profile';
 import MyArticles from '../pages/MyArticles';
 import AdminPanel from '../pages/AdminPanel';
 import PodcastEditor from '../pages/PodcastEditor';
+import CommunityDashboard from '../pages/CommunityDashboard';
+import PublicProfile from '../pages/PublicProfile';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -76,7 +78,7 @@ export default function App() {
           <Route path="/auth/register" element={<AuthRegister />} />
           <Route path="/auth/confirm-email" element={<AuthConfirmEmail />} />
 
-          {/* Profil & dashboard (protégés) */}
+          {/* Profil personnel (protégé, route exacte) */}
           <Route
             path="/profile"
             element={
@@ -85,6 +87,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Profil public par slug/username (après /profile exacte) */}
+          <Route path="/profile/:username" element={<PublicProfile />} />
           <Route
             path="/dashboard/articles/mine"
             element={
@@ -139,6 +144,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <CommunityDashboard />
               </ProtectedRoute>
             }
           />
