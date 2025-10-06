@@ -316,7 +316,7 @@ export default function About() {
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
 
   return (
-    <main className="container-max pr-[30px]">
+    <main className="container-max pr-[30px] pl-[20px]">
       <Seo
         lang={lang}
         title={L.metaTitle}

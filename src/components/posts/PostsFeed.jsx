@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n';
 import PostCard from './PostCard';
 import CreatePost from './CreatePost';
 
 export default function PostsFeed({ userId = null, showCreatePost = true }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,12 +80,12 @@ export default function PostsFeed({ userId = null, showCreatePost = true }) {
         setPosts(postsWithData);
       }
     } catch (err) {
-      console.error('Erreur chargement posts:', err);
+      console.error(t.posts?.feed?.loadingError || 'Erreur lors du chargement des posts:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [userId, user]);
+  }, [userId, user, t]);
 
   useEffect(() => {
     loadPosts();
@@ -108,12 +110,12 @@ export default function PostsFeed({ userId = null, showCreatePost = true }) {
   if (error) {
     return (
       <div className="text-center py-12 text-red-500">
-        <p>Erreur: {error}</p>
+        <p>{t.posts?.feed?.loadingError || 'Erreur'}: {error}</p>
         <button
           onClick={loadPosts}
           className="mt-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
         >
-          Réessayer
+          {t.posts?.feed?.retry || 'Réessayer'}
         </button>
       </div>
     );
@@ -130,9 +132,9 @@ export default function PostsFeed({ userId = null, showCreatePost = true }) {
       {posts.length === 0 ? (
         <div className="text-center py-12 text-text-secondary">
           <div className="text-6xl mb-4">📝</div>
-          <p>Aucun post pour le moment</p>
+          <p>{t.posts?.feed?.noPosts || 'Aucun post pour le moment'}</p>
           {showCreatePost && user && (
-            <p className="text-sm mt-2">Soyez le premier à publier !</p>
+            <p className="text-sm mt-2">{t.posts?.feed?.startConversation || 'Soyez le premier à publier !'}</p>
           )}
         </div>
       ) : (

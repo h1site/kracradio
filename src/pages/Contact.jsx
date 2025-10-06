@@ -10,7 +10,7 @@ export default function Contact() {
   const { t, lang } = useI18n();
 
   return (
-    <main className="container-max pr-[30px]">
+    <main className="container-max pr-[30px] pl-[20px]">
       <Seo
         lang={lang}
         title={t.meta.contactTitle}

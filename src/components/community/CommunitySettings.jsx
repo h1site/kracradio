@@ -149,6 +149,10 @@ export default function CommunitySettings() {
   const handleSaveSettings = async (e) => {
     e.preventDefault();
 
+    // Sauvegarder l'ancien slug pour vérifier s'il a changé
+    const oldSlug = profile?.artist_slug;
+    const slugChanged = oldSlug !== settings.artist_slug;
+
     try {
       await updateProfile(user.id, {
         artist_slug: settings.artist_slug,
@@ -161,14 +165,22 @@ export default function CommunitySettings() {
       await refetch();
 
       setMessage({ type: 'success', text: '✅ Paramètres enregistrés avec succès' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+
+      // Si le slug a changé, rafraîchir la page après un court délai
+      if (slugChanged) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
     } catch (error) {
       setMessage({ type: 'error', text: `❌ Erreur: ${error.message}` });
     }
   };
 
   const addGenre = (genre) => {
-    if (genre && !settings.genres.includes(genre) && settings.genres.length < 5) {
+    if (genre && !settings.genres.includes(genre) && settings.genres.length < 3) {
       setSettings(prev => ({ ...prev, genres: [...prev.genres, genre] }));
     }
   };
@@ -376,7 +388,7 @@ export default function CommunitySettings() {
         {/* Genres musicaux */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            🎵 Genres musicaux (max 5)
+            🎵 Genres musicaux (max 3)
           </label>
 
           {/* Tags sélectionnés */}
@@ -398,22 +410,208 @@ export default function CommunitySettings() {
             ))}
           </div>
 
-          {/* Suggestions de genres */}
-          {settings.genres.length < 5 && (
-            <div className="flex flex-wrap gap-2">
-              {['Hip-Hop', 'Rap', 'R&B', 'Rock', 'Jazz', 'Électro', 'Pop', 'Indie', 'Metal', 'Reggae']
-                .filter(g => !settings.genres.includes(g))
-                .map(genre => (
-                  <button
-                    key={genre}
-                    type="button"
-                    onClick={() => addGenre(genre)}
-                    className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                             hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                  >
-                    + {genre}
-                  </button>
-                ))}
+          {/* Suggestions de genres organisées par catégorie */}
+          {settings.genres.length < 3 && (
+            <div className="space-y-4">
+              {/* Musiques urbaines */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎤 Musiques urbaines</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Hip-Hop', 'Rap', 'Trap', 'Drill', 'R&B', 'Soul', 'Funk', 'Neo-Soul']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Musiques Rock et alternatives */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎸 Musiques Rock et alternatives</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Rock', 'Hard Rock', 'Punk', 'Grunge', 'Indie', 'Alternative Rock', 'Garage Rock', 'Progressive Rock', 'Psychedelic Rock']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Musiques électroniques */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎧 Musiques électroniques</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Électro', 'House', 'Techno', 'Trance', 'Drum & Bass', 'Dubstep', 'Chillwave / Lo-Fi', 'Industrial / EBM', 'Synthwave']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Jazz, Blues et dérivés */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎷 Jazz, Blues et dérivés</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Jazz', 'Smooth Jazz', 'Blues', 'Swing', 'Funk-Jazz / Fusion', 'Bebop']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Pop et dérivés */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎵 Pop et dérivés</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Pop', 'Electro-Pop', 'Dream Pop', 'K-Pop / J-Pop / C-Pop', 'Dance Pop', 'Synth Pop']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Métal et ses branches */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🤘 Métal et ses branches</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Metal', 'Heavy Metal', 'Thrash Metal', 'Death Metal', 'Black Metal', 'Doom Metal', 'Metalcore', 'Industrial Metal']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Reggae et musiques tropicales */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🌴 Reggae et musiques tropicales</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Reggae', 'Dub', 'Ska', 'Dancehall', 'Calypso', 'Soca', 'Afrobeat']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Musiques classiques et instrumentales */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎻 Musiques classiques et instrumentales</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Classique', 'Opéra', 'Baroque', 'Symphonique', 'Instrumental', 'Film Score / Soundtrack']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Musiques du monde */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">🌍 Musiques du monde</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Latin', 'Salsa', 'Bachata', 'Flamenco', 'Oriental / Arabe', 'Musique Africaine', 'Celtic / Folk', 'Country', 'Bluegrass']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Musiques modernes et hybrides */}
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary mb-2">💻 Musiques modernes et hybrides</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Lo-Fi', 'Chillout', 'Ambient', 'Experimental', 'Post-Rock', 'Alternative Electronic']
+                    .filter(g => !settings.genres.includes(g))
+                    .map(genre => (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => addGenre(genre)}
+                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
+                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
+                      >
+                        + {genre}
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

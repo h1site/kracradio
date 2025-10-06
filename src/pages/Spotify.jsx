@@ -115,7 +115,7 @@ export default function SpotifyPage() {
   const embedSrc = selected ? toSpotifyEmbedSrc(selected.url) : '';
 
   return (
-    <main className="container-max pr-[30px]">
+    <main className="container-max pr-[30px] pl-[20px]">
       <Seo
         lang={lang}
         title={`${L.title} — KracRadio`}

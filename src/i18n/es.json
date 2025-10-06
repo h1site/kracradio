@@ -25,7 +25,28 @@
     "moreInfo": "Más info",
     "nowOnKrac": "Ahora en KracRadio",
     "listenCta": "Escuchar",
-    "viewScheduleCta": "Ver nuestro horario"
+    "viewScheduleCta": "Ver nuestro horario",
+    "joinCommunity": "Únete a la comunidad",
+    "shareMusic": "Comparte tu música",
+    "shareMusicDesc": "Difunde tus creaciones y conéctate con fans",
+    "createPodcast": "Crea tu podcast",
+    "createPodcastDesc": "Lanza tu programa y aumenta tu audiencia",
+    "publishArticles": "Publica tus artículos",
+    "publishArticlesDesc": "Comparte tus ideas e historias con la comunidad",
+    "interact": "Interactúa en tiempo real",
+    "interactDesc": "Comenta, dale me gusta y sigue a tus artistas favoritos",
+    "createAccountCta": "Crear cuenta gratis",
+    "latestPosts": "Últimas publicaciones",
+    "noPosts": "No hay publicaciones aún",
+    "viewAllPosts": "Ver todas las publicaciones",
+    "latestArticle": "Último artículo",
+    "noArticle": "No hay artículos aún",
+    "readArticle": "Leer artículo",
+    "allBlogs": "Todos los blogs",
+    "podcastOfDay": "Podcast del día",
+    "noPodcast": "No hay podcasts aún",
+    "discover": "Descubrir",
+    "allPodcasts": "Todos los podcasts"
   },
   "meta": {
     "homeTitle": "Escucha la mejor radio independiente en línea",
@@ -56,7 +77,21 @@
     "noAccount": "¿No tienes cuenta?",
     "already": "¿Ya tienes cuenta?",
     "or": "o",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "resetPasswordDesc": "Ingresa tu dirección de email para recibir un enlace de restablecimiento.",
+    "sendResetLink": "Enviar enlace",
+    "resetPasswordSent": "¡Email enviado!",
+    "resetPasswordSentDesc": "Revisa tu bandeja de entrada y haz clic en el enlace para restablecer tu contraseña.",
+    "backToLogin": "Volver al inicio de sesión",
+    "updatePassword": "Actualizar contraseña",
+    "updatePasswordDesc": "Elige una nueva contraseña para tu cuenta.",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordUpdated": "¡Contraseña actualizada con éxito!"
   },
   "articles": {
     "title": "Artículos",
@@ -247,7 +282,10 @@
     "title": "Horario",
     "noData": "Horario no disponible vía la API. Usa el enlace de la página pública arriba.",
     "rotation24": "Rotación musical 24/7 (sin programación horaria específica).",
-    "viewPublic": "Ver horario completo"
+    "viewPublic": "Ver horario completo",
+    "nowPlaying": "En reproducción",
+    "upNext": "Próximo",
+    "otherAreRotation": "Los otros canales especializados están en rotación musical 24/7."
   },
   "common": {
     "loading": "Cargando…"
@@ -350,11 +388,45 @@
     "connectionsContent": "{count} conexiones",
     "postsContent": "Los posts de {username} aparecerán aquí",
     "toImplement": "Por implementar - Fase 3",
-    "toConnect": "Por conectar con {type} existentes"
+    "toConnect": "Por conectar con {type} existentes",
+    "verifiedArtist": "Artista verificado",
+    "openOn": "Abrir en",
+    "author": "Autor"
   },
   "artists": {
     "title": "Artistas",
     "noArtists": "Aún no hay artistas",
     "noArtistsDesc": "Los artistas públicos aparecerán aquí"
+  },
+  "posts": {
+    "createPost": {
+      "placeholder": "¿Qué está pasando?",
+      "replyPlaceholder": "Escribe tu respuesta...",
+      "replyingTo": "En respuesta a",
+      "addMedia": "Agregar imágenes/videos",
+      "maxFilesError": "Máximo {max} archivos",
+      "postRequired": "La publicación debe contener texto o medios",
+      "uploadError": "Error de carga:",
+      "publishing": "Publicando...",
+      "publish": "Publicar",
+      "reply": "Responder"
+    },
+    "postCard": {
+      "justNow": "Justo ahora",
+      "deleteConfirm": "¿Eliminar esta publicación?",
+      "deleteError": "Error al eliminar",
+      "deleteReplyConfirm": "¿Eliminar esta respuesta?",
+      "likeError": "Error de me gusta:",
+      "repostError": "Error de republicar:",
+      "viewReplies": "Ver respuestas",
+      "hideReplies": "Ocultar respuestas",
+      "delete": "Eliminar"
+    },
+    "feed": {
+      "noPosts": "No hay publicaciones aún",
+      "startConversation": "¡Sé el primero en publicar!",
+      "loadingError": "Error al cargar publicaciones",
+      "retry": "Reintentar"
+    }
   }
 }

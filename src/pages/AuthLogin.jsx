@@ -73,7 +73,15 @@ export default function AuthLogin() {
           </label>
 
           <label className="block">
-            <span className="text-sm opacity-80">{T.password || 'Password'}</span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm opacity-80">{T.password || 'Password'}</span>
+              <Link
+                to="/auth/reset-password"
+                className="text-xs text-accent hover:text-accent-hover hover:underline"
+              >
+                {T.forgotPassword || 'Mot de passe oublié?'}
+              </Link>
+            </div>
             <input
               type="password"
               required

@@ -22,10 +22,31 @@
   "home": {
     "channelsHeading": "Nos Chaînes Musicales",
     "channelBadge": "Chaîne",
-    "moreInfo": "Plus d’infos",
+    "moreInfo": "Plus d'infos",
     "nowOnKrac": "Présentement sur KracRadio",
     "listenCta": "Écouter",
-    "viewScheduleCta": "Consulter notre horaire"
+    "viewScheduleCta": "Consulter notre horaire",
+    "joinCommunity": "Rejoignez la communauté",
+    "shareMusic": "Partagez votre musique",
+    "shareMusicDesc": "Diffusez vos créations et connectez-vous avec des fans",
+    "createPodcast": "Créez votre podcast",
+    "createPodcastDesc": "Lancez votre émission et développez votre audience",
+    "publishArticles": "Publiez vos articles",
+    "publishArticlesDesc": "Partagez vos idées et histoires avec la communauté",
+    "interact": "Interagissez en temps réel",
+    "interactDesc": "Commentez, aimez et suivez vos artistes préférés",
+    "createAccountCta": "Créer un compte gratuitement",
+    "latestPosts": "Derniers posts",
+    "noPosts": "Aucun post pour le moment",
+    "viewAllPosts": "Voir tous les posts",
+    "latestArticle": "Dernier article",
+    "noArticle": "Aucun article pour le moment",
+    "readArticle": "Lire l'article",
+    "allBlogs": "Tous les blogs",
+    "podcastOfDay": "Podcast du jour",
+    "noPodcast": "Aucun podcast pour le moment",
+    "discover": "Découvrir",
+    "allPodcasts": "Tous les podcasts"
   },
   "meta": {
     "homeTitle": "Écoute la meilleure radio indépendante en ligne",
@@ -56,7 +77,21 @@
     "noAccount": "Pas de compte ?",
     "already": "Déjà inscrit ?",
     "or": "ou",
-    "submit": "Valider"
+    "submit": "Valider",
+    "forgotPassword": "Mot de passe oublié?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordDesc": "Entrez votre adresse email pour recevoir un lien de réinitialisation.",
+    "sendResetLink": "Envoyer le lien",
+    "resetPasswordSent": "Email envoyé!",
+    "resetPasswordSentDesc": "Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.",
+    "backToLogin": "Retour à la connexion",
+    "updatePassword": "Mettre à jour le mot de passe",
+    "updatePasswordDesc": "Choisissez un nouveau mot de passe pour votre compte.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "passwordUpdated": "Mot de passe mis à jour avec succès!"
   },
   "articles": {
     "title": "Articles",
@@ -245,9 +280,12 @@
   },
   "schedule": {
     "title": "Horaire",
-    "noData": "Horaire non disponible via l’API. Utilisez le lien ci-dessus pour la page publique.",
+    "noData": "Horaire non disponible via l'API. Utilisez le lien ci-dessus pour la page publique.",
     "rotation24": "Rotation musicale 24/24 (sans programmation horaire spécifique).",
-    "viewPublic": "Voir l’horaire complet"
+    "viewPublic": "Voir l'horaire complet",
+    "nowPlaying": "En lecture",
+    "upNext": "À suivre",
+    "otherAreRotation": "Les autres chaînes spécialisées sont en rotation musicale 24/7."
   },
   "common": {
     "loading": "Chargement…"
@@ -350,11 +388,45 @@
     "connectionsContent": "{count} connexions",
     "postsContent": "Les posts de {username} apparaîtront ici",
     "toImplement": "À implémenter - Phase 3",
-    "toConnect": "À connecter avec {type} existants"
+    "toConnect": "À connecter avec {type} existants",
+    "verifiedArtist": "Artiste vérifié",
+    "openOn": "Ouvrir sur",
+    "author": "Auteur"
   },
   "artists": {
     "title": "Artistes",
     "noArtists": "Aucun artiste pour le moment",
     "noArtistsDesc": "Les artistes publics apparaîtront ici"
+  },
+  "posts": {
+    "createPost": {
+      "placeholder": "Quoi de neuf ?",
+      "replyPlaceholder": "Écrivez votre réponse...",
+      "replyingTo": "En réponse à",
+      "addMedia": "Ajouter des images/vidéos",
+      "maxFilesError": "Maximum {max} fichiers",
+      "postRequired": "Le post doit contenir du texte ou des médias",
+      "uploadError": "Erreur upload:",
+      "publishing": "Publication...",
+      "publish": "Publier",
+      "reply": "Répondre"
+    },
+    "postCard": {
+      "justNow": "À l'instant",
+      "deleteConfirm": "Supprimer ce post ?",
+      "deleteError": "Erreur lors de la suppression",
+      "deleteReplyConfirm": "Supprimer cette réponse ?",
+      "likeError": "Erreur like:",
+      "repostError": "Erreur repost:",
+      "viewReplies": "Voir les réponses",
+      "hideReplies": "Masquer les réponses",
+      "delete": "Supprimer"
+    },
+    "feed": {
+      "noPosts": "Aucun post pour le moment",
+      "startConversation": "Soyez le premier à publier !",
+      "loadingError": "Erreur lors du chargement des posts",
+      "retry": "Réessayer"
+    }
   }
 }

@@ -80,7 +80,7 @@ export default function Schedule() {
   }, [lang]);
 
   return (
-    <div className="min-h-screen pl-[30px]">
+    <div className="min-h-screen pl-[30px] ">
       {/* En-tête */}
       <div className="pb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -103,8 +103,8 @@ export default function Schedule() {
         </h2>
       </div>
 
-      {/* Grille 4 colonnes x 3 rangées */}
-      <div className="grid grid-cols-4 grid-rows-3 gap-4 pb-6 pr-[30px]">
+      {/* Grille 4 colonnes x 3 rangées (desktop) / 1 colonne (mobile) */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 sm:grid-rows-3 gap-4 pb-6 pr-[30px]">
         {segments.map((it) => {
           const isCurrent = current?.id === it.id;
           const isNext = next?.id === it.id;
@@ -127,7 +127,7 @@ export default function Schedule() {
                 {isCurrent && (
                   <div className="absolute top-4 right-4">
                     <span className="inline-block px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase">
-                      En lecture
+                      {t?.schedule?.nowPlaying || 'En lecture'}
                     </span>
                   </div>
                 )}
@@ -135,7 +135,7 @@ export default function Schedule() {
                 {isNext && !isCurrent && (
                   <div className="absolute top-4 right-4">
                     <span className="inline-block px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold uppercase">
-                      À suivre
+                      {t?.schedule?.upNext || 'À suivre'}
                     </span>
                   </div>
                 )}

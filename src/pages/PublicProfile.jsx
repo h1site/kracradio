@@ -144,11 +144,11 @@ export default function PublicProfile() {
     return (
       <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-text-primary mb-4">❌ Erreur</h1>
-          <p className="text-text-secondary mb-2">Erreur lors de la résolution du profil</p>
+          <h1 className="text-4xl font-bold text-text-primary mb-4">❌ {t.publicProfile?.error || 'Erreur'}</h1>
+          <p className="text-text-secondary mb-2">{t.publicProfile?.errorResolving || 'Erreur lors de la résolution du profil'}</p>
           <p className="text-red-400 text-sm font-mono">{resolveError}</p>
           <p className="text-text-secondary text-sm mt-4">
-            Slug recherché: <span className="font-mono text-accent">{username}</span>
+            {t.publicProfile?.slugSearched || 'Slug recherché:'} <span className="font-mono text-accent">{username}</span>
           </p>
         </div>
       </div>
@@ -160,9 +160,9 @@ export default function PublicProfile() {
       <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-text-primary mb-4">404</h1>
-          <p className="text-text-secondary mb-2">Profil introuvable</p>
+          <p className="text-text-secondary mb-2">{t.publicProfile?.notFound || 'Profil introuvable'}</p>
           <p className="text-text-secondary text-sm">
-            Aucun profil avec le slug: <span className="font-mono text-accent">{username}</span>
+            {t.publicProfile?.noSlug || 'Aucun profil avec le slug:'} <span className="font-mono text-accent">{username}</span>
           </p>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function PublicProfile() {
       <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-text-primary mb-4">404</h1>
-          <p className="text-text-secondary">Profil introuvable</p>
+          <p className="text-text-secondary">{t.publicProfile?.notFound || 'Profil introuvable'}</p>
         </div>
       </div>
     );
@@ -186,9 +186,9 @@ export default function PublicProfile() {
       <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Profil privé</h1>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">{t.publicProfile?.privateProfile || 'Profil privé'}</h1>
           <p className="text-text-secondary">
-            Ce profil n'est visible que par les connexions de l'artiste
+            {t.publicProfile?.privateProfileDesc || "Ce profil n'est visible que par les connexions de l'artiste"}
           </p>
         </div>
       </div>
@@ -259,7 +259,7 @@ export default function PublicProfile() {
                   <h1 className="text-3xl font-bold text-text-primary flex items-center gap-2">
                     {profile.username || 'Utilisateur'}
                     {profile.is_verified && (
-                      <span className="text-accent text-xl" title="Artiste vérifié">✓</span>
+                      <span className="text-accent text-xl" title={t.publicProfile?.verifiedArtist || 'Artiste vérifié'}>✓</span>
                     )}
                   </h1>
                   <p className="text-text-secondary text-sm">@{profile.artist_slug || 'artiste'}</p>
@@ -297,9 +297,23 @@ export default function PublicProfile() {
                     📍 {profile.location}
                   </span>
                 )}
-                <span className="flex items-center gap-1">
-                  🎵 Entertainment & Recreation
-                </span>
+                {/* Genres musicaux cliquables */}
+                {profile.genres && profile.genres.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>🎵</span>
+                    {profile.genres.map((genre, index) => (
+                      <React.Fragment key={genre}>
+                        <Link
+                          to={`/artists?genre=${encodeURIComponent(genre)}`}
+                          className="text-accent hover:text-accent-hover hover:underline transition-colors"
+                        >
+                          {genre}
+                        </Link>
+                        {index < profile.genres.length - 1 && <span className="text-text-secondary">•</span>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
                 <span className="flex items-center gap-1">
                   🗓️ {t.publicProfile?.joined || 'Membre depuis'} {new Date(profile.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', { month: 'short', year: 'numeric' })}
                 </span>
@@ -342,7 +356,7 @@ export default function PublicProfile() {
                             {link.platform === 'soundcloud' && '☁️'}
                             {link.platform === 'youtube' && '▶️'}
                           </span>
-                          <span>Ouvrir sur {link.platform}</span>
+                          <span>{t.publicProfile?.openOn || 'Ouvrir sur'} {link.platform}</span>
                         </a>
                       )}
                     </div>
@@ -402,7 +416,7 @@ export default function PublicProfile() {
                                 className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors mb-2"
                               >
                                 <span>✍️</span>
-                                <span>{article.author.username || 'Auteur'}</span>
+                                <span>{article.author.username || t.publicProfile?.author || 'Auteur'}</span>
                               </Link>
                             )}
                             <p className="text-sm text-text-secondary line-clamp-2 mb-3">{article.content?.substring(0, 150)}...</p>
@@ -482,7 +496,7 @@ export default function PublicProfile() {
                                       className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors"
                                     >
                                       <span>🎙️</span>
-                                      <span>{podcast.author.username || 'Auteur'}</span>
+                                      <span>{podcast.author.username || t.publicProfile?.author || 'Auteur'}</span>
                                     </Link>
                                   )}
                                 </div>
@@ -528,7 +542,7 @@ export default function PublicProfile() {
                               )}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-text-primary">{follow.profiles?.username || 'Utilisateur'}</h3>
+                              <h3 className="font-semibold text-text-primary">{follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}</h3>
                               <p className="text-sm text-text-secondary">@{follow.profiles?.artist_slug || 'artiste'}</p>
                             </div>
                           </Link>

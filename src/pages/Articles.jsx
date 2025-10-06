@@ -66,7 +66,7 @@ export default function Articles() {
   }, []);
 
   return (
-    <main className="container-max pr-[30px]">
+    <main className="container-max pr-[30px] pl-[20px]">
       <Seo
         lang={lang}
         title={L.metaTitle}

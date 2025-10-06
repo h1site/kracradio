@@ -72,7 +72,7 @@ export default function CommunityDashboard() {
         </div>
 
         {/* Onglets */}
-        <div className="mb-6 border-b border-border">
+        <div className="mb-6">
             <div className="flex gap-2 overflow-x-auto">
               {TABS.map(tab => (
                 <button

@@ -91,7 +91,7 @@ export default function Podcasts() {
   };
 
   return (
-    <main className="container-max pb-16">
+    <main className="container-max pb-16 pl-4">
       <Seo
         lang={lang}
         title={L.metaTitle}

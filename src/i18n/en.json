@@ -25,7 +25,28 @@
     "moreInfo": "More info",
     "nowOnKrac": "Now on KracRadio",
     "listenCta": "Listen",
-    "viewScheduleCta": "View our schedule"
+    "viewScheduleCta": "View our schedule",
+    "joinCommunity": "Join the community",
+    "shareMusic": "Share your music",
+    "shareMusicDesc": "Broadcast your creations and connect with fans",
+    "createPodcast": "Create your podcast",
+    "createPodcastDesc": "Launch your show and grow your audience",
+    "publishArticles": "Publish your articles",
+    "publishArticlesDesc": "Share your ideas and stories with the community",
+    "interact": "Interact in real time",
+    "interactDesc": "Comment, like and follow your favorite artists",
+    "createAccountCta": "Create a free account",
+    "latestPosts": "Latest posts",
+    "noPosts": "No posts yet",
+    "viewAllPosts": "View all posts",
+    "latestArticle": "Latest article",
+    "noArticle": "No articles yet",
+    "readArticle": "Read article",
+    "allBlogs": "All blogs",
+    "podcastOfDay": "Podcast of the day",
+    "noPodcast": "No podcasts yet",
+    "discover": "Discover",
+    "allPodcasts": "All podcasts"
   },
   "meta": {
     "homeTitle": "Listen to the best independent online radio",
@@ -56,7 +77,21 @@
     "noAccount": "No account?",
     "already": "Already registered?",
     "or": "or",
-    "submit": "Submit"
+    "submit": "Submit",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "resetPasswordDesc": "Enter your email address to receive a password reset link.",
+    "sendResetLink": "Send reset link",
+    "resetPasswordSent": "Email sent!",
+    "resetPasswordSentDesc": "Check your inbox and click the link to reset your password.",
+    "backToLogin": "Back to login",
+    "updatePassword": "Update password",
+    "updatePasswordDesc": "Choose a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordUpdated": "Password updated successfully!"
   },
   "articles": {
     "title": "Articles",
@@ -247,7 +282,10 @@
     "title": "Schedule",
     "noData": "Schedule not available via API. Use the public page link above.",
     "rotation24": "24/7 music rotation (no specific timed programs).",
-    "viewPublic": "View full schedule"
+    "viewPublic": "View full schedule",
+    "nowPlaying": "Now Playing",
+    "upNext": "Up Next",
+    "otherAreRotation": "Other specialized channels are on 24/7 music rotation."
   },
   "common": {
     "loading": "Loading…"
@@ -350,11 +388,45 @@
     "connectionsContent": "{count} connections",
     "postsContent": "{username}'s posts will appear here",
     "toImplement": "To implement - Phase 3",
-    "toConnect": "To connect with existing {type}"
+    "toConnect": "To connect with existing {type}",
+    "verifiedArtist": "Verified artist",
+    "openOn": "Open on",
+    "author": "Author"
   },
   "artists": {
     "title": "Artists",
     "noArtists": "No artists yet",
     "noArtistsDesc": "Public artists will appear here"
+  },
+  "posts": {
+    "createPost": {
+      "placeholder": "What's happening?",
+      "replyPlaceholder": "Write your reply...",
+      "replyingTo": "Replying to",
+      "addMedia": "Add images/videos",
+      "maxFilesError": "Maximum {max} files",
+      "postRequired": "Post must contain text or media",
+      "uploadError": "Upload error:",
+      "publishing": "Publishing...",
+      "publish": "Post",
+      "reply": "Reply"
+    },
+    "postCard": {
+      "justNow": "Just now",
+      "deleteConfirm": "Delete this post?",
+      "deleteError": "Error while deleting",
+      "deleteReplyConfirm": "Delete this reply?",
+      "likeError": "Like error:",
+      "repostError": "Repost error:",
+      "viewReplies": "View replies",
+      "hideReplies": "Hide replies",
+      "delete": "Delete"
+    },
+    "feed": {
+      "noPosts": "No posts yet",
+      "startConversation": "Be the first to post!",
+      "loadingError": "Error loading posts",
+      "retry": "Retry"
+    }
   }
 }

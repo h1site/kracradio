@@ -20,7 +20,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
     const files = Array.from(e.target.files);
 
     if (files.length + mediaFiles.length > MAX_FILES) {
-      setError(`Maximum ${MAX_FILES} fichiers`);
+      setError((t.posts?.createPost?.maxFilesError || 'Maximum {max} fichiers').replace('{max}', MAX_FILES));
       return;
     }
 
@@ -61,7 +61,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
         });
 
       if (error) {
-        throw new Error(`Erreur upload: ${error.message}`);
+        throw new Error(`${t.posts?.createPost?.uploadError || 'Erreur upload:'} ${error.message}`);
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -78,7 +78,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
     e.preventDefault();
 
     if (!content.trim() && mediaFiles.length === 0) {
-      setError('Le post doit contenir du texte ou des médias');
+      setError(t.posts?.createPost?.postRequired || 'Le post doit contenir du texte ou des médias');
       return;
     }
 
@@ -150,7 +150,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
     <div className="bg-bg-secondary rounded-xl p-4 border border-border">
       {replyTo && (
         <div className="mb-3 text-sm text-text-secondary">
-          En réponse à <span className="text-accent">@{replyTo.author?.username}</span>
+          {t.posts?.createPost?.replyingTo || 'En réponse à'} <span className="text-accent">@{replyTo.author?.username}</span>
         </div>
       )}
 
@@ -158,7 +158,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={replyTo ? "Écrivez votre réponse..." : "Quoi de neuf ?"}
+          placeholder={replyTo ? (t.posts?.createPost?.replyPlaceholder || "Écrivez votre réponse...") : (t.posts?.createPost?.placeholder || "Quoi de neuf ?")}
           className="w-full bg-bg-primary text-text-primary rounded-lg p-3 border border-border focus:border-accent focus:outline-none resize-none"
           rows="4"
           maxLength={MAX_LENGTH}
@@ -202,7 +202,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
               onClick={() => fileInputRef.current?.click()}
               disabled={mediaFiles.length >= MAX_FILES || isSubmitting}
               className="p-2 text-text-secondary hover:text-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Ajouter des images/vidéos"
+              title={t.posts?.createPost?.addMedia || 'Ajouter des images/vidéos'}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -230,7 +230,7 @@ export default function CreatePost({ onPostCreated, replyTo = null }) {
             disabled={isSubmitting || (!content.trim() && mediaFiles.length === 0) || isOverLimit}
             className="px-6 py-2 bg-accent text-white rounded-full font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Publication...' : (replyTo ? 'Répondre' : 'Publier')}
+            {isSubmitting ? (t.posts?.createPost?.publishing || 'Publication...') : (replyTo ? (t.posts?.createPost?.reply || 'Répondre') : (t.posts?.createPost?.publish || 'Publier'))}
           </button>
         </div>
       </form>

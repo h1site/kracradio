@@ -7,7 +7,7 @@ import CreatePost from './CreatePost';
 
 export default function PostCard({ post, onUpdate, onDelete }) {
   const { user } = useAuth();
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const [showReply, setShowReply] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState([]);
@@ -28,7 +28,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 1) return t.posts?.postCard?.justNow || 'À l\'instant';
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}j`;
@@ -63,7 +63,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
         setLikesCount(prev => prev + 1);
       }
     } catch (error) {
-      console.error('Erreur like:', error);
+      console.error(t.posts?.postCard?.likeError || 'Erreur like:', error);
     }
   };
 
@@ -95,12 +95,12 @@ export default function PostCard({ post, onUpdate, onDelete }) {
 
       if (onUpdate) onUpdate();
     } catch (error) {
-      console.error('Erreur repost:', error);
+      console.error(t.posts?.postCard?.repostError || 'Erreur repost:', error);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Supprimer ce post ?')) return;
+    if (!confirm(t.posts?.postCard?.deleteConfirm || 'Supprimer ce post ?')) return;
 
     setIsDeleting(true);
     try {
@@ -114,7 +114,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
       if (onDelete) onDelete(post.id);
     } catch (error) {
       console.error('Erreur suppression:', error);
-      alert('Erreur lors de la suppression');
+      alert(t.posts?.postCard?.deleteError || 'Erreur lors de la suppression');
     } finally {
       setIsDeleting(false);
     }
@@ -319,7 +319,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
                   onClick={() => setShowReply(true)}
                   className="mb-4 text-sm text-accent hover:text-accent-hover transition-colors"
                 >
-                  💬 Répondre
+                  💬 {t.posts?.createPost?.reply || 'Répondre'}
                 </button>
               )}
 
@@ -331,7 +331,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
                     onClick={() => setShowReply(false)}
                     className="mt-2 text-sm text-text-secondary hover:text-text-primary"
                   >
-                    Annuler
+                    {t.editor?.cancel || 'Annuler'}
                   </button>
                 </div>
               )}
@@ -380,7 +380,7 @@ export default function PostCard({ post, onUpdate, onDelete }) {
                           {isReplyOwner && (
                             <button
                               onClick={async () => {
-                                if (!confirm('Supprimer cette réponse ?')) return;
+                                if (!confirm(t.posts?.postCard?.deleteReplyConfirm || 'Supprimer cette réponse ?')) return;
 
                                 try {
                                   const { error } = await supabase
@@ -394,11 +394,11 @@ export default function PostCard({ post, onUpdate, onDelete }) {
                                   setCommentsCount(prev => prev - 1);
                                 } catch (error) {
                                   console.error('Erreur suppression réponse:', error);
-                                  alert('Erreur lors de la suppression');
+                                  alert(t.posts?.postCard?.deleteError || 'Erreur lors de la suppression');
                                 }
                               }}
                               className="text-text-secondary hover:text-red-500 transition-colors"
-                              title="Supprimer"
+                              title={t.posts?.postCard?.delete || 'Supprimer'}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

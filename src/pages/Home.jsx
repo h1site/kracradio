@@ -296,7 +296,7 @@ export default function Home() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-text-primary">
-                Rejoignez la communauté
+                {t.home?.joinCommunity || 'Rejoignez la communauté'}
               </h2>
             </div>
             <div className="space-y-4">
@@ -305,8 +305,8 @@ export default function Home() {
                   <span className="text-xl">🎵</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary mb-1">Partagez votre musique</h3>
-                  <p className="text-sm text-text-secondary">Diffusez vos créations et connectez-vous avec des fans</p>
+                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.shareMusic || 'Partagez votre musique'}</h3>
+                  <p className="text-sm text-text-secondary">{t.home?.shareMusicDesc || 'Diffusez vos créations et connectez-vous avec des fans'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -314,8 +314,8 @@ export default function Home() {
                   <span className="text-xl">🎙️</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary mb-1">Créez votre podcast</h3>
-                  <p className="text-sm text-text-secondary">Lancez votre émission et développez votre audience</p>
+                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.createPodcast || 'Créez votre podcast'}</h3>
+                  <p className="text-sm text-text-secondary">{t.home?.createPodcastDesc || 'Lancez votre émission et développez votre audience'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -323,8 +323,8 @@ export default function Home() {
                   <span className="text-xl">✍️</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary mb-1">Publiez vos articles</h3>
-                  <p className="text-sm text-text-secondary">Partagez vos idées et histoires avec la communauté</p>
+                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.publishArticles || 'Publiez vos articles'}</h3>
+                  <p className="text-sm text-text-secondary">{t.home?.publishArticlesDesc || 'Partagez vos idées et histoires avec la communauté'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -332,8 +332,8 @@ export default function Home() {
                   <span className="text-xl">💬</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary mb-1">Interagissez en temps réel</h3>
-                  <p className="text-sm text-text-secondary">Commentez, aimez et suivez vos artistes préférés</p>
+                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.interact || 'Interagissez en temps réel'}</h3>
+                  <p className="text-sm text-text-secondary">{t.home?.interactDesc || 'Commentez, aimez et suivez vos artistes préférés'}</p>
                 </div>
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function Home() {
               to="/auth/signup"
               className="mt-6 inline-block w-full text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
             >
-              Créer un compte gratuitement
+              {t.home?.createAccountCta || 'Créer un compte gratuitement'}
             </Link>
           </div>
 
@@ -353,11 +353,11 @@ export default function Home() {
                   <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-text-primary">Derniers posts</h2>
+              <h2 className="text-2xl font-bold text-text-primary">{t.home?.latestPosts || 'Derniers posts'}</h2>
             </div>
             <div className="space-y-4">
               {recentPosts.length === 0 ? (
-                <p className="text-text-secondary text-center py-8">Aucun post pour le moment</p>
+                <p className="text-text-secondary text-center py-8">{t.home?.noPosts || 'Aucun post pour le moment'}</p>
               ) : (
                 recentPosts.map(post => (
                   <div key={post.id} className="border-b border-border pb-4 last:border-0">
@@ -385,7 +385,7 @@ export default function Home() {
               to="/dashboard"
               className="mt-6 inline-block w-full text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
             >
-              Voir tous les posts
+              {t.home?.viewAllPosts || 'Voir tous les posts'}
             </Link>
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function Home() {
                   <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-text-primary">Dernier article</h2>
+              <h2 className="text-2xl font-bold text-text-primary">{t.home?.latestArticle || 'Dernier article'}</h2>
             </div>
             {latestBlog ? (
               <>
@@ -413,18 +413,18 @@ export default function Home() {
                     to={`/article/${latestBlog.slug}`}
                     className="flex-1 text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
                   >
-                    Lire l'article
+                    {t.home?.readArticle || "Lire l'article"}
                   </Link>
                   <Link
                     to="/blog"
                     className="flex-1 text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
                   >
-                    Tous les blogs
+                    {t.home?.allBlogs || 'Tous les blogs'}
                   </Link>
                 </div>
               </>
             ) : (
-              <p className="text-text-secondary text-center py-8">Aucun article pour le moment</p>
+              <p className="text-text-secondary text-center py-8">{t.home?.noArticle || 'Aucun article pour le moment'}</p>
             )}
           </div>
 
@@ -436,7 +436,7 @@ export default function Home() {
                   <path d="M12 2a9 9 0 0 0-9 9v7.5A2.5 2.5 0 0 0 5.5 21h1a2.5 2.5 0 0 0 2.5-2.5V15a2.5 2.5 0 0 0-2.5-2.5h-.5v-1A7 7 0 0 1 19 11.5v1h-.5A2.5 2.5 0 0 0 16 15v3.5a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 0 2.5-2.5V11a9 9 0 0 0-9-9z"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-text-primary">Podcast du jour</h2>
+              <h2 className="text-2xl font-bold text-text-primary">{t.home?.podcastOfDay || 'Podcast du jour'}</h2>
             </div>
             {latestPodcast ? (
               <>
@@ -455,28 +455,25 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="flex-1 text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
                   >
-                    Découvrir
+                    {t.home?.discover || 'Découvrir'}
                   </a>
                   <Link
                     to="/podcasts"
                     className="flex-1 text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
                   >
-                    Tous les podcasts
+                    {t.home?.allPodcasts || 'Tous les podcasts'}
                   </Link>
                 </div>
               </>
             ) : (
-              <p className="text-text-secondary text-center py-8">Aucun podcast pour le moment</p>
+              <p className="text-text-secondary text-center py-8">{t.home?.noPodcast || 'Aucun podcast pour le moment'}</p>
             )}
           </div>
         </div>
       </section>
 
-      {/* Cale mobile pour le player fixe */}
-      <div
-        className="sm:hidden"
-        style={{ height: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
-      />
+      {/* Espacement en bas - 30px sur mobile au lieu de la cale pour le player */}
+      <div className="pb-[30px] sm:pb-0" />
     </div>
   );
 }
