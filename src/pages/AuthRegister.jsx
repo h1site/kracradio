@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
+import { sendVerificationEmail } from '../lib/emailService';
 
 const PASSWORD_REQUIREMENTS = {
   fr: {
@@ -69,7 +70,24 @@ export default function AuthRegister() {
     }
 
     try {
-      await signUp({ email, password: pwd });
+      const result = await signUp({ email, password: pwd });
+
+      // Send verification email
+      if (result?.user?.id) {
+        try {
+          console.log('🚀 Attempting to send verification email...');
+          await sendVerificationEmail(result.user.id, email, lang);
+          console.log('✅ Verification email sent successfully!');
+        } catch (emailError) {
+          console.error('❌ Error sending verification email:', {
+            message: emailError.message,
+            error: emailError
+          });
+          // Continue anyway - user is created
+          // User can resend verification email later
+        }
+      }
+
       nav('/auth/confirm-email'); // Rediriger vers la page de confirmation
     } catch (error) {
       setErr(error.message);

@@ -1,6 +1,7 @@
 // src/components/community/FollowButton.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n';
 import { useFollowStatus, useManageFollow } from '../../hooks/useCommunity';
 
 export default function FollowButton({ userId, onFollowChange }) {
@@ -8,6 +9,16 @@ export default function FollowButton({ userId, onFollowChange }) {
   const { status, loading: loadingStatus } = useFollowStatus(userId);
   const { follow, unfollow, loading: managing } = useManageFollow();
   const [localStatus, setLocalStatus] = useState(null);
+  const { t } = useI18n();
+  const community = t?.community ?? {};
+  const followText = community.follow ?? {};
+  const states = followText.states ?? {};
+  const compact = followText.compact ?? {};
+  const defaultState = states.default ?? {};
+  const followingState = states.following ?? {};
+  const followerState = states.follower ?? {};
+  const connectedState = states.connected ?? {};
+  const loadingLabel = followText.loading ?? 'Chargement...';
 
   useEffect(() => {
     if (status !== undefined) {
@@ -44,28 +55,28 @@ export default function FollowButton({ userId, onFollowChange }) {
   // Configuration des états
   const config = {
     null: {
-      label: 'Suivre',
+      label: defaultState.label ?? 'Suivre',
       icon: '➕',
       className: 'bg-accent text-bg-primary hover:bg-accent-hover',
-      description: 'Suivre cet artiste'
+      description: defaultState.description ?? 'Suivre cet artiste'
     },
     following: {
-      label: 'En attente',
+      label: followingState.label ?? 'En attente',
       icon: '⏳',
       className: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30',
-      description: 'Vous suivez cet artiste, en attente de connexion'
+      description: followingState.description ?? 'Vous suivez cet artiste, en attente de connexion'
     },
     follower: {
-      label: 'Suivre en retour',
+      label: followerState.label ?? 'Suivre en retour',
       icon: '🔄',
       className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30',
-      description: 'Cet artiste vous suit, suivez-le en retour pour connecter'
+      description: followerState.description ?? 'Cet artiste vous suit, suivez-le en retour pour connecter'
     },
     connected: {
-      label: 'Connecté(e)',
+      label: connectedState.label ?? 'Connecté(e)',
       icon: '✓',
       className: 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30',
-      description: 'Vous êtes connectés mutuellement'
+      description: connectedState.description ?? 'Vous êtes connectés mutuellement'
     }
   };
 
@@ -79,7 +90,7 @@ export default function FollowButton({ userId, onFollowChange }) {
       >
         <div className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-text-secondary"></div>
-          Chargement...
+          {loadingLabel}
         </div>
       </button>
     );
@@ -99,7 +110,7 @@ export default function FollowButton({ userId, onFollowChange }) {
       >
         <div className="flex items-center gap-2">
           <span>{currentConfig.icon}</span>
-          <span>{managing ? 'Chargement...' : currentConfig.label}</span>
+          <span>{managing ? loadingLabel : currentConfig.label}</span>
         </div>
       </button>
 
@@ -121,6 +132,12 @@ export function FollowButtonCompact({ userId, showLabel = false }) {
   const { user } = useAuth();
   const { status } = useFollowStatus(userId);
   const { follow, unfollow, loading } = useManageFollow();
+  const { t } = useI18n();
+  const followText = t?.community?.follow ?? {};
+  const compact = followText.compact ?? {};
+  const loadingLabelCompact = compact.loading ?? followText.loading ?? '...';
+  const connectedLabel = compact.connected ?? 'Connecté';
+  const followLabel = compact.follow ?? 'Suivre';
 
   if (!user || user.id === userId) return null;
 
@@ -161,10 +178,10 @@ export function FollowButtonCompact({ userId, showLabel = false }) {
         ${colors[status] || colors.null}
       `}
     >
-      {loading ? '...' : (
+      {loading ? loadingLabelCompact : (
         <span className="flex items-center gap-1">
           <span>{icons[status] || icons.null}</span>
-          {showLabel && <span>{status === 'connected' ? 'Connecté' : 'Suivre'}</span>}
+          {showLabel && <span>{status === 'connected' ? connectedLabel : followLabel}</span>}
         </span>
       )}
     </button>

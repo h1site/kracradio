@@ -1,6 +1,7 @@
 // src/components/PlayerBarMobile.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAudio } from '../context/AudioPlayerContext';
+import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 
@@ -8,6 +9,12 @@ const RED = '#E50914';
 
 export default function PlayerBarMobile() {
   const { current, playing, togglePlay } = useAudio();
+  const { t } = useI18n();
+  const player = t?.player ?? {};
+  const site = t?.site ?? {};
+  const playLabel = player.play ?? 'Lire';
+  const pauseLabel = player.pause ?? site.pause ?? 'Pause';
+  const liveLabel = player.live ?? 'LIVE';
 
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
@@ -89,8 +96,8 @@ export default function PlayerBarMobile() {
         onClick={togglePlay}
         className="w-10 h-10 rounded-full inline-flex items-center justify-center shrink-0"
         style={{ backgroundColor: RED }}
-        aria-label={playing ? 'Pause' : 'Lire'}
-        title={playing ? 'Pause' : 'Lire'}
+        aria-label={playing ? pauseLabel : playLabel}
+        title={playing ? pauseLabel : playLabel}
       >
         {playing ? (
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor">
@@ -120,13 +127,13 @@ export default function PlayerBarMobile() {
               <div className="flex-1 h-1 bg-white/15 rounded overflow-hidden">
                 <div
                   className="h-full bg-white/70"
-                  style={{ width: `${progressPct ?? 0}%` }}
+                  style={{ width: `${progressPct || 0}%` }}
                 />
               </div>
               <span className="text-[10px] text-white/60 tabular-nums">{mmss(duration)}</span>
             </>
           ) : (
-            <span className="text-[10px] font-semibold text-red-400">LIVE</span>
+            <span className="text-[10px] font-semibold text-red-400">{liveLabel}</span>
           )}
         </div>
       </div>

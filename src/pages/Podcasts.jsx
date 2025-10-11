@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
+import GoogleAd from '../components/ads/GoogleAd';
 
 const STRINGS = {
   fr: {
@@ -308,6 +309,10 @@ export default function Podcasts() {
           {L.heroSubtitle}
         </p>
       </header>
+
+      <div className="py-8">
+        <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+      </div>
 
       <section className="rounded-3xl border border-gray-200 bg-white p-6 text-sm leading-relaxed text-gray-800 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 md:text-base">
         <h2 className="text-xl font-semibold text-black dark:text-white">{L.infoTitle}</h2>

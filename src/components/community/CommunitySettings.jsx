@@ -3,8 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/useCommunity';
 import { supabase } from '../../lib/supabase';
+import { COUNTRIES } from '../../constants/countries';
+import { useI18n } from '../../i18n';
 
 export default function CommunitySettings() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { profile, loading: loadingProfile, refetch } = useProfile(user?.id);
   const { updateProfile, loading: updating } = useUpdateProfile();
@@ -205,7 +208,7 @@ export default function CommunitySettings() {
       {/* Header avec bouton Enregistrer */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-text-primary">
-          ⚙️ Paramètres de la communauté
+          ⚙️ {t.community.settings.title}
         </h2>
         <button
           onClick={handleSaveSettings}
@@ -215,11 +218,11 @@ export default function CommunitySettings() {
           {updating ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-bg-primary"></div>
-              Enregistrement...
+              {t.community.saving}
             </>
           ) : (
             <>
-              💾 Enregistrer
+              💾 {t.community.save}
             </>
           )}
         </button>
@@ -286,20 +289,20 @@ export default function CommunitySettings() {
       {/* Formulaire des paramètres */}
       <form onSubmit={handleSaveSettings} className="bg-bg-secondary rounded-lg p-6 border border-border">
         <h3 className="text-xl font-semibold text-text-primary mb-4">
-          ✏️ Informations du profil
+          ✏️ {t.community.settings.profileInfo}
         </h3>
 
         {/* Nom d'artiste / Slug */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            🎤 Nom d'artiste (pour URL publique) {settings.is_public && <span className="text-red-500">*</span>}
+            🎤 {t.community.settings.artistSlug} {settings.is_public && <span className="text-red-500">*</span>}
           </label>
           <div className="relative">
             <input
               type="text"
               value={settings.artist_slug}
               onChange={handleSlugChange}
-              placeholder="mon_nom_artiste"
+              placeholder={t.community.settings.artistSlugPlaceholder}
               className={`w-full px-4 py-2 pr-10 bg-bg-tertiary border rounded-lg
                        text-text-primary placeholder-text-secondary
                        focus:outline-none focus:ring-2 focus:ring-accent
@@ -352,12 +355,12 @@ export default function CommunitySettings() {
         {/* Bio */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            Bio
+            {t.community.settings.bio}
           </label>
           <textarea
             value={settings.bio}
             onChange={(e) => setSettings(prev => ({ ...prev, bio: e.target.value }))}
-            placeholder="Parlez-nous de vous, votre musique, vos projets..."
+            placeholder={t.community.settings.bioPlaceholder}
             maxLength={500}
             rows={4}
             className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
@@ -365,30 +368,35 @@ export default function CommunitySettings() {
                      focus:outline-none focus:ring-2 focus:ring-accent resize-none"
           />
           <p className="text-xs text-text-secondary mt-1">
-            {settings.bio.length}/500 caractères
+            {t.community.settings.bioCount.replace('{count}', settings.bio.length)}
           </p>
         </div>
 
-        {/* Localisation */}
+        {/* Pays */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            📍 Localisation
+            📍 {t.community.settings.country}
           </label>
-          <input
-            type="text"
+          <select
             value={settings.location}
             onChange={(e) => setSettings(prev => ({ ...prev, location: e.target.value }))}
-            placeholder="ex: Montréal, QC"
             className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
-                     text-text-primary placeholder-text-secondary
-                     focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+                     text-text-primary
+                     focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
+          >
+            <option value="">{t.community.settings.countryPlaceholder}</option>
+            {COUNTRIES.map(country => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Genres musicaux */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-text-primary mb-2">
-            🎵 Genres musicaux (max 3)
+            🎵 {t.community.settings.genresMax}
           </label>
 
           {/* Tags sélectionnés */}

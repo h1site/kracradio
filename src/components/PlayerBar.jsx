@@ -1,6 +1,7 @@
 // src/components/PlayerBar.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAudio } from '../context/AudioPlayerContext';
+import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
@@ -11,6 +12,21 @@ export default function PlayerBar() {
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const tickRef = useRef(null);
+  const { t } = useI18n();
+  const player = t?.player ?? {};
+  const site = t?.site ?? {};
+  const selectPrompt = player.selectPrompt ?? 'Sélectionne une chaîne — Clique Écouter';
+  const [selectMain, selectSecondary] = selectPrompt.split(' — ');
+  const likeLabel = player.likeComingSoon ?? site.like ?? 'J’aime (à venir)';
+  const settingsLabel = player.settings ?? site.settings ?? 'Paramètres';
+  const shareLabel = player.share ?? site.share ?? 'Partager';
+  const volumeLabel = player.volume ?? 'Volume';
+  const podcastLabel = player.podcastLabel ?? 'Podcast';
+  const channelLabel = site.channelLabel ?? 'Channel';
+  const playLabel = player.play ?? 'Lire';
+  const pauseLabel = player.pause ?? site.pause ?? 'Pause';
+  const progressLabel = player.progressAria ?? 'Barre de progression - cliquer pour naviguer';
+  const liveLabel = player.live ?? 'LIVE';
 
   // Poll AzuraCast toutes les 15s (seulement pour radio)
   useEffect(() => {
@@ -125,16 +141,22 @@ export default function PlayerBar() {
         <div className="hidden md:flex w-full h-16 items-center">
           <div className="h-full aspect-square bg-black/30" />
           <div className="flex-1 font-semibold truncate px-3">
-            Sélectionne une chaîne — <span className="opacity-70">Clique Écouter</span>
+            {selectSecondary ? (
+              <>
+                {selectMain} — <span className="opacity-70">{selectSecondary}</span>
+              </>
+            ) : (
+              selectPrompt
+            )}
           </div>
           <div className="flex items-center gap-3 min-w-[220px] justify-end pr-2">
-            <button className="icon-btn" title="J’aime (à venir)" aria-label="J’aime (à venir)">
+            <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
             </button>
-            <button className="icon-btn" title="Paramètres" aria-label="Paramètres">
+            <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
             </button>
-            <button className="icon-btn" title="Partager" aria-label="Partager">
+            <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
@@ -148,7 +170,7 @@ export default function PlayerBar() {
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               className="range range-sm w-28"
-              aria-label="Volume"
+              aria-label={volumeLabel}
             />
           </div>
         </div>
@@ -181,7 +203,7 @@ export default function PlayerBar() {
         {/* Bloc 2 — Label + nom du channel OU nom du podcast */}
         <div className="flex flex-col justify-center min-w-[140px] px-2">
           <div className="text-[10px] uppercase opacity-70 leading-none">
-            {isPodcast ? 'Podcast' : 'Channel'}
+            {isPodcast ? podcastLabel : channelLabel}
           </div>
           <div className="font-bold text-base leading-tight truncate">
             {isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
@@ -204,8 +226,8 @@ export default function PlayerBar() {
           <button
             onClick={togglePlay}
             className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0"
-            aria-label={playing ? 'Pause' : 'Play'}
-            title={playing ? 'Pause' : 'Play'}
+            aria-label={playing ? pauseLabel : playLabel}
+            title={playing ? pauseLabel : playLabel}
           >
             {playing ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M8 5h3v14H8V5zm5 0h3v14h-3V5z"/></svg>
@@ -232,7 +254,7 @@ export default function PlayerBar() {
               className={`h-2 bg-black/30 rounded overflow-hidden ${isPodcast && duration ? 'cursor-pointer hover:h-3 transition-all' : ''}`}
               onClick={handleProgressClick}
               role={isPodcast && duration ? 'slider' : undefined}
-              aria-label={isPodcast && duration ? 'Progress bar - click to seek' : undefined}
+              aria-label={isPodcast && duration ? progressLabel : undefined}
             >
               {progressPct !== null ? (
                 <div className="h-full bg-white" style={{ width: `${progressPct}%` }} />
@@ -242,13 +264,13 @@ export default function PlayerBar() {
             </div>
           </div>
           <div className="text-xs tabular-nums opacity-80 w-12">{duration ? mmss(duration) : '--:--'}</div>
-          <button className="icon-btn" title="J’aime (à venir)" aria-label="J’aime (à venir)">
+          <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
           </button>
-          <button className="icon-btn" title="Paramètres" aria-label="Paramètres">
+          <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
           </button>
-          <button className="icon-btn" title="Partager" aria-label="Partager">
+          <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
           </button>
           <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
@@ -262,7 +284,7 @@ export default function PlayerBar() {
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
             className="range range-sm w-28"
-            aria-label="Volume"
+            aria-label={volumeLabel}
           />
         </div>
       </div>

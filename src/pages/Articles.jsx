@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { listPublishedArticles } from '../lib/articles';
 import { useI18n } from '../i18n';
+import GoogleAd from '../components/ads/GoogleAd';
 
 const STRINGS = {
   fr: {
@@ -15,6 +16,8 @@ const STRINGS = {
     loading: 'Chargement en cours...',
     empty: 'Aucun article publié pour le moment.',
     readMore: 'Lire la suite',
+    by: 'Par',
+    defaultTag: 'Article',
   },
   en: {
     metaTitle: 'Articles — KracRadio',
@@ -25,6 +28,8 @@ const STRINGS = {
     loading: 'Loading...',
     empty: 'No published articles yet.',
     readMore: 'Read more',
+    by: 'By',
+    defaultTag: 'Article',
   },
   es: {
     metaTitle: 'Artículos — KracRadio',
@@ -35,6 +40,8 @@ const STRINGS = {
     loading: 'Cargando...',
     empty: 'No hay artículos publicados todavía.',
     readMore: 'Leer más',
+    by: 'Por',
+    defaultTag: 'Artículo',
   },
 };
 
@@ -44,21 +51,27 @@ export default function Articles() {
 
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        console.log('Fetching published articles...');
         const data = await listPublishedArticles({ limit: 20 });
+        console.log('Articles data received:', data);
         if (mounted) {
           setRows(data || []);
           setLoading(false);
+          setError(null);
         }
-      } catch (error) {
-        console.error('Error loading articles:', error);
+      } catch (err) {
+        console.error('Error loading articles:', err);
+        console.error('Error details:', err.message, err.details);
         if (mounted) {
           setRows([]);
           setLoading(false);
+          setError(err.message || 'Failed to load articles');
         }
       }
     })();
@@ -87,6 +100,17 @@ export default function Articles() {
         </p>
       </header>
 
+      <div className="pb-10">
+        <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+      </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+          <p className="font-semibold">Error loading articles:</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
@@ -99,8 +123,8 @@ export default function Articles() {
           <p className="text-base text-gray-600 dark:text-gray-400">{L.empty}</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {rows.map((article) => {
+        <div className="space-y-8 pb-16">
+          {rows.map((article, index) => {
             let excerpt = article.excerpt || '';
             // si excerpt vide mais content JSON, essaye d'en tirer l'excerpt de la langue active
             if (!excerpt && typeof article.content === 'string' && article.content.trim().startsWith('{')) {
@@ -110,64 +134,96 @@ export default function Articles() {
               } catch {/* ignore */}
             }
 
+            const imageUrl = article.featured_image || article.cover_url;
+
             return (
-              <article
-                key={article.slug}
-                className="rounded-3xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-950 overflow-hidden"
-              >
-                {article.cover_url && (
-                  <div className="aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-                    <img
-                      src={article.cover_url}
-                      alt={article.title}
-                      className="h-full w-full object-cover transition hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-black dark:text-white mb-3">
-                    <Link
-                      to={`/article/${article.slug}`}
-                      className="hover:text-red-600 dark:hover:text-red-400 transition"
-                    >
-                      {article.title}
-                    </Link>
-                  </h3>
-
-                  {excerpt && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                      {excerpt}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    {article.published_at && (
-                      <time
-                        dateTime={article.published_at}
-                        className="text-xs text-gray-500 dark:text-gray-500"
-                      >
-                        {new Date(article.published_at).toLocaleDateString(lang, {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </time>
+              <React.Fragment key={article.slug}>
+                <article
+                  className="group border-b border-gray-200 dark:border-gray-800 pb-8 last:border-b-0"
+                >
+                  <Link to={`/article/${article.slug}`} className="block">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Bloc 1: Image rectangle à gauche */}
+                    {imageUrl && (
+                      <div className="w-full md:w-72 flex-shrink-0">
+                        <div className="aspect-[3/2] w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                          <img
+                            src={imageUrl}
+                            alt={article.title}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        </div>
+                      </div>
                     )}
 
-                    <Link
-                      to={`/article/${article.slug}`}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
-                    >
-                      {L.readMore}
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-                      </svg>
-                    </Link>
+                    {/* Bloc 2: Contenu vertical à droite */}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      {/* Ligne 1: Tags à gauche + Date à droite */}
+                      <div className="flex items-center justify-between mb-3">
+                        {/* Tags à gauche */}
+                        <div className="flex items-center gap-2">
+                          {article.categories && article.categories.length > 0 ? (
+                            article.categories.slice(0, 2).map((category, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center rounded-md bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-400 uppercase tracking-wide"
+                              >
+                                {category}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="inline-flex items-center rounded-md bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 uppercase tracking-wide">
+                              {L.defaultTag}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Date à droite */}
+                        {article.published_at && (
+                          <time
+                            dateTime={article.published_at}
+                            className="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide"
+                          >
+                            {new Date(article.published_at).toLocaleDateString(lang, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </time>
+                        )}
+                      </div>
+
+                      {/* Ligne 2: Titre en gras */}
+                      <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-3 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
+                        {article.title}
+                      </h2>
+
+                      {/* Ligne 3: Auteur du blog */}
+                      {article.author?.username && (
+                        <div className="mb-3">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {L.by} {article.author.username}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Ligne 4 (optionnelle): Extrait */}
+                      {excerpt && (
+                        <p className="text-base text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                          {excerpt}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </article>
+                  </Link>
+                </article>
+                {index === 1 && (
+                  <div className="my-10">
+                    <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>

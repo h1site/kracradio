@@ -19,9 +19,148 @@ import Subscript from '@tiptap/extension-subscript';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { supabase } from '../lib/supabaseClient';
+import { useI18n } from '../i18n';
+
+const STRINGS = {
+  fr: {
+    uploadError: 'Erreur lors du téléversement de l\'image: ',
+    uploadChoice: 'Voulez-vous téléverser une image depuis votre ordinateur?\n\nOK = Téléverser\nAnnuler = Insérer une URL',
+    imageUrlPrompt: 'URL de l\'image:',
+    youtubeUrlPrompt: 'URL YouTube:',
+    urlPrompt: 'URL:',
+    textColorPrompt: 'Couleur du texte (ex: #ff0000):',
+    highlightColorPrompt: 'Couleur de surlignage (ex: #ffff00):',
+    bold: 'Gras (Ctrl+B)',
+    italic: 'Italique (Ctrl+I)',
+    underline: 'Souligné (Ctrl+U)',
+    strike: 'Barré',
+    inlineCode: 'Code inline',
+    superscript: 'Exposant',
+    subscript: 'Indice',
+    paragraph: 'Paragraphe',
+    heading1: 'Titre 1',
+    heading2: 'Titre 2',
+    heading3: 'Titre 3',
+    heading4: 'Titre 4',
+    heading5: 'Titre 5',
+    heading6: 'Titre 6',
+    alignLeft: 'Aligner à gauche',
+    alignCenter: 'Centrer',
+    alignRight: 'Aligner à droite',
+    justify: 'Justifier',
+    bulletList: 'Liste à puces',
+    orderedList: 'Liste numérotée',
+    blockquote: 'Citation',
+    codeBlock: 'Bloc de code',
+    textColor: 'Couleur du texte',
+    highlight: 'Surligner',
+    clearFormatting: 'Effacer le formatage',
+    insertImage: 'Insérer une image',
+    uploading: 'Téléversement en cours...',
+    youtube: 'Vidéo YouTube',
+    insertLink: 'Insérer un lien',
+    insertTable: 'Insérer un tableau',
+    undo: 'Annuler (Ctrl+Z)',
+    redo: 'Refaire (Ctrl+Y)',
+    lightMode: 'Mode clair',
+    darkMode: 'Mode sombre',
+    placeholder: 'Commencez à écrire votre article... Utilisez la barre d\'outils pour formater'
+  },
+  en: {
+    uploadError: 'Error uploading image: ',
+    uploadChoice: 'Do you want to upload an image from your computer?\n\nOK = Upload\nCancel = Insert a URL',
+    imageUrlPrompt: 'Image URL:',
+    youtubeUrlPrompt: 'YouTube URL:',
+    urlPrompt: 'URL:',
+    textColorPrompt: 'Text color (e.g. #ff0000):',
+    highlightColorPrompt: 'Highlight color (e.g. #ffff00):',
+    bold: 'Bold (Ctrl+B)',
+    italic: 'Italic (Ctrl+I)',
+    underline: 'Underline (Ctrl+U)',
+    strike: 'Strikethrough',
+    inlineCode: 'Inline code',
+    superscript: 'Superscript',
+    subscript: 'Subscript',
+    paragraph: 'Paragraph',
+    heading1: 'Heading 1',
+    heading2: 'Heading 2',
+    heading3: 'Heading 3',
+    heading4: 'Heading 4',
+    heading5: 'Heading 5',
+    heading6: 'Heading 6',
+    alignLeft: 'Align left',
+    alignCenter: 'Center',
+    alignRight: 'Align right',
+    justify: 'Justify',
+    bulletList: 'Bullet list',
+    orderedList: 'Numbered list',
+    blockquote: 'Quote',
+    codeBlock: 'Code block',
+    textColor: 'Text color',
+    highlight: 'Highlight',
+    clearFormatting: 'Clear formatting',
+    insertImage: 'Insert an image',
+    uploading: 'Uploading...',
+    youtube: 'YouTube video',
+    insertLink: 'Insert link',
+    insertTable: 'Insert table',
+    undo: 'Undo (Ctrl+Z)',
+    redo: 'Redo (Ctrl+Y)',
+    lightMode: 'Light mode',
+    darkMode: 'Dark mode',
+    placeholder: 'Start writing your article... Use the toolbar to format'
+  },
+  es: {
+    uploadError: 'Error al subir la imagen: ',
+    uploadChoice: '¿Quieres subir una imagen desde tu computadora?\n\nAceptar = Subir\nCancelar = Insertar una URL',
+    imageUrlPrompt: 'URL de la imagen:',
+    youtubeUrlPrompt: 'URL de YouTube:',
+    urlPrompt: 'URL:',
+    textColorPrompt: 'Color del texto (ej.: #ff0000):',
+    highlightColorPrompt: 'Color de resaltado (ej.: #ffff00):',
+    bold: 'Negrita (Ctrl+B)',
+    italic: 'Itálica (Ctrl+I)',
+    underline: 'Subrayado (Ctrl+U)',
+    strike: 'Tachado',
+    inlineCode: 'Código en línea',
+    superscript: 'Superíndice',
+    subscript: 'Subíndice',
+    paragraph: 'Párrafo',
+    heading1: 'Título 1',
+    heading2: 'Título 2',
+    heading3: 'Título 3',
+    heading4: 'Título 4',
+    heading5: 'Título 5',
+    heading6: 'Título 6',
+    alignLeft: 'Alinear a la izquierda',
+    alignCenter: 'Centrar',
+    alignRight: 'Alinear a la derecha',
+    justify: 'Justificar',
+    bulletList: 'Lista con viñetas',
+    orderedList: 'Lista numerada',
+    blockquote: 'Cita',
+    codeBlock: 'Bloque de código',
+    textColor: 'Color del texto',
+    highlight: 'Resaltar',
+    clearFormatting: 'Limpiar formato',
+    insertImage: 'Insertar una imagen',
+    uploading: 'Subiendo...',
+    youtube: 'Video de YouTube',
+    insertLink: 'Insertar enlace',
+    insertTable: 'Insertar tabla',
+    undo: 'Deshacer (Ctrl+Z)',
+    redo: 'Rehacer (Ctrl+Y)',
+    lightMode: 'Modo claro',
+    darkMode: 'Modo oscuro',
+    placeholder: 'Comienza a escribir tu artículo... Usa la barra de herramientas para dar formato'
+  }
+};
 
 const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
   if (!editor) return null;
+
+  const { lang } = useI18n();
+  const strings = STRINGS[lang] || STRINGS.fr;
 
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -66,21 +205,21 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Erreur lors du téléversement de l\'image: ' + error.message);
+      alert(strings.uploadError + error.message);
     } finally {
       setUploading(false);
     }
   }, [editor]);
 
   const addImage = useCallback(() => {
-    const choice = window.confirm('Voulez-vous téléverser une image depuis votre ordinateur?\n\nOK = Téléverser\nAnnuler = Insérer une URL');
+    const choice = window.confirm(strings.uploadChoice);
 
     if (choice) {
       // Téléverser
       fileInputRef.current?.click();
     } else {
       // URL
-      const url = window.prompt('URL de l\'image:');
+      const url = window.prompt(strings.imageUrlPrompt);
       if (url) {
         editor.chain().focus().setImage({ src: url }).run();
       }
@@ -88,7 +227,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
   }, [editor]);
 
   const addYouTube = useCallback(() => {
-    const url = window.prompt('URL YouTube:');
+    const url = window.prompt(strings.youtubeUrlPrompt);
     if (url) {
       editor.commands.setYoutubeVideo({ src: url });
     }
@@ -96,7 +235,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
 
   const setLink = useCallback(() => {
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL:', previousUrl);
+    const url = window.prompt(strings.urlPrompt, previousUrl);
 
     if (url === null) return;
     if (url === '') {
@@ -108,14 +247,14 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
   }, [editor]);
 
   const setColor = useCallback(() => {
-    const color = window.prompt('Couleur du texte (ex: #ff0000):', '#000000');
+    const color = window.prompt(strings.textColorPrompt, '#000000');
     if (color) {
       editor.chain().focus().setColor(color).run();
     }
   }, [editor]);
 
   const setHighlight = useCallback(() => {
-    const color = window.prompt('Couleur de surlignage (ex: #ffff00):', '#ffff00');
+    const color = window.prompt(strings.highlightColorPrompt, '#ffff00');
     if (color) {
       editor.chain().focus().setHighlight({ color }).run();
     }
@@ -147,7 +286,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('bold') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Gras (Ctrl+B)"
+          title={strings.bold}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/>
@@ -161,7 +300,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold italic transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('italic') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Italique (Ctrl+I)"
+          title={strings.italic}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z"/>
@@ -175,7 +314,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold underline transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('underline') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Souligné (Ctrl+U)"
+          title={strings.underline}
         >
           U
         </button>
@@ -187,7 +326,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('strike') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Barré"
+          title={strings.strike}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z"/>
@@ -201,7 +340,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-mono font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('code') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Code inline"
+          title={strings.inlineCode}
         >
           {'</>'}
         </button>
@@ -217,7 +356,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-xs font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('superscript') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Exposant"
+          title={strings.superscript}
         >
           x<sup>2</sup>
         </button>
@@ -228,7 +367,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-xs font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('subscript') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Indice"
+          title={strings.subscript}
         >
           x<sub>2</sub>
         </button>
@@ -258,13 +397,13 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           }}
           className="rounded border border-gray-300 bg-white px-3 py-1 text-sm font-semibold transition hover:bg-gray-50 focus:border-red-600 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
         >
-          <option value="p">Paragraphe</option>
-          <option value="1">Titre 1</option>
-          <option value="2">Titre 2</option>
-          <option value="3">Titre 3</option>
-          <option value="4">Titre 4</option>
-          <option value="5">Titre 5</option>
-          <option value="6">Titre 6</option>
+          <option value="p">{strings.paragraph}</option>
+          <option value="1">{strings.heading1}</option>
+          <option value="2">{strings.heading2}</option>
+          <option value="3">{strings.heading3}</option>
+          <option value="4">{strings.heading4}</option>
+          <option value="5">{strings.heading5}</option>
+          <option value="6">{strings.heading6}</option>
         </select>
       </div>
 
@@ -278,7 +417,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive({ textAlign: 'left' }) ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Aligner à gauche"
+          title={strings.alignLeft}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
@@ -291,7 +430,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive({ textAlign: 'center' }) ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Centrer"
+          title={strings.alignCenter}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
@@ -304,7 +443,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive({ textAlign: 'right' }) ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Aligner à droite"
+          title={strings.alignRight}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
@@ -317,7 +456,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Justifier"
+          title={strings.justify}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18V7H3v2zm0-6v2h18V3H3z"/>
@@ -335,7 +474,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('bulletList') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Liste à puces"
+          title={strings.bulletList}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/>
@@ -348,7 +487,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('orderedList') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Liste numérotée"
+          title={strings.orderedList}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/>
@@ -361,7 +500,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('blockquote') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Citation"
+          title={strings.blockquote}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
@@ -374,7 +513,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-mono font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('codeBlock') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Bloc de code"
+          title={strings.codeBlock}
         >
           {'{ }'}
         </button>
@@ -388,7 +527,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           type="button"
           onClick={setColor}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800"
-          title="Couleur du texte"
+          title={strings.textColor}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M9.62 12L12 5.67 14.38 12M11 3L5.5 17h2.25l1.12-3h6.25l1.12 3h2.25L13 3h-2z"/>
@@ -401,7 +540,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('highlight') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Surligner"
+          title={strings.highlight}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M6 14l3 3-3 3v4h18v-4l-3-3 3-3V6H6v8zm5-6h6v2h-6V8zm0 3h6v2h-6v-2z"/>
@@ -412,7 +551,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           type="button"
           onClick={() => editor.chain().focus().unsetAllMarks().run()}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800"
-          title="Effacer le formatage"
+          title={strings.clearFormatting}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M6 5v.18L8.82 8h2.4l-.72 1.68 2.1 2.1L14.21 8H20V5H6zm14 14l1.27-1.27L3.55 0 2.27 1.27 7.73 6.73 5.5 13H8l1.78-5.09 4.99 4.99-1.5 3.1h2.5l1.68-3.44 2.32 2.32L21 14z"/>
@@ -429,7 +568,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           onClick={addImage}
           disabled={uploading}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-800"
-          title={uploading ? 'Téléversement en cours...' : 'Insérer une image'}
+          title={uploading ? strings.uploading : strings.insertImage}
         >
           {uploading ? (
             <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -447,7 +586,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           type="button"
           onClick={addYouTube}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800"
-          title="Vidéo YouTube"
+          title={strings.youtube}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M10 16.5l6-4.5-6-4.5v9zM23 12s0-3.5-.5-5c-.3-.8-1-1.5-1.8-1.8C19 5 12 5 12 5s-7 0-8.7.2c-.8.3-1.5 1-1.8 1.8C1 8.5 1 12 1 12s0 3.5.5 5c.3.8 1 1.5 1.8 1.8C5 19 12 19 12 19s7 0 8.7-.2c.8-.3 1.5-1 1.8-1.8.5-1.5.5-5 .5-5z"/>
@@ -460,7 +599,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           className={`rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800 ${
             editor.isActive('link') ? 'bg-gray-300 dark:bg-gray-700' : ''
           }`}
-          title="Insérer un lien"
+          title={strings.insertLink}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
@@ -476,7 +615,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           type="button"
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800"
-          title="Insérer un tableau"
+          title={strings.insertTable}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M10 10.02h5V21h-5zM17 21h3c1.1 0 2-.9 2-2v-9h-5v11zm3-18H5c-1.1 0-2 .9-2 2v3h19V5c0-1.1-.9-2-2-2zM3 19c0 1.1.9 2 2 2h3V10.02H3V19z"/>
@@ -493,7 +632,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().chain().focus().undo().run()}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-800"
-          title="Annuler (Ctrl+Z)"
+          title={strings.undo}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
@@ -505,7 +644,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().chain().focus().redo().run()}
           className="rounded px-2 py-1 text-sm font-semibold transition hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-800"
-          title="Refaire (Ctrl+Y)"
+          title={strings.redo}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/>
@@ -520,7 +659,7 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
         type="button"
         onClick={() => setIsDarkMode(!isDarkMode)}
         className="ml-2 rounded px-3 py-1 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800"
-        title={isDarkMode ? 'Mode clair' : 'Mode sombre'}
+        title={isDarkMode ? strings.lightMode : strings.darkMode}
       >
         {isDarkMode ? (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
@@ -538,6 +677,8 @@ const MenuBar = ({ editor, isDarkMode, setIsDarkMode }) => {
 
 export default function TipTapEditor({ content, onChange }) {
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const { lang } = useI18n();
+  const strings = STRINGS[lang] || STRINGS.fr;
 
   const editor = useEditor({
     extensions: [
@@ -565,7 +706,7 @@ export default function TipTapEditor({ content, onChange }) {
       TableHeader,
       TableCell,
       Placeholder.configure({
-        placeholder: 'Commencez à écrire votre article... Utilisez la barre d\'outils pour formater',
+        placeholder: strings.placeholder,
       }),
       Typography,
       Underline,

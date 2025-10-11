@@ -7,21 +7,27 @@ const STRINGS = {
     title: 'Vérifiez votre email',
     message: 'Un email de confirmation a été envoyé à votre adresse.',
     instruction: 'Veuillez cliquer sur le lien dans l\'email pour activer votre compte.',
-    checkSpam: 'Si vous ne voyez pas l\'email, vérifiez votre dossier spam.',
+    checkSpam: '💡 Astuce : Si vous ne voyez pas l\'email, vérifiez votre dossier spam.',
+    resendLink: 'Vous n\'avez pas reçu l\'email ?',
+    resendButton: 'Renvoyer l\'email de vérification',
     backToLogin: '← Retour à la connexion',
   },
   en: {
     title: 'Check your email',
     message: 'A confirmation email has been sent to your address.',
     instruction: 'Please click on the link in the email to activate your account.',
-    checkSpam: 'If you don\'t see the email, check your spam folder.',
+    checkSpam: '💡 Tip: If you don\'t see the email, check your spam folder.',
+    resendLink: 'Didn\'t receive the email?',
+    resendButton: 'Resend verification email',
     backToLogin: '← Back to login',
   },
   es: {
     title: 'Revisa tu correo',
     message: 'Se ha enviado un correo de confirmación a tu dirección.',
     instruction: 'Por favor, haz clic en el enlace del correo para activar tu cuenta.',
-    checkSpam: 'Si no ves el correo, revisa tu carpeta de spam.',
+    checkSpam: '💡 Consejo: Si no ves el correo, revisa tu carpeta de spam.',
+    resendLink: '¿No recibiste el correo?',
+    resendButton: 'Reenviar correo de verificación',
     backToLogin: '← Volver al inicio de sesión',
   },
 };
@@ -67,9 +73,24 @@ export default function AuthConfirmEmail() {
           {L.instruction}
         </p>
 
-        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-          {L.checkSpam}
-        </p>
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            {L.checkSpam}
+          </p>
+        </div>
+
+        {/* Lien pour renvoyer l'email */}
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            {L.resendLink}
+          </p>
+          <Link
+            to="/auth/resend-verification"
+            className="text-red-600 dark:text-red-500 hover:underline font-medium"
+          >
+            {L.resendButton}
+          </Link>
+        </div>
 
         {/* Bouton retour */}
         <Link

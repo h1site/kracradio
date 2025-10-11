@@ -1,6 +1,7 @@
 // src/components/community/MusicLinksManager.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n';
 import { useMusicLinks, useManageMusicLinks } from '../../hooks/useCommunity';
 
 const PLATFORMS = [
@@ -11,6 +12,17 @@ export default function MusicLinksManager() {
   const { user } = useAuth();
   const { musicLinks, loading, refetch } = useMusicLinks(user?.id);
   const { addMusicLink, removeMusicLink, loading: managing } = useManageMusicLinks();
+  const { t } = useI18n();
+  const community = t?.community ?? {};
+  const links = community.musicLinks ?? {};
+  const common = t?.common ?? {};
+  const saveLabel = community.save ?? common.save ?? 'Enregistrer';
+  const savedLabel = community.saved ?? 'Modifications enregistrées';
+  const cancelLabel = links.cancel ?? common.cancel ?? 'Annuler';
+  const addLinkLabel = links.addLink ?? 'Ajouter un lien';
+  const addFirstLinkLabel = links.addFirstLink ?? 'Ajouter mon premier lien';
+  const placeholders = links.placeholders ?? {};
+  const helpText = links.help ?? {};
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,7 +35,7 @@ export default function MusicLinksManager() {
     e.preventDefault();
 
     if (!formData.url.trim()) {
-      setMessage({ type: 'error', text: '❌ Veuillez entrer une URL' });
+      setMessage({ type: 'error', text: `❌ ${links.enterUrl || 'Veuillez entrer une URL'}` });
       return;
     }
 
@@ -31,19 +43,19 @@ export default function MusicLinksManager() {
     try {
       new URL(formData.url);
     } catch {
-      setMessage({ type: 'error', text: '❌ URL invalide' });
+      setMessage({ type: 'error', text: `❌ ${links.invalidUrl || 'URL invalide'}` });
       return;
     }
 
     // Vérifier qu'il n'y a pas déjà un lien
     if (musicLinks.length > 0) {
-      setMessage({ type: 'error', text: '❌ Vous pouvez ajouter un seul lien Spotify. Supprimez l\'existant pour en ajouter un nouveau.' });
+      setMessage({ type: 'error', text: `❌ ${links.onlyOne || 'Vous pouvez ajouter un seul lien Spotify. Supprimez l\'existant pour en ajouter un nouveau.'}` });
       return;
     }
 
     try {
       await addMusicLink(user.id, formData.platform, formData.url);
-      setMessage({ type: 'success', text: '✅ Lien ajouté avec succès' });
+      setMessage({ type: 'success', text: `✅ ${links.linkAdded || 'Lien ajouté avec succès'}` });
       setFormData({ platform: 'spotify', url: '' });
       setShowForm(false);
       refetch();
@@ -54,11 +66,11 @@ export default function MusicLinksManager() {
   };
 
   const handleRemove = async (linkId) => {
-    if (!confirm('Supprimer ce lien musical ?')) return;
+    if (!confirm(links.deleteConfirm ?? 'Supprimer ce lien musical ?')) return;
 
     try {
       await removeMusicLink(linkId);
-      setMessage({ type: 'success', text: '✅ Lien supprimé' });
+      setMessage({ type: 'success', text: `✅ ${links.linkRemoved || 'Lien supprimé'}` });
       refetch();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
@@ -78,7 +90,7 @@ export default function MusicLinksManager() {
     <div style={{ maxWidth: '800px' }}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-text-primary">
-          🎶 Mes liens musicaux
+          🎶 {links.title ?? 'Mes liens musicaux'}
         </h2>
         <div className="flex items-center gap-3">
           {musicLinks.length === 0 && (
@@ -86,18 +98,18 @@ export default function MusicLinksManager() {
               onClick={() => setShowForm(!showForm)}
               className="px-4 py-2 bg-bg-secondary hover:bg-bg-tertiary border border-border rounded-lg text-text-primary font-medium transition-colors"
             >
-              {showForm ? '✖ Annuler' : '➕ Ajouter un lien'}
+              {showForm ? `✖ ${cancelLabel}` : `➕ ${addLinkLabel}`}
             </button>
           )}
           <button
             onClick={async () => {
               await refetch();
-              setMessage({ type: 'success', text: '✅ Modifications enregistrées' });
+              setMessage({ type: 'success', text: `✅ ${savedLabel}` });
               setTimeout(() => setMessage({ type: '', text: '' }), 3000);
             }}
             className="px-6 py-2 bg-accent text-bg-primary font-semibold rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2"
           >
-            💾 Enregistrer
+            💾 {saveLabel}
           </button>
         </div>
       </div>
@@ -117,13 +129,13 @@ export default function MusicLinksManager() {
       {showForm && (
         <form onSubmit={handleAdd} className="mb-6 p-6 bg-bg-secondary rounded-lg border border-border">
           <h3 className="text-lg font-semibold text-text-primary mb-4">
-            Ajouter un nouveau lien
+            {links.formTitle ?? 'Ajouter un nouveau lien'}
           </h3>
 
           {/* Sélection plateforme */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-text-primary mb-2">
-              Plateforme
+              {links.platform ?? 'Plateforme'}
             </label>
             <div className="grid grid-cols-3 gap-3">
               {PLATFORMS.map(platform => (
@@ -151,19 +163,19 @@ export default function MusicLinksManager() {
           {/* URL */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-text-primary mb-2">
-              URL du lien
+              {links.url ?? 'URL du lien'}
             </label>
             <input
               type="url"
               value={formData.url}
               onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-              placeholder={getPlaceholder(formData.platform)}
+              placeholder={getPlaceholder(formData.platform, placeholders)}
               className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
                        text-text-primary placeholder-text-secondary
                        focus:outline-none focus:ring-2 focus:ring-accent"
             />
             <p className="text-xs text-text-secondary mt-1">
-              {getHelpText(formData.platform)}
+              {getHelpText(formData.platform, helpText)}
             </p>
           </div>
 
@@ -174,7 +186,7 @@ export default function MusicLinksManager() {
               onClick={() => setShowForm(false)}
               className="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
             >
-              Annuler
+              {cancelLabel}
             </button>
             <button
               type="submit"
@@ -182,7 +194,7 @@ export default function MusicLinksManager() {
               className="px-6 py-2 bg-accent text-bg-primary font-semibold rounded-lg
                        hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
-              {managing ? 'Ajout...' : 'Ajouter'}
+              {managing ? (links.adding ?? 'Ajout...') : (links.add ?? 'Ajouter')}
             </button>
           </div>
         </form>
@@ -193,17 +205,17 @@ export default function MusicLinksManager() {
         <div className="text-center py-12 bg-bg-secondary rounded-lg border border-border">
           <div className="text-6xl mb-4">🎵</div>
           <h3 className="text-xl font-semibold text-text-primary mb-2">
-            Aucun lien musical
+            {links.noLinks ?? 'Aucun lien musical'}
           </h3>
           <p className="text-text-secondary mb-6">
-            Ajoutez vos liens Spotify, Bandcamp, etc. pour les partager sur votre profil
+            {links.noLinksDesc ?? 'Ajoutez vos liens Spotify, Bandcamp, etc. pour les partager sur votre profil'}
           </p>
           <button
             onClick={() => setShowForm(true)}
             className="px-6 py-2 bg-accent text-bg-primary font-semibold rounded-lg
                      hover:bg-accent-hover transition-colors"
           >
-            ➕ Ajouter mon premier lien
+            {`➕ ${addFirstLinkLabel}`}
           </button>
         </div>
       ) : (
@@ -241,7 +253,7 @@ export default function MusicLinksManager() {
                     className="px-3 py-1 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors
                              disabled:opacity-50"
                   >
-                    🗑️ Supprimer
+                    {`🗑️ ${common.delete || 'Supprimer'}`}
                   </button>
                 </div>
 
@@ -262,11 +274,13 @@ export default function MusicLinksManager() {
 
       {/* Informations */}
       <div className="mt-6 p-4 bg-accent/10 rounded-lg border border-accent/20">
-        <h4 className="font-semibold text-text-primary mb-2">💡 Conseils</h4>
+        <h4 className="font-semibold text-text-primary mb-2">
+          {`💡 ${links.tips || 'Conseils'}`}
+        </h4>
         <ul className="text-sm text-text-secondary space-y-1">
-          <li>• Le lien Spotify apparaît sur votre profil public</li>
-          <li>• Un seul lien Spotify est autorisé par profil</li>
-          <li>• Le lecteur Spotify s'affiche directement sur votre profil</li>
+          <li>• {links.tip1 ?? 'Le lien Spotify apparaît sur votre profil public'}</li>
+          <li>• {links.tip2 ?? 'Un seul lien Spotify est autorisé par profil'}</li>
+          <li>• {links.tip3 ?? "Le lecteur Spotify s'affiche directement sur votre profil"}</li>
         </ul>
       </div>
     </div>
@@ -274,26 +288,12 @@ export default function MusicLinksManager() {
 }
 
 // Helpers
-function getPlaceholder(platform) {
-  const placeholders = {
-    spotify: 'https://open.spotify.com/track/...',
-    bandcamp: 'https://votreartiste.bandcamp.com/album/...',
-    apple_music: 'https://music.apple.com/...',
-    soundcloud: 'https://soundcloud.com/votreartiste/...',
-    youtube: 'https://youtube.com/watch?v=...',
-    other: 'https://...'
-  };
-  return placeholders[platform] || 'https://...';
+function getPlaceholder(platform, placeholders) {
+  if (!placeholders) return 'https://...';
+  return placeholders[platform] || placeholders.other || 'https://...';
 }
 
-function getHelpText(platform) {
-  const help = {
-    spotify: 'Copiez le lien depuis l\'app Spotify (Partager → Copier le lien)',
-    bandcamp: 'Copiez l\'URL de votre album ou track Bandcamp',
-    apple_music: 'Copiez le lien depuis Apple Music',
-    soundcloud: 'Copiez l\'URL de votre track SoundCloud',
-    youtube: 'Copiez l\'URL de votre vidéo YouTube',
-    other: 'Collez n\'importe quel lien musical'
-  };
-  return help[platform] || '';
+function getHelpText(platform, help) {
+  if (!help) return '';
+  return help[platform] || help.other || '';
 }

@@ -9,6 +9,7 @@ import {
   updateArticleById,
   fetchArticleById,
 } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import TipTapEditor from '../components/TipTapEditor';
 
 export default function ArticleEditor() {
@@ -41,6 +42,8 @@ export default function ArticleEditor() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [activeTab, setActiveTab] = useState('content'); // content | seo | settings
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Charger l'article à éditer
   useEffect(() => {
@@ -78,6 +81,123 @@ export default function ArticleEditor() {
     return () => { mounted = false; };
   }, [id, isEdit]);
 
+  async function convertToWebP(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Créer un canvas pour convertir l'image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          // Convertir en WebP avec qualité 85%
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Conversion WebP échouée'));
+              }
+            },
+            'image/webp',
+            0.85
+          );
+        };
+        img.onerror = () => reject(new Error('Impossible de charger l\'image'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Impossible de lire le fichier'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image trop grande (max 5MB)');
+      return;
+    }
+
+    // Vérifier le type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Veuillez sélectionner une image');
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadError('');
+
+    try {
+      // Convertir en WebP
+      const webpBlob = await convertToWebP(file);
+
+      // Générer un nom de fichier unique avec extension .webp
+      const timestamp = Date.now();
+      const fileName = `${timestamp}.webp`;
+      const filePath = `articles/${user.id}/${fileName}`;
+
+      console.log('Uploading to:', filePath);
+
+      // Upload vers Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('public-assets')
+        .upload(filePath, webpBlob, {
+          contentType: 'image/webp',
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Storage error details:', error);
+        throw new Error(error.message || 'Erreur d\'upload');
+      }
+
+      console.log('Upload successful:', data);
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from('public-assets')
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', publicUrl);
+      setFeaturedImage(publicUrl);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError(error.message || 'Erreur lors de l\'upload. Vérifiez les permissions du bucket.');
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
+  async function handleRemoveImage() {
+    if (!featuredImage) return;
+
+    // Extraire le chemin du fichier depuis l'URL
+    try {
+      const url = new URL(featuredImage);
+      const pathMatch = url.pathname.match(/\/public-assets\/(.+)$/);
+
+      if (pathMatch) {
+        const filePath = pathMatch[1];
+        await supabase.storage
+          .from('public-assets')
+          .remove([filePath]);
+      }
+    } catch (error) {
+      console.error('Error removing file:', error);
+    }
+
+    setFeaturedImage('');
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
     if (!user) return;
@@ -103,14 +223,24 @@ export default function ArticleEditor() {
       if (isEdit) {
         const { data, error } = await updateArticleById(id, articleData);
         if (error) throw error;
-        navigate('/dashboard', { replace: true });
+        // Redirect to the article page after update
+        if (data && data.slug) {
+          navigate(`/article/${data.slug}`, { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         const { data, error } = await createArticle({
           ...articleData,
           author_id: user.id,
         });
         if (error) throw error;
-        navigate('/dashboard', { replace: true });
+        // Redirect to the article page after creation
+        if (data && data.slug) {
+          navigate(`/article/${data.slug}`, { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
     } catch (e2) {
       setErr(e2.message || 'Error');
@@ -256,25 +386,74 @@ export default function ArticleEditor() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {A.imageUrl || 'URL de l\'image'}
-                </label>
-                <input
-                  type="url"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={featuredImage}
-                  onChange={(e) => setFeaturedImage(e.target.value)}
-                  placeholder={A.imageUrlPh || 'https://example.com/image.jpg'}
-                />
-                <p className="mt-1 text-xs text-gray-500">{A.imageUrlHint || 'Téléversez votre image sur Supabase Storage et collez l\'URL ici'}</p>
+                {!featuredImage ? (
+                  <div className="space-y-3">
+                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-red-500 transition dark:border-gray-700 dark:hover:border-red-500">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        {uploadingImage ? (
+                          <>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-3"></div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Téléversement en cours...</p>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-12 h-12 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              Cliquez pour téléverser une image
+                            </p>
+                            <p className="text-xs text-gray-500">PNG, JPG, GIF (max. 5MB)</p>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                    {uploadError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 dark:bg-red-900/20 dark:border-red-800">
+                        {uploadError}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                      <div className="flex items-start justify-between mb-3">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{A.imagePreview || 'Aperçu'}:</p>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition dark:bg-red-900/20 dark:hover:bg-red-900/30"
+                        >
+                          🗑️ Supprimer
+                        </button>
+                      </div>
+                      <img src={featuredImage} alt="Preview" className="w-full max-h-64 rounded-lg object-cover" />
+                    </div>
+                    <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-red-500 transition dark:border-gray-700 dark:hover:border-red-500">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Remplacer l'image
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
-
-              {featuredImage && (
-                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                  <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{A.imagePreview || 'Aperçu'}:</p>
-                  <img src={featuredImage} alt="Preview" className="max-h-64 rounded-lg object-cover" />
-                </div>
-              )}
 
               <div className="border-b border-gray-200 pb-4 pt-6 dark:border-gray-800">
                 <h3 className="text-lg font-bold text-black dark:text-white">{A.seoTitle || 'SEO (Référencement)'}</h3>

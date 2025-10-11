@@ -7,6 +7,7 @@ import Seo from '../seo/Seo';
 import { radioStationJsonLd } from '../seo/jsonld';
 import { useI18n } from '../i18n';
 import { getNowPlaying, getRecentTracks } from '../utils/azura';
+import GoogleAd from '../components/ads/GoogleAd';
 
 const RED = '#E50914';
 
@@ -187,6 +188,10 @@ export default function Channel() {
               </ul>
             </section>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
         </div>
       </div>
     </main>

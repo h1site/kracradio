@@ -17,7 +17,11 @@
     "settings": "Settings",
     "like": "Like",
     "store": "Our Store",
-    "donation": "Donation"
+    "donation": "Donation",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme"
   },
   "home": {
     "channelsHeading": "Our Music Channels",
@@ -150,6 +154,8 @@
     "title": "Profile",
     "myArticles": "My articles",
     "createArticle": "Create article",
+    "addBlog": "Add blog",
+    "addPodcast": "Add podcast",
     "edit": "Edit",
     "back": "Back",
     "status": "Status",
@@ -288,7 +294,34 @@
     "otherAreRotation": "Other specialized channels are on 24/7 music rotation."
   },
   "common": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "savingInProgress": "Saving in progress...",
+    "noChanges": "No changes to save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View"
+  },
+  "myArticles": {
+    "title": "My articles",
+    "write": "Write an article",
+    "empty": "No articles created yet.",
+    "notPublished": "Not published",
+    "editTooltip": "Edit this article"
+  },
+  "player": {
+    "selectPrompt": "Select a channel — click Listen",
+    "likeComingSoon": "Like (coming soon)",
+    "settings": "Settings",
+    "share": "Share",
+    "volume": "Volume",
+    "podcastLabel": "Podcast",
+    "play": "Play",
+    "pause": "Pause",
+    "progressAria": "Progress bar - click to seek",
+    "live": "LIVE"
   },
   "community": {
     "title": "My Community",
@@ -307,20 +340,55 @@
       "title": "Community settings",
       "username": "Username",
       "usernamePlaceholder": "Your artist name",
-      "artistSlug": "Custom URL",
-      "artistSlugPlaceholder": "your-name",
-      "bio": "Biography",
-      "bioPlaceholder": "Tell us about you and your music...",
+      "artistSlug": "Artist name (for public URL)",
+      "artistSlugPlaceholder": "my_artist_name",
+      "artistSlugMin": "Artist name must be at least 3 characters",
+      "artistSlugAvailable": "Artist name available",
+      "artistSlugTaken": "This artist name is already taken",
+      "artistSlugChecking": "Checking...",
+      "artistSlugError": "Error checking availability",
+      "artistSlugHelp": "Spaces will be replaced with underscores (_). Minimum 3 characters.",
+      "artistSlugRequired": "You must set an artist name (min. 3 characters) to make your profile public",
+      "artistSlugTakenError": "The chosen artist name is already taken. Please choose another one.",
+      "publicUrl": "Your public URL:",
+      "profileInfo": "Profile information",
+      "bio": "Bio",
+      "bioPlaceholder": "Tell us about you, your music, your projects...",
+      "bioCount": "{count}/500 characters",
+      "country": "Country",
+      "countryPlaceholder": "Select a country",
       "location": "Location",
       "locationPlaceholder": "Montreal, QC",
       "website": "Website",
       "websitePlaceholder": "https://your-site.com",
       "genres": "Music genres",
+      "genresMax": "Music genres (max 3)",
       "genresPlaceholder": "Rock, Jazz, Electronic",
       "isPublic": "Public profile",
       "isPublicDesc": "Your profile will be visible to everyone",
       "isPrivate": "Private profile",
-      "isPrivateDesc": "Only your connections will see your profile"
+      "isPrivateDesc": "Only your connections will see your profile",
+      "publicProfile": "Public profile",
+      "privateProfile": "Private profile",
+      "profilePublic": "Your profile is now public",
+      "profilePrivate": "Your profile is now private",
+      "publicMode": "Public mode enabled:",
+      "publicModeDesc": "People can see your profile, public posts, blogs and podcasts. You can receive follow requests.",
+      "settingsSaved": "Settings saved successfully",
+      "settingsError": "Error:",
+      "yourPublicProfile": "Your public profile:",
+      "genreCategories": {
+        "urban": "Urban Music",
+        "rock": "Rock and Alternative Music",
+        "electronic": "Electronic Music",
+        "jazz": "Jazz, Blues and derivatives",
+        "pop": "Pop and derivatives",
+        "metal": "Metal and its branches",
+        "reggae": "Reggae and tropical music",
+        "classical": "Classical and instrumental music",
+        "world": "World Music",
+        "modern": "Modern and hybrid music"
+      }
     },
     "customization": {
       "title": "Profile customization",
@@ -363,7 +431,51 @@
       "tips": "Tips",
       "tip1": "Spotify link appears on your public profile",
       "tip2": "Only one Spotify link allowed per profile",
-      "tip3": "Spotify player displays directly on your profile"
+      "tip3": "Spotify player displays directly on your profile",
+      "formTitle": "Add a new link",
+      "selectPlatform": "Select a platform",
+      "placeholders": {
+        "spotify": "https://open.spotify.com/track/...",
+        "bandcamp": "https://yourartist.bandcamp.com/album/...",
+        "apple_music": "https://music.apple.com/...",
+        "soundcloud": "https://soundcloud.com/yourartist/...",
+        "youtube": "https://youtube.com/watch?v=...",
+        "other": "https://..."
+      },
+      "help": {
+        "spotify": "Copy the link from the Spotify app (Share → Copy link)",
+        "bandcamp": "Copy the URL of your Bandcamp album or track",
+        "apple_music": "Copy the link from Apple Music",
+        "soundcloud": "Copy the URL of your SoundCloud track",
+        "youtube": "Copy the URL of your YouTube video",
+        "other": "Paste any music link"
+      }
+    },
+    "follow": {
+      "loading": "Loading...",
+      "states": {
+        "default": {
+          "label": "Follow",
+          "description": "Follow this artist"
+        },
+        "following": {
+          "label": "Pending",
+          "description": "You follow this artist, awaiting connection"
+        },
+        "follower": {
+          "label": "Follow back",
+          "description": "This artist follows you, follow back to connect"
+        },
+        "connected": {
+          "label": "Connected",
+          "description": "You are mutually connected"
+        }
+      },
+      "compact": {
+        "connected": "Connected",
+        "follow": "Follow",
+        "loading": "..."
+      }
     }
   },
   "publicProfile": {
@@ -396,7 +508,24 @@
   "artists": {
     "title": "Artists",
     "noArtists": "No artists yet",
-    "noArtistsDesc": "Public artists will appear here"
+    "noArtistsDesc": "Public artists will appear here",
+    "searchPlaceholder": "Search for an artist by name...",
+    "allGenres": "All genres",
+    "allCountries": "All countries",
+    "activeFilters": "Active filters",
+    "artistsFound": "artist",
+    "artistsFoundPlural": "artists",
+    "found": "found",
+    "foundPlural": "found",
+    "noArtistFound": "No artist found",
+    "modifyFilters": "Try modifying your search filters",
+    "viewAllArtists": "View all artists",
+    "back": "Back",
+    "removeGenreFilter": "Remove genre filter",
+    "removeCountryFilter": "Remove country filter",
+    "removeSearch": "Remove search",
+    "clearSearch": "Clear search",
+    "resetAllFilters": "Reset all filters"
   },
   "posts": {
     "createPost": {

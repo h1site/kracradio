@@ -18,6 +18,8 @@ import AuthRegister from '../pages/AuthRegister';
 import AuthConfirmEmail from '../pages/AuthConfirmEmail';
 import AuthResetPassword from '../pages/AuthResetPassword';
 import AuthUpdatePassword from '../pages/AuthUpdatePassword';
+import AuthVerifyEmail from '../pages/AuthVerifyEmail';
+import AuthResendVerification from '../pages/AuthResendVerification';
 import ArticleEditor from '../pages/ArticleEditor';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -79,6 +81,8 @@ export default function App() {
           <Route path="/auth/login" element={<AuthLogin />} />
           <Route path="/auth/register" element={<AuthRegister />} />
           <Route path="/auth/confirm-email" element={<AuthConfirmEmail />} />
+          <Route path="/auth/verify-email" element={<AuthVerifyEmail />} />
+          <Route path="/auth/resend-verification" element={<AuthResendVerification />} />
           <Route path="/auth/reset-password" element={<AuthResetPassword />} />
           <Route path="/auth/update-password" element={<AuthUpdatePassword />} />
 

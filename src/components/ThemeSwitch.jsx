@@ -1,17 +1,22 @@
 // src/components/ThemeSwitch.jsx
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../i18n';
 
 export default function ThemeSwitch({ className = '' }) {
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useI18n();
+  const site = t?.site ?? {};
+  const ariaLabel = isDark ? (site.switchToLight ?? 'Passer en thème clair') : (site.switchToDark ?? 'Passer en thème sombre');
+  const title = isDark ? (site.lightTheme ?? 'Thème clair') : (site.darkTheme ?? 'Thème sombre');
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
       className={`inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/20 hover:bg-white/10 text-white transition ${className}`}
-      aria-label={isDark ? 'Passer en thème clair' : 'Passer en thème sombre'}
-      title={isDark ? 'Thème clair' : 'Thème sombre'}
+      aria-label={ariaLabel}
+      title={title}
     >
       {isDark ? (
         // Icône Soleil (pour passer au clair)

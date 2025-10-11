@@ -119,13 +119,28 @@ export async function fetchArticleById(id) {
 export async function fetchArticleBySlug(slug) {
   const { data, error } = await supabase
     .from('articles')
-    .select('id, slug, title, excerpt, content, cover_url, status, published_at, created_at, author_id')
+    .select('id, slug, title, excerpt, content, cover_url, featured_image, categories, status, published_at, created_at, user_id')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
 
   console.log('fetchArticleBySlug - slug:', slug, 'data:', data, 'error:', error);
   if (error) throw error;
+
+  // Add author data if user_id exists
+  if (data && data.user_id) {
+    const { data: author } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('id', data.user_id)
+      .single();
+
+    if (author) {
+      data.author = author;
+      data.author_id = data.user_id; // alias for compatibility
+    }
+  }
+
   return data;
 }
 
@@ -135,19 +150,70 @@ export async function listPublishedArticles({ limit = 24, offset = 0 } = {}) {
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
   try {
-    const { data, error } = await supabase
+    // First, get articles (note: table uses user_id, not author_id)
+    const { data: articles, error } = await supabase
       .from('articles')
-      .select('id, slug, title, excerpt, cover_url, published_at, author_id')
+      .select(`
+        id,
+        slug,
+        title,
+        excerpt,
+        content,
+        cover_url,
+        featured_image,
+        categories,
+        published_at,
+        user_id
+      `)
       .eq('status', 'published')
       .order('published_at', { ascending: false, nullsFirst: false })
       .range(offset, offset + limit - 1)
       .abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
-    if (error) throw error;
-    return data || [];
+    if (error) {
+      console.error('Error loading articles:', error);
+      throw error;
+    }
+
+    if (!articles || articles.length === 0) {
+      console.log('No articles found');
+      return [];
+    }
+
+    // Get unique author IDs (from user_id field)
+    const authorIds = [...new Set(articles.map(a => a.user_id).filter(Boolean))];
+
+    // Fetch authors
+    const { data: authors } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .in('id', authorIds);
+
+    // Create author map
+    const authorMap = {};
+    if (authors) {
+      authors.forEach(author => {
+        authorMap[author.id] = author;
+      });
+    }
+
+    // Merge author data into articles (add author_id alias for compatibility)
+    const articlesWithAuthors = articles.map(article => ({
+      ...article,
+      author_id: article.user_id, // Add alias for compatibility
+      author: authorMap[article.user_id] || null
+    }));
+
+    console.log('Articles loaded:', articlesWithAuthors.length, 'items');
+    if (articlesWithAuthors.length > 0) {
+      console.log('First article:', articlesWithAuthors[0]);
+    }
+
+    return articlesWithAuthors;
   } catch (error) {
     clearTimeout(timeoutId);
+    console.error('Failed to load articles:', error);
     throw error;
   }
 }

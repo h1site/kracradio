@@ -62,6 +62,39 @@ export function AuthProvider({ children }) {
   const signIn = async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message || 'Sign-in failed');
+
+    // Check if email is verified
+    if (data?.user) {
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email_verified')
+          .eq('id', data.user.id)
+          .single();
+
+        console.log('Profile check:', { profile, profileError, userId: data.user.id });
+
+        // If profile exists and email_verified field exists
+        if (profile && typeof profile.email_verified !== 'undefined') {
+          if (!profile.email_verified) {
+            // Sign out the user
+            await supabase.auth.signOut();
+            throw new Error('EMAIL_NOT_VERIFIED');
+          }
+        } else {
+          // Field doesn't exist or profile not found - log warning but allow login
+          console.warn('email_verified field not found in profile. Run migration first!');
+        }
+      } catch (verificationError) {
+        // If it's our custom error, throw it
+        if (verificationError.message === 'EMAIL_NOT_VERIFIED') {
+          throw verificationError;
+        }
+        // Otherwise, log the error but allow login (backwards compatibility)
+        console.error('Error checking email verification:', verificationError);
+      }
+    }
+
     return data;
   };
 

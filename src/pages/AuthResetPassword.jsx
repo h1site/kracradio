@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
+import { sendPasswordResetEmail } from '../lib/emailService';
 
 export default function AuthResetPassword() {
   const { t, lang } = useI18n();
@@ -21,17 +22,26 @@ export default function AuthResetPassword() {
     setSuccess(false);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
+      // Find user by email to get user_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', email)
+        .single();
 
-      if (error) {
-        setErr(error.message || 'Erreur lors de l\'envoi du lien');
-      } else {
+      if (profileError || !profile) {
+        // Don't reveal if email exists or not for security
         setSuccess(true);
+        return;
       }
+
+      // Send password reset email using our custom system
+      await sendPasswordResetEmail(profile.id, email, lang);
+      setSuccess(true);
     } catch (e2) {
-      setErr(e2.message || 'Erreur lors de l\'envoi du lien');
+      console.error('Error sending password reset:', e2);
+      // Don't reveal error details to user for security
+      setSuccess(true);
     } finally {
       setLoading(false);
     }
@@ -82,6 +92,12 @@ export default function AuthResetPassword() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                💡 Astuce : Vérifiez votre dossier spam si vous ne voyez pas l'email.
+              </p>
             </div>
 
             <Link

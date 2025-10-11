@@ -17,7 +17,11 @@
     "settings": "Ajustes",
     "like": "Me gusta",
     "store": "Nuestra tienda",
-    "donation": "Donación"
+    "donation": "Donación",
+    "switchToLight": "Cambiar al tema claro",
+    "switchToDark": "Cambiar al tema oscuro",
+    "lightTheme": "Tema claro",
+    "darkTheme": "Tema oscuro"
   },
   "home": {
     "channelsHeading": "Nuestros Canales Musicales",
@@ -150,6 +154,8 @@
     "title": "Perfil",
     "myArticles": "Mis artículos",
     "createArticle": "Crear artículo",
+    "addBlog": "Agregar blog",
+    "addPodcast": "Agregar podcast",
     "edit": "Editar",
     "back": "Volver",
     "status": "Estado",
@@ -288,7 +294,34 @@
     "otherAreRotation": "Los otros canales especializados están en rotación musical 24/7."
   },
   "common": {
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "savingInProgress": "Guardado en progreso...",
+    "noChanges": "No hay cambios para guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver"
+  },
+  "myArticles": {
+    "title": "Mis artículos",
+    "write": "Escribir un artículo",
+    "empty": "Aún no has creado artículos.",
+    "notPublished": "No publicado",
+    "editTooltip": "Editar este artículo"
+  },
+  "player": {
+    "selectPrompt": "Selecciona un canal — haz clic en Escuchar",
+    "likeComingSoon": "Me gusta (próximamente)",
+    "settings": "Ajustes",
+    "share": "Compartir",
+    "volume": "Volumen",
+    "podcastLabel": "Podcast",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "progressAria": "Barra de progreso - haz clic para avanzar",
+    "live": "EN VIVO"
   },
   "community": {
     "title": "Mi Comunidad",
@@ -307,20 +340,55 @@
       "title": "Configuración de la comunidad",
       "username": "Nombre de usuario",
       "usernamePlaceholder": "Tu nombre artístico",
-      "artistSlug": "URL personalizada",
-      "artistSlugPlaceholder": "tu-nombre",
-      "bio": "Biografía",
-      "bioPlaceholder": "Cuéntanos sobre ti y tu música...",
+      "artistSlug": "Nombre artístico (para URL pública)",
+      "artistSlugPlaceholder": "mi_nombre_artistico",
+      "artistSlugMin": "El nombre artístico debe tener al menos 3 caracteres",
+      "artistSlugAvailable": "Nombre artístico disponible",
+      "artistSlugTaken": "Este nombre artístico ya está ocupado",
+      "artistSlugChecking": "Verificando...",
+      "artistSlugError": "Error al verificar disponibilidad",
+      "artistSlugHelp": "Los espacios se reemplazarán por guiones bajos (_). Mínimo 3 caracteres.",
+      "artistSlugRequired": "Debes establecer un nombre artístico (mín. 3 caracteres) para hacer tu perfil público",
+      "artistSlugTakenError": "El nombre artístico elegido ya está ocupado. Por favor elige otro.",
+      "publicUrl": "Tu URL pública:",
+      "profileInfo": "Información del perfil",
+      "bio": "Bio",
+      "bioPlaceholder": "Cuéntanos sobre ti, tu música, tus proyectos...",
+      "bioCount": "{count}/500 caracteres",
+      "country": "País",
+      "countryPlaceholder": "Selecciona un país",
       "location": "Ubicación",
       "locationPlaceholder": "Montreal, QC",
       "website": "Sitio web",
       "websitePlaceholder": "https://tu-sitio.com",
       "genres": "Géneros musicales",
+      "genresMax": "Géneros musicales (máx 3)",
       "genresPlaceholder": "Rock, Jazz, Electronic",
       "isPublic": "Perfil público",
       "isPublicDesc": "Tu perfil será visible para todos",
       "isPrivate": "Perfil privado",
-      "isPrivateDesc": "Solo tus conexiones verán tu perfil"
+      "isPrivateDesc": "Solo tus conexiones verán tu perfil",
+      "publicProfile": "Perfil público",
+      "privateProfile": "Perfil privado",
+      "profilePublic": "Tu perfil ahora es público",
+      "profilePrivate": "Tu perfil ahora es privado",
+      "publicMode": "Modo público activado:",
+      "publicModeDesc": "La gente puede ver tu perfil, publicaciones públicas, blogs y podcasts. Puedes recibir solicitudes de seguimiento.",
+      "settingsSaved": "Configuración guardada con éxito",
+      "settingsError": "Error:",
+      "yourPublicProfile": "Tu perfil público:",
+      "genreCategories": {
+        "urban": "Música Urbana",
+        "rock": "Música Rock y Alternativa",
+        "electronic": "Música Electrónica",
+        "jazz": "Jazz, Blues y derivados",
+        "pop": "Pop y derivados",
+        "metal": "Metal y sus ramas",
+        "reggae": "Reggae y música tropical",
+        "classical": "Música clásica e instrumental",
+        "world": "Música del Mundo",
+        "modern": "Música moderna e híbrida"
+      }
     },
     "customization": {
       "title": "Personalización del perfil",
@@ -363,7 +431,51 @@
       "tips": "Consejos",
       "tip1": "El enlace de Spotify aparece en tu perfil público",
       "tip2": "Solo un enlace de Spotify permitido por perfil",
-      "tip3": "El reproductor de Spotify se muestra directamente en tu perfil"
+      "tip3": "El reproductor de Spotify se muestra directamente en tu perfil",
+      "formTitle": "Agregar un nuevo enlace",
+      "selectPlatform": "Selecciona una plataforma",
+      "placeholders": {
+        "spotify": "https://open.spotify.com/track/...",
+        "bandcamp": "https://tuartista.bandcamp.com/album/...",
+        "apple_music": "https://music.apple.com/...",
+        "soundcloud": "https://soundcloud.com/tuartista/...",
+        "youtube": "https://youtube.com/watch?v=...",
+        "other": "https://..."
+      },
+      "help": {
+        "spotify": "Copia el enlace desde la app de Spotify (Compartir → Copiar enlace)",
+        "bandcamp": "Copia la URL de tu álbum o pista en Bandcamp",
+        "apple_music": "Copia el enlace desde Apple Music",
+        "soundcloud": "Copia la URL de tu pista en SoundCloud",
+        "youtube": "Copia la URL de tu video de YouTube",
+        "other": "Pega cualquier enlace musical"
+      }
+    },
+    "follow": {
+      "loading": "Cargando...",
+      "states": {
+        "default": {
+          "label": "Seguir",
+          "description": "Seguir a este artista"
+        },
+        "following": {
+          "label": "Pendiente",
+          "description": "Sigues a este artista, en espera de conexión"
+        },
+        "follower": {
+          "label": "Seguir de vuelta",
+          "description": "Este artista te sigue, síguelo de vuelta para conectar"
+        },
+        "connected": {
+          "label": "Conectado/a",
+          "description": "Están conectados mutuamente"
+        }
+      },
+      "compact": {
+        "connected": "Conectado",
+        "follow": "Seguir",
+        "loading": "..."
+      }
     }
   },
   "publicProfile": {
@@ -396,7 +508,24 @@
   "artists": {
     "title": "Artistas",
     "noArtists": "Aún no hay artistas",
-    "noArtistsDesc": "Los artistas públicos aparecerán aquí"
+    "noArtistsDesc": "Los artistas públicos aparecerán aquí",
+    "searchPlaceholder": "Buscar un artista por nombre...",
+    "allGenres": "Todos los géneros",
+    "allCountries": "Todos los países",
+    "activeFilters": "Filtros activos",
+    "artistsFound": "artista",
+    "artistsFoundPlural": "artistas",
+    "found": "encontrado",
+    "foundPlural": "encontrados",
+    "noArtistFound": "No se encontraron artistas",
+    "modifyFilters": "Intenta modificar tus filtros de búsqueda",
+    "viewAllArtists": "Ver todos los artistas",
+    "back": "Volver",
+    "removeGenreFilter": "Eliminar filtro de género",
+    "removeCountryFilter": "Eliminar filtro de país",
+    "removeSearch": "Eliminar búsqueda",
+    "clearSearch": "Borrar búsqueda",
+    "resetAllFilters": "Restablecer todos los filtros"
   },
   "posts": {
     "createPost": {

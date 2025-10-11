@@ -2,11 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
 
 export default function MyArticles() {
   const { user } = useAuth();
   const [rows, setRows] = useState(null);
+  const { t } = useI18n();
+  const common = t?.common ?? {};
+  const profile = t?.profile ?? {};
+  const myArticles = t?.myArticles ?? {};
 
   if (!user) return <Navigate to="/auth/login" replace />;
 
@@ -28,16 +33,18 @@ export default function MyArticles() {
   return (
     <main className="container-max px-5 py-5">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-extrabold">Mes articles</h1>
+        <h1 className="text-2xl font-extrabold">{myArticles.title ?? 'Mes articles'}</h1>
         <Link to="/dashboard/articles/edit" className="btn-primary h-11 rounded-xl font-semibold">
-          Écrire un article
+          {myArticles.write ?? 'Écrire un article'}
         </Link>
       </div>
 
       {rows === null ? (
-        <p>Chargement…</p>
+        <p>{common.loading ?? 'Chargement…'}</p>
       ) : rows.length === 0 ? (
-        <div className="card p-5 dark:bg-[#1e1e1e]">Aucun article créé pour le moment.</div>
+        <div className="card p-5 dark:bg-[#1e1e1e]">
+          {myArticles.empty ?? 'Aucun article créé pour le moment.'}
+        </div>
       ) : (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {rows.map((a) => (
@@ -63,25 +70,27 @@ export default function MyArticles() {
                       : 'bg-yellow-600/15 text-yellow-500',
                   ].join(' ')}
                 >
-                  {a.status === 'published' ? 'Publié' : 'Brouillon'}
+                  {a.status === 'published'
+                    ? (profile.published ?? 'Publié')
+                    : (profile.draft ?? 'Brouillon')}
                 </span>
 
                 <div className="flex items-center gap-3">
                   {a.status === 'published' ? (
                     <Link to={`/article/${a.slug}`} className="underline opacity-80 hover:opacity-100">
-                      Voir
+                      {common.view ?? 'Voir'}
                     </Link>
                   ) : (
-                    <span className="opacity-60">Non publié</span>
+                    <span className="opacity-60">{myArticles.notPublished ?? 'Non publié'}</span>
                   )}
 
                   {/* Lien d'édition par ID */}
                   <Link
                     to={`/dashboard/articles/edit/${a.id}`}
                     className="underline opacity-80 hover:opacity-100"
-                    title="Modifier cet article"
+                    title={myArticles.editTooltip ?? 'Modifier cet article'}
                   >
-                    Modifier
+                    {common.edit ?? 'Modifier'}
                   </Link>
                   {/* Variante query string possible :
                       to={`/dashboard/articles/edit?id=${a.id}`}

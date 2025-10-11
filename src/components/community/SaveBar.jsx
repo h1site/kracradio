@@ -1,5 +1,6 @@
 // src/components/community/SaveBar.jsx
 import React from 'react';
+import { useI18n } from '../../i18n';
 
 export default function SaveBar({
   onSave,
@@ -7,9 +8,17 @@ export default function SaveBar({
   loading = false,
   disabled = false,
   message = null,
-  saveText = 'Enregistrer',
-  cancelText = 'Annuler'
+  saveText = null,
+  cancelText = null
 }) {
+  const { t } = useI18n();
+  const common = t?.common ?? {};
+  const effectiveSaveLabel = saveText ?? (common.save ?? 'Enregistrer');
+  const effectiveCancelLabel = cancelText ?? (common.cancel ?? 'Annuler');
+  const savingInProgress = common.savingInProgress ?? 'Enregistrement en cours...';
+  const noChanges = common.noChanges ?? 'Aucune modification à enregistrer';
+  const saving = common.saving ?? 'Enregistrement...';
+
   return (
     <>
       {/* Messages de feedback */}
@@ -27,8 +36,8 @@ export default function SaveBar({
       <div className="bg-bg-secondary border-t border-border p-4 mt-6 rounded-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-text-secondary">
-            {loading && '💾 Enregistrement en cours...'}
-            {!loading && disabled && '⚠️ Aucune modification à enregistrer'}
+            {loading && `💾 ${savingInProgress}`}
+            {!loading && disabled && `⚠️ ${noChanges}`}
           </div>
 
           <div className="flex gap-3">
@@ -40,7 +49,7 @@ export default function SaveBar({
                 className="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {cancelText}
+                {effectiveCancelLabel}
               </button>
             )}
 
@@ -55,11 +64,11 @@ export default function SaveBar({
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-bg-primary"></div>
-                  Enregistrement...
+                  {saving}
                 </>
               ) : (
                 <>
-                  💾 {saveText}
+                  💾 {effectiveSaveLabel}
                 </>
               )}
             </button>

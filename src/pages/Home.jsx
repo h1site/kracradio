@@ -5,6 +5,7 @@ import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
 import ChannelCarousel from '../components/ChannelCarousel';
+import GoogleAd from '../components/ads/GoogleAd';
 import daily from '../data/daily-schedule.json';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
@@ -272,6 +273,10 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="px-5 py-10">
+        <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
+      </div>
+
       {/* Carrousel */}
       <section className="w-full relative z-10 overflow-visible">
         <div className="px-5 md:px-5 px-0 pt-0">
@@ -390,6 +395,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <div className="px-5 py-10">
+        <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
+      </div>
 
       {/* Section Blog + Podcast */}
       <section className="px-5 pb-12">
