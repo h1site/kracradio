@@ -95,7 +95,9 @@
     "confirmPassword": "Confirmer le mot de passe",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
-    "passwordUpdated": "Mot de passe mis à jour avec succès!"
+    "passwordUpdated": "Mot de passe mis à jour avec succès!",
+    "emailFromSupabase": "📧 Le courriel de confirmation viendra de Supabase (temporaire)",
+    "checkSpamFolder": "💡 N'oubliez pas de vérifier votre dossier spam"
   },
   "articles": {
     "title": "Articles",
@@ -162,19 +164,42 @@
     "published": "Publié",
     "draft": "Brouillon",
     "none": "Aucun article pour le moment.",
-    "dashboard": "Dashboard",
-    "dashboardDesc": "Gérez vos podcasts et articles de blog",
-    "accessDashboard": "Accéder au Dashboard",
+    "dashboard": "🧭 Tableau de bord",
+    "dashboardDesc": "Gérez vos podcasts, vos articles de blog et suivez leurs performances",
+    "accessDashboard": "➡️ Accéder au tableau de bord",
     "manageAccount": "Gérez votre compte",
-    "communityTitle": "Ma Communauté",
-    "communityDesc": "Gérez votre profil public, liens musicaux et suivez d'autres artistes",
-    "accessCommunity": "Accéder à la Communauté",
+    "communityTitle": "🌐 Ma Communauté",
+    "communityDesc": "Gérez votre profil public, vos liens musicaux et interagissez avec d'autres artistes",
+    "accessCommunity": "➡️ Accéder à la communauté",
     "publicProfileTitle": "Mon Profil Public",
     "publicProfileDesc": "Votre profil est visible publiquement",
     "viewMyProfile": "Voir mon profil",
     "privateProfileTitle": "Profil Privé",
     "privateProfileDesc": "Votre profil n'est pas encore public. Activez-le dans les paramètres de la communauté pour le partager.",
-    "makePublic": "Rendre mon profil public"
+    "makePublic": "Rendre mon profil public",
+    "welcomeTutorial": {
+      "title": "👋 Bienvenue sur KracRadio !",
+      "subtitle": "Découvrez comment utiliser votre espace créateur",
+      "skip": "Passer",
+      "next": "Suivant",
+      "prev": "Précédent",
+      "finish": "Terminer",
+      "step1": {
+        "title": "📝 Écrire des articles de blog",
+        "description": "Partagez vos idées, histoires et actualités musicales avec la communauté.",
+        "action": "Cliquez sur le bouton 'Tableau de bord' puis créez votre premier article."
+      },
+      "step2": {
+        "title": "🎙️ Ajouter des podcasts",
+        "description": "Diffusez vos émissions audio et développez votre audience.",
+        "action": "Accédez au tableau de bord et ajoutez votre premier podcast ou importez un flux RSS."
+      },
+      "step3": {
+        "title": "🌐 Publier votre profil artiste",
+        "description": "Créez votre présence en ligne et connectez-vous avec d'autres artistes.",
+        "action": "⚠️ Important : Allez dans 'Ma Communauté' et activez 'Profil public' pour être visible !"
+      }
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -335,6 +360,34 @@
       "settings": "⚙️ Paramètres",
       "customization": "🎨 Personnalisation",
       "musicLinks": "🎶 Liens musicaux"
+    },
+    "tutorial": {
+      "title": "🌐 Guide de votre Communauté",
+      "subtitle": "Découvrez comment gérer votre profil d'artiste",
+      "skip": "Passer",
+      "next": "Suivant",
+      "prev": "Précédent",
+      "finish": "Terminer",
+      "step1": {
+        "title": "🔓 Profil Public ON/OFF",
+        "description": "Contrôlez la visibilité de votre profil. Activez 'Profil public' pour être visible dans l'annuaire des artistes et partager votre profil avec le monde.",
+        "action": "⚠️ Important : Votre profil doit être PUBLIC pour être visible par d'autres ! Allez dans l'onglet 'Paramètres' pour activer cette option."
+      },
+      "step2": {
+        "title": "🔗 URL Publique Personnalisée",
+        "description": "Créez votre nom d'artiste unique pour avoir une URL personnalisée (ex: kracradio.com/profile/votre-nom).",
+        "action": "Dans 'Paramètres', définissez votre 'Nom d'artiste' pour créer votre URL publique unique. Minimum 3 caractères."
+      },
+      "step3": {
+        "title": "🎨 Personnalisation du Profil",
+        "description": "Ajoutez une bannière et une photo de profil pour personnaliser votre page artiste.",
+        "action": "Allez dans l'onglet 'Personnalisation' pour télécharger votre bannière (1500x500px) et votre avatar (400x400px)."
+      },
+      "step4": {
+        "title": "🎵 Lien Musical Spotify",
+        "description": "Ajoutez votre lien Spotify pour partager votre musique. Le lecteur Spotify s'affichera directement sur votre profil public.",
+        "action": "Dans l'onglet 'Liens musicaux', ajoutez votre lien Spotify. Pour l'instant, seul Spotify est disponible (d'autres plateformes seront ajoutées prochainement)."
+      }
     },
     "settings": {
       "title": "Paramètres de la communauté",

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
-import { sendPasswordResetEmail } from '../lib/emailService';
 
 export default function AuthResetPassword() {
   const { t, lang } = useI18n();
@@ -22,27 +21,19 @@ export default function AuthResetPassword() {
     setSuccess(false);
 
     try {
-      // Find user by email to get user_id
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', email)
-        .single();
+      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/auth/update-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo
+      });
 
-      if (profileError || !profile) {
-        // Don't reveal if email exists or not for security
-        setSuccess(true);
-        return;
+      if (error) {
+        console.error('Error sending password reset:', error);
       }
-
-      // Send password reset email using our custom system
-      await sendPasswordResetEmail(profile.id, email, lang);
-      setSuccess(true);
     } catch (e2) {
-      console.error('Error sending password reset:', e2);
-      // Don't reveal error details to user for security
-      setSuccess(true);
+      console.error('Unexpected error sending password reset:', e2);
     } finally {
+      // Always show success message to avoid email enumeration
+      setSuccess(true);
       setLoading(false);
     }
   }
@@ -72,9 +63,19 @@ export default function AuthResetPassword() {
         <h1 className="text-2xl font-extrabold mb-2">
           {T.resetPassword || 'Réinitialiser le mot de passe'}
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           {T.resetPasswordDesc || 'Entrez votre adresse email pour recevoir un lien de réinitialisation.'}
         </p>
+
+        {/* Info: Email viendra de Supabase */}
+        <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+          <p className="text-blue-800 dark:text-blue-200 mb-1">
+            {T.emailFromSupabase || '📧 Le courriel de confirmation viendra de Supabase (temporaire)'}
+          </p>
+          <p className="text-blue-700 dark:text-blue-300 text-xs">
+            {T.checkSpamFolder || '💡 N\'oubliez pas de vérifier votre dossier spam'}
+          </p>
+        </div>
 
         {success ? (
           <div className="space-y-4">

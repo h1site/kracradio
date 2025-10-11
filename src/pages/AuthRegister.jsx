@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
-import { sendVerificationEmail } from '../lib/emailService';
 
 const PASSWORD_REQUIREMENTS = {
   fr: {
@@ -70,24 +69,7 @@ export default function AuthRegister() {
     }
 
     try {
-      const result = await signUp({ email, password: pwd });
-
-      // Send verification email
-      if (result?.user?.id) {
-        try {
-          console.log('🚀 Attempting to send verification email...');
-          await sendVerificationEmail(result.user.id, email, lang);
-          console.log('✅ Verification email sent successfully!');
-        } catch (emailError) {
-          console.error('❌ Error sending verification email:', {
-            message: emailError.message,
-            error: emailError
-          });
-          // Continue anyway - user is created
-          // User can resend verification email later
-        }
-      }
-
+      await signUp({ email, password: pwd });
       nav('/auth/confirm-email'); // Rediriger vers la page de confirmation
     } catch (error) {
       setErr(error.message);
@@ -111,6 +93,17 @@ export default function AuthRegister() {
         </div>
 
         <h1 className="text-xl font-bold mb-4">{t?.auth?.register ?? 'Créer un compte'}</h1>
+
+        {/* Info: Email viendra de Supabase */}
+        <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+          <p className="text-blue-800 dark:text-blue-200 mb-1">
+            {t?.auth?.emailFromSupabase ?? '📧 Le courriel de confirmation viendra de Supabase (temporaire)'}
+          </p>
+          <p className="text-blue-700 dark:text-blue-300 text-xs">
+            {t?.auth?.checkSpamFolder ?? '💡 N\'oubliez pas de vérifier votre dossier spam'}
+          </p>
+        </div>
+
         {err && <div className="text-sm text-red-500 mb-2">{err}</div>}
 
         <label className="block text-sm mb-1">Email</label>

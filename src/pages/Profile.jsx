@@ -1,15 +1,29 @@
 // src/pages/Profile.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { useProfile } from '../hooks/useCommunity';
+import WelcomeTutorial from '../components/WelcomeTutorial';
 
 export default function Profile() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Vérifier si c'est la première visite
+  useEffect(() => {
+    const tutorialSeen = localStorage.getItem('kracradio_tutorial_seen');
+    if (!tutorialSeen && user) {
+      // Petit délai pour laisser la page se charger
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const onLogout = async () => {
     try {
@@ -22,8 +36,11 @@ export default function Profile() {
   };
 
   return (
-    <div className="container-max px-5 pb-16">
-      <header className="pt-16 pb-12">
+    <>
+      {showTutorial && <WelcomeTutorial onClose={() => setShowTutorial(false)} />}
+
+      <div className="container-max px-5 pb-16">
+        <header className="pt-16 pb-12">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
@@ -198,6 +215,17 @@ export default function Profile() {
           </div>
         </section>
       )}
-    </div>
+
+        {/* Bouton pour relancer le tutorial */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline transition"
+          >
+            📚 Revoir le tutoriel de bienvenue
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

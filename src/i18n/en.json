@@ -95,7 +95,9 @@
     "confirmPassword": "Confirm password",
     "passwordMismatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters",
-    "passwordUpdated": "Password updated successfully!"
+    "passwordUpdated": "Password updated successfully!",
+    "emailFromSupabase": "📧 The confirmation email will come from Supabase (temporary)",
+    "checkSpamFolder": "💡 Don't forget to check your spam folder"
   },
   "articles": {
     "title": "Articles",
@@ -162,19 +164,42 @@
     "published": "Published",
     "draft": "Draft",
     "none": "No articles yet.",
-    "dashboard": "Dashboard",
-    "dashboardDesc": "Manage your podcasts and blog articles",
-    "accessDashboard": "Access Dashboard",
+    "dashboard": "🧭 Dashboard",
+    "dashboardDesc": "Manage your podcasts, blog articles, and track their performance",
+    "accessDashboard": "➡️ Access Dashboard",
     "manageAccount": "Manage your account",
-    "communityTitle": "My Community",
-    "communityDesc": "Manage your public profile, music links and follow other artists",
-    "accessCommunity": "Access Community",
+    "communityTitle": "🌐 My Community",
+    "communityDesc": "Manage your public profile, music links, and interact with other artists",
+    "accessCommunity": "➡️ Access Community",
     "publicProfileTitle": "My Public Profile",
     "publicProfileDesc": "Your profile is publicly visible",
     "viewMyProfile": "View my profile",
     "privateProfileTitle": "Private Profile",
     "privateProfileDesc": "Your profile is not yet public. Enable it in community settings to share it.",
-    "makePublic": "Make my profile public"
+    "makePublic": "Make my profile public",
+    "welcomeTutorial": {
+      "title": "👋 Welcome to KracRadio!",
+      "subtitle": "Discover how to use your creator space",
+      "skip": "Skip",
+      "next": "Next",
+      "prev": "Previous",
+      "finish": "Finish",
+      "step1": {
+        "title": "📝 Write blog articles",
+        "description": "Share your ideas, stories, and music news with the community.",
+        "action": "Click the 'Dashboard' button and create your first article."
+      },
+      "step2": {
+        "title": "🎙️ Add podcasts",
+        "description": "Broadcast your audio shows and grow your audience.",
+        "action": "Access the dashboard and add your first podcast or import an RSS feed."
+      },
+      "step3": {
+        "title": "🌐 Publish your artist profile",
+        "description": "Create your online presence and connect with other artists.",
+        "action": "⚠️ Important: Go to 'My Community' and enable 'Public profile' to be visible!"
+      }
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -335,6 +360,34 @@
       "settings": "⚙️ Settings",
       "customization": "🎨 Customization",
       "musicLinks": "🎶 Music Links"
+    },
+    "tutorial": {
+      "title": "🌐 Your Community Guide",
+      "subtitle": "Discover how to manage your artist profile",
+      "skip": "Skip",
+      "next": "Next",
+      "prev": "Previous",
+      "finish": "Finish",
+      "step1": {
+        "title": "🔓 Public Profile ON/OFF",
+        "description": "Control your profile visibility. Enable 'Public profile' to be visible in the artist directory and share your profile with the world.",
+        "action": "⚠️ Important: Your profile must be PUBLIC to be visible to others! Go to the 'Settings' tab to enable this option."
+      },
+      "step2": {
+        "title": "🔗 Custom Public URL",
+        "description": "Create your unique artist name to have a custom URL (e.g., kracradio.com/profile/your-name).",
+        "action": "In 'Settings', set your 'Artist name' to create your unique public URL. Minimum 3 characters."
+      },
+      "step3": {
+        "title": "🎨 Profile Customization",
+        "description": "Add a banner and profile picture to customize your artist page.",
+        "action": "Go to the 'Customization' tab to upload your banner (1500x500px) and avatar (400x400px)."
+      },
+      "step4": {
+        "title": "🎵 Spotify Music Link",
+        "description": "Add your Spotify link to share your music. The Spotify player will display directly on your public profile.",
+        "action": "In the 'Music links' tab, add your Spotify link. For now, only Spotify is available (other platforms coming soon)."
+      }
     },
     "settings": {
       "title": "Community settings",

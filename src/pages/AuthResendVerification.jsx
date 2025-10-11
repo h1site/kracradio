@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { sendVerificationEmail } from '../lib/emailService';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 
@@ -20,35 +19,23 @@ export default function AuthResendVerification() {
     setMessage('');
 
     try {
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, email_verified')
-        .eq('email', email)
-        .single();
+      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/auth/verify-email`;
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: redirectTo }
+      });
 
-      if (profileError || !profile) {
-        setStatus('error');
-        setMessage('Aucun compte trouvé avec cet email');
-        return;
+      if (error) {
+        console.error('Error resending verification:', error);
       }
-
-      // Check if already verified
-      if (profile.email_verified) {
-        setStatus('error');
-        setMessage('Votre email est déjà vérifié. Vous pouvez vous connecter.');
-        return;
-      }
-
-      // Send verification email
-      await sendVerificationEmail(profile.id, email, lang);
 
       setStatus('success');
-      setMessage('Un nouvel email de vérification a été envoyé. Vérifiez votre boîte de réception et votre dossier spam.');
+      setMessage('Si un compte existe pour cet email, un nouveau lien de vérification a été envoyé.');
     } catch (error) {
-      console.error('Error resending verification:', error);
-      setStatus('error');
-      setMessage('Une erreur s\'est produite. Veuillez réessayer.');
+      console.error('Unexpected error resending verification:', error);
+      setStatus('success');
+      setMessage('Si un compte existe pour cet email, un nouveau lien de vérification a été envoyé.');
     } finally {
       setLoading(false);
     }

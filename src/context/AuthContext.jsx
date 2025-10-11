@@ -63,35 +63,21 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message || 'Sign-in failed');
 
-    // Check if email is verified
-    if (data?.user) {
+    // Block sign-in until Supabase email confirmation is complete
+    if (data?.user && !data.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      throw new Error('EMAIL_NOT_VERIFIED');
+    }
+
+    // Update the profile flag if it exists (best-effort)
+    if (data?.user?.email_confirmed_at) {
       try {
-        const { data: profile, error: profileError } = await supabase
+        await supabase
           .from('profiles')
-          .select('email_verified')
-          .eq('id', data.user.id)
-          .single();
-
-        console.log('Profile check:', { profile, profileError, userId: data.user.id });
-
-        // If profile exists and email_verified field exists
-        if (profile && typeof profile.email_verified !== 'undefined') {
-          if (!profile.email_verified) {
-            // Sign out the user
-            await supabase.auth.signOut();
-            throw new Error('EMAIL_NOT_VERIFIED');
-          }
-        } else {
-          // Field doesn't exist or profile not found - log warning but allow login
-          console.warn('email_verified field not found in profile. Run migration first!');
-        }
-      } catch (verificationError) {
-        // If it's our custom error, throw it
-        if (verificationError.message === 'EMAIL_NOT_VERIFIED') {
-          throw verificationError;
-        }
-        // Otherwise, log the error but allow login (backwards compatibility)
-        console.error('Error checking email verification:', verificationError);
+          .update({ email_verified: true })
+          .eq('id', data.user.id);
+      } catch (updateError) {
+        console.warn('Unable to sync profile email_verified flag:', updateError);
       }
     }
 
@@ -99,7 +85,17 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // Configuration pour l'envoi d'email de confirmation
+    const options = {
+      emailRedirectTo: `${process.env.REACT_APP_URL || window.location.origin}/auth/verify-email`
+    };
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options
+    });
+
     if (error) throw new Error(error.message || 'Sign-up failed');
     return data;
   };

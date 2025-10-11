@@ -1,5 +1,5 @@
 // src/pages/CommunityDashboard.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
@@ -7,6 +7,7 @@ import Seo from '../seo/Seo';
 import CommunitySettings from '../components/community/CommunitySettings';
 import ProfileEditor from '../components/community/ProfileEditor';
 import MusicLinksManager from '../components/community/MusicLinksManager';
+import CommunityTutorial from '../components/CommunityTutorial';
 import { useProfile } from '../hooks/useCommunity';
 
 export default function CommunityDashboard() {
@@ -14,7 +15,20 @@ export default function CommunityDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('settings');
+  const [showTutorial, setShowTutorial] = useState(false);
   const { profile } = useProfile(user?.id);
+
+  // Vérifier si c'est la première visite de la page Communauté
+  useEffect(() => {
+    const tutorialSeen = localStorage.getItem('kracradio_community_tutorial_seen');
+    if (!tutorialSeen && user) {
+      // Petit délai pour laisser la page se charger
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const TABS = [
     { id: 'settings', label: t.community.tabs.settings },
@@ -33,6 +47,8 @@ export default function CommunityDashboard() {
 
   return (
     <>
+      {showTutorial && <CommunityTutorial onClose={() => setShowTutorial(false)} />}
+
       <Seo
         title={`${t.community.title} - KracRadio`}
         description={t.community.description}
@@ -97,6 +113,16 @@ export default function CommunityDashboard() {
           {activeTab === 'settings' && <CommunitySettings />}
           {activeTab === 'profile' && <ProfileEditor />}
           {activeTab === 'music' && <MusicLinksManager />}
+        </div>
+
+        {/* Bouton pour relancer le tutorial */}
+        <div className="mt-8 text-center pb-8">
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline transition"
+          >
+            📚 Revoir le guide de la communauté
+          </button>
         </div>
       </div>
     </>

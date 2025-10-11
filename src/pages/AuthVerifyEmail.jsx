@@ -1,7 +1,6 @@
 // src/pages/AuthVerifyEmail.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { verifyEmailToken } from '../lib/emailService';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 
@@ -13,29 +12,24 @@ export default function AuthVerifyEmail() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const errorDescription = searchParams.get('error_description');
+    const errorCode = searchParams.get('error_code');
 
-    if (!token) {
+    if (errorDescription || errorCode) {
+      const decoded = decodeURIComponent(errorDescription || 'Une erreur s\'est produite');
       setStatus('error');
-      setMessage('Token manquant dans l\'URL');
+      setMessage(decoded);
       return;
     }
 
-    // Verify the token
-    verifyEmailToken(token)
-      .then(() => {
-        setStatus('success');
-        setMessage('Votre email a été vérifié avec succès !');
+    setStatus('success');
+    setMessage('Votre email a été vérifié avec succès !');
 
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/auth/login');
-        }, 3000);
-      })
-      .catch((error) => {
-        setStatus('error');
-        setMessage(error.message || 'Une erreur s\'est produite lors de la vérification');
-      });
+    const timer = setTimeout(() => {
+      navigate('/auth/login');
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [searchParams, navigate]);
 
   return (
