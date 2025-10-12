@@ -1,0 +1,14 @@
+[
+  { "title": "Electronic Music",        "start": "00:00", "end": "04:00", "image": "/schedule/electronic-music.webp" },
+  { "title": "Jazz & Instrumental",     "start": "04:00", "end": "05:00", "image": "/schedule/jazz-instrumental.webp" },
+  { "title": "Franco Matin",            "start": "05:00", "end": "08:00", "image": "/schedule/franco-matin.webp" },
+  { "title": "Soft Rock et Folk",       "start": "08:00", "end": "09:00", "image": "/schedule/soft-rock-et-folk.webp" },
+  { "title": "Rock Alternatif",         "start": "09:00", "end": "10:00", "image": "/schedule/rock-alternatif.webp" },
+  { "title": "Indie Pop Rock",          "start": "10:00", "end": "11:00", "image": "/schedule/indie-pop-rock.webp" },
+  { "title": "Hip-Hop",                 "start": "11:00", "end": "12:00", "image": "/schedule/hip-hop.webp" },
+  { "title": "Post-punk & Cold Wave",   "start": "12:00", "end": "13:00", "image": "/schedule/post-punk-cold-wave.webp" },
+  { "title": "Electronic Music",        "start": "13:00", "end": "14:00", "image": "/schedule/electronic-music.webp" },
+  { "title": "Electro Pop Rock",        "start": "14:00", "end": "16:00", "image": "/schedule/electro-pop-rock.webp" },
+  { "title": "Musique Québec",          "start": "16:00", "end": "21:00", "image": "/schedule/musique-quebec.webp" },
+  { "title": "EBM Industrial",          "start": "21:00", "end": "24:00", "image": "/schedule/ebm-industrial.webp" }
+]
