@@ -13,6 +13,7 @@ export default function Header() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
@@ -83,7 +84,10 @@ export default function Header() {
                 </Link>
                 <button
                   type="button"
+                  disabled={loggingOut}
                   onClick={async () => {
+                    if (loggingOut) return; // Prevent double-click
+                    setLoggingOut(true);
                     console.log('[Header] Logout button clicked');
                     try {
                       await signOut();
@@ -96,9 +100,9 @@ export default function Header() {
                       window.location.href = '/';
                     }
                   }}
-                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t?.auth?.logout ?? 'Déconnexion'}
+                  {loggingOut ? '...' : (t?.auth?.logout ?? 'Déconnexion')}
                 </button>
               </>
             )}

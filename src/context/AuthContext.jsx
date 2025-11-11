@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);   // gate rendering until we know
+  const [signingOut, setSigningOut] = useState(false); // prevent multiple signOut calls
 
   useEffect(() => {
     let mounted = true;
@@ -142,11 +143,25 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    // Prevent multiple simultaneous signOut calls
+    if (signingOut) {
+      console.log('[Auth] signOut already in progress, ignoring');
+      return;
+    }
+
     console.log('[Auth] signOut called');
+    setSigningOut(true);
+
     try {
-      // Call Supabase signOut FIRST to properly clear the session
-      // Use scope: 'local' to clear only this browser's session
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      // Create a promise with timeout to prevent hanging
+      const signOutPromise = supabase.auth.signOut();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('SignOut timeout')), 5000)
+      );
+
+      // Race between signOut and timeout
+      const { error } = await Promise.race([signOutPromise, timeoutPromise]);
+
       if (error) {
         console.error('[Auth] signOut error:', error);
         throw error;
@@ -169,6 +184,8 @@ export function AuthProvider({ children }) {
       localStorage.clear();
       sessionStorage.clear();
       throw e; // Re-throw to let caller handle
+    } finally {
+      setSigningOut(false);
     }
   };
 

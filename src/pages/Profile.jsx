@@ -12,6 +12,7 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Vérifier si c'est la première visite
   useEffect(() => {
@@ -26,6 +27,8 @@ export default function Profile() {
   }, [user]);
 
   const onLogout = async () => {
+    if (loggingOut) return; // Prevent double-click
+    setLoggingOut(true);
     console.log('[Profile] Logout button clicked');
     try {
       await signOut();
@@ -75,12 +78,13 @@ export default function Profile() {
             </Link>
             <button
               onClick={onLogout}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-900/30"
+              disabled={loggingOut}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
               </svg>
-              {t?.nav?.logout || 'Log out'}
+              {loggingOut ? 'Déconnexion...' : (t?.nav?.logout || 'Log out')}
             </button>
           </div>
         </div>
