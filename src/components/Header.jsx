@@ -84,10 +84,14 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={async () => {
+                    console.log('[Header] Logout button clicked');
                     try {
                       await signOut();
+                      console.log('[Header] signOut completed, redirecting...');
+                      // Force redirect to home page after logout
+                      window.location.href = '/';
                     } catch (e) {
-                      console.error('Logout error, forcing cleanup:', e);
+                      console.error('[Header] Logout error, forcing cleanup:', e);
                       // Force cleanup en cas d'erreur
                       localStorage.clear();
                       sessionStorage.clear();

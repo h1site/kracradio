@@ -26,12 +26,18 @@ export default function Profile() {
   }, [user]);
 
   const onLogout = async () => {
+    console.log('[Profile] Logout button clicked');
     try {
       await signOut();
-      navigate('/');
+      console.log('[Profile] signOut completed, redirecting...');
+      // Force redirect to home page after logout
+      window.location.href = '/';
     } catch (e) {
       console.error('[Profile] signOut error:', e);
-      alert(e?.message || 'Logout failed');
+      // Force cleanup and redirect even on error
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   };
 

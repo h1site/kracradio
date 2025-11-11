@@ -58,7 +58,10 @@ export function AuthProvider({ children }) {
     init();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
+      console.log('[Auth] State change:', event, session?.user?.email || 'no user');
+
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        console.log('[Auth] User signed out, clearing state');
         setUser(null);
         setUserRole(null);
         return;
@@ -139,16 +142,26 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    console.log('[Auth] signOut called');
     try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.warn('[Auth] signOut error, forcing cleanup:', e);
-    } finally {
-      // Force cleanup local
+      // First clear local state immediately to prevent UI confusion
       setUser(null);
       setUserRole(null);
+
+      // Then call Supabase signOut
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('[Auth] signOut error:', error);
+      } else {
+        console.log('[Auth] signOut successful');
+      }
+    } catch (e) {
+      console.error('[Auth] signOut exception:', e);
+    } finally {
+      // Force cleanup local storage
       localStorage.clear();
       sessionStorage.clear();
+      console.log('[Auth] Local storage cleared');
     }
   };
 
