@@ -30,13 +30,11 @@ export default function Profile() {
     try {
       await signOut();
       console.log('[Profile] signOut completed, redirecting...');
-      // Force redirect to home page after logout
-      window.location.href = '/';
     } catch (e) {
       console.error('[Profile] signOut error:', e);
-      // Force cleanup and redirect even on error
-      localStorage.clear();
-      sessionStorage.clear();
+      // signOut already cleaned up, even on error
+    } finally {
+      // Always redirect to home page after logout attempt
       window.location.href = '/';
     }
   };

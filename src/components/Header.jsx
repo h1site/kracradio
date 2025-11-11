@@ -88,13 +88,11 @@ export default function Header() {
                     try {
                       await signOut();
                       console.log('[Header] signOut completed, redirecting...');
-                      // Force redirect to home page after logout
-                      window.location.href = '/';
                     } catch (e) {
-                      console.error('[Header] Logout error, forcing cleanup:', e);
-                      // Force cleanup en cas d'erreur
-                      localStorage.clear();
-                      sessionStorage.clear();
+                      console.error('[Header] Logout error:', e);
+                      // signOut already cleaned up, even on error
+                    } finally {
+                      // Always redirect to home page after logout attempt
                       window.location.href = '/';
                     }
                   }}

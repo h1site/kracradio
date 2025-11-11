@@ -144,24 +144,31 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     console.log('[Auth] signOut called');
     try {
-      // First clear local state immediately to prevent UI confusion
+      // Call Supabase signOut FIRST to properly clear the session
+      // Use scope: 'local' to clear only this browser's session
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) {
+        console.error('[Auth] signOut error:', error);
+        throw error;
+      }
+      console.log('[Auth] signOut successful');
+
+      // Clear local state after Supabase confirms sign out
       setUser(null);
       setUserRole(null);
 
-      // Then call Supabase signOut
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('[Auth] signOut error:', error);
-      } else {
-        console.log('[Auth] signOut successful');
-      }
-    } catch (e) {
-      console.error('[Auth] signOut exception:', e);
-    } finally {
-      // Force cleanup local storage
+      // Clear storage to ensure no stale data remains
       localStorage.clear();
       sessionStorage.clear();
       console.log('[Auth] Local storage cleared');
+    } catch (e) {
+      console.error('[Auth] signOut exception:', e);
+      // Even on error, force cleanup
+      setUser(null);
+      setUserRole(null);
+      localStorage.clear();
+      sessionStorage.clear();
+      throw e; // Re-throw to let caller handle
     }
   };
 
