@@ -1,0 +1,3 @@
+# Configuration pour la fonction audio-proxy
+# Permet l'accès sans authentification pour que l'audio player puisse l'utiliser
+verify_jwt: false

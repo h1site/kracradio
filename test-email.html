@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Email KracRadio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #ff0000;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #cc0000;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test d'envoi d'email KracRadio</h1>
+
+    <p>Ce script teste directement l'envoi d'email via la Edge Function Supabase.</p>
+
+    <label>
+      <strong>Votre SUPABASE_URL:</strong>
+      <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" />
+    </label>
+
+    <label>
+      <strong>Votre SUPABASE_ANON_KEY:</strong>
+      <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+    </label>
+
+    <label>
+      <strong>Email de destination:</strong>
+      <input type="email" id="testEmail" placeholder="test@example.com" value="karpe_25@hotmail.com" />
+    </label>
+
+    <button onclick="testEmail()">📧 Envoyer un email de test</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function testEmail() {
+      const url = document.getElementById('supabaseUrl').value.trim();
+      const key = document.getElementById('supabaseKey').value.trim();
+      const email = document.getElementById('testEmail').value.trim();
+      const resultDiv = document.getElementById('result');
+
+      if (!url || !key || !email) {
+        resultDiv.className = 'error';
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '❌ Veuillez remplir tous les champs';
+        return;
+      }
+
+      resultDiv.style.display = 'block';
+      resultDiv.className = '';
+      resultDiv.innerHTML = '⏳ Envoi en cours...';
+
+      try {
+        console.log('Calling Supabase Edge Function...');
+
+        const response = await fetch(`${url}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`,
+            'apikey': key
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: 'Test Email - KracRadio',
+            html: '<h1>Test réussi!</h1><p>Si vous recevez cet email, le système fonctionne!</p>',
+            text: 'Test réussi! Si vous recevez cet email, le système fonctionne!'
+          })
+        });
+
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (response.ok && data.success) {
+          resultDiv.className = 'success';
+          resultDiv.innerHTML = `
+            <strong>✅ Email envoyé avec succès!</strong>
+            <p>Vérifiez votre boîte de réception (et spam!) à: <strong>${email}</strong></p>
+            <details>
+              <summary>Détails de la réponse</summary>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </details>
+          `;
+        } else {
+          resultDiv.className = 'error';
+          resultDiv.innerHTML = `
+            <strong>❌ Erreur lors de l'envoi</strong>
+            <p>${data.error || 'Erreur inconnue'}</p>
+            <details>
+              <summary>Détails de l'erreur</summary>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </details>
+          `;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        resultDiv.className = 'error';
+        resultDiv.innerHTML = `
+          <strong>❌ Erreur réseau</strong>
+          <p>${error.message}</p>
+          <p><strong>Causes possibles:</strong></p>
+          <ul>
+            <li>La Edge Function n'est pas déployée</li>
+            <li>L'URL Supabase est incorrecte</li>
+            <li>La clé API est invalide</li>
+            <li>CORS n'est pas configuré</li>
+          </ul>
+        `;
+      }
+    }
+
+    // Load from .env.local if available
+    window.addEventListener('load', () => {
+      // Try to get from React env
+      const storedUrl = localStorage.getItem('supabaseUrl');
+      const storedKey = localStorage.getItem('supabaseKey');
+
+      if (storedUrl) document.getElementById('supabaseUrl').value = storedUrl;
+      if (storedKey) document.getElementById('supabaseKey').value = storedKey;
+    });
+
+    // Save to localStorage
+    document.getElementById('supabaseUrl').addEventListener('change', (e) => {
+      localStorage.setItem('supabaseUrl', e.target.value);
+    });
+    document.getElementById('supabaseKey').addEventListener('change', (e) => {
+      localStorage.setItem('supabaseKey', e.target.value);
+    });
+  </script>
+</body>
+</html>
