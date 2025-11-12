@@ -113,13 +113,30 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
 
       if (currentUser) {
+        // If this is a SIGNED_IN event during OAuth callback, set loading to false IMMEDIATELY
+        if (event === 'SIGNED_IN' && isOAuthCallback) {
+          console.log('[Auth] SIGNED_IN during OAuth callback, setting loading to false immediately');
+          setLoading(false);
+        }
+
         console.log('[Auth] Fetching role from profiles table on auth change');
+
+        // Fetch role with timeout
+        const fetchRolePromise = supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => {
+            console.warn('[Auth] Profile fetch timeout, using default role');
+            resolve({ data: null, error: null });
+          }, 2000)
+        );
+
         try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .maybeSingle();
+          const { data: profileData, error: profileError } = await Promise.race([fetchRolePromise, timeoutPromise]);
 
           if (profileError) {
             console.warn('[Auth] Failed to fetch user role on auth change:', profileError);
@@ -132,12 +149,6 @@ export function AuthProvider({ children }) {
         } catch (err) {
           console.warn('[Auth] Error fetching user role on auth change:', err);
           setUserRole('user');
-        }
-
-        // If this is a SIGNED_IN event during OAuth callback, set loading to false NOW
-        if (event === 'SIGNED_IN' && isOAuthCallback) {
-          console.log('[Auth] SIGNED_IN during OAuth callback, setting loading to false immediately');
-          setLoading(false);
         }
       } else {
         setUserRole(null);
