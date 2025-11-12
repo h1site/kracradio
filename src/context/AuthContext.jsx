@@ -161,11 +161,20 @@ export function AuthProvider({ children }) {
   };
 
   const signInWithGoogle = async () => {
+    // Determine the correct redirect URL based on environment
+    const isProduction = window.location.hostname === 'kracradio.com' ||
+                        window.location.hostname === 'www.kracradio.com';
+    const redirectUrl = isProduction
+      ? 'https://kracradio.com/auth/callback'
+      : `${window.location.origin}/auth/callback`;
+
+    console.log('[Auth] signInWithGoogle redirectUrl:', redirectUrl);
+
     // Use PKCE flow which works better with localhost
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
