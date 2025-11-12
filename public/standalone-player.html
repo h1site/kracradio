@@ -162,84 +162,125 @@
       border: none;
     }
 
-    .channel-selector {
+    .channel-carousel {
       margin-top: auto;
-    }
-
-    .channel-toggle {
-      width: 100%;
-      padding: 12px;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 12px;
-    }
-
-    .channel-toggle:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
-    .channel-list {
-      max-height: 200px;
-      overflow-y: auto;
+      padding: 16px 0;
       background: rgba(0,0,0,0.3);
-      border-radius: 12px;
-      padding: 8px;
+      border-radius: 16px;
     }
 
-    .channel-list::-webkit-scrollbar {
-      width: 6px;
+    .carousel-title {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .channel-list::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.05);
-      border-radius: 3px;
-    }
-
-    .channel-list::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.2);
-      border-radius: 3px;
-    }
-
-    .channel-item {
+    .carousel-container {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
+      padding: 0 12px;
+    }
+
+    .carousel-btn {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: white;
       cursor: pointer;
-      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.2s;
     }
 
-    .channel-item:hover {
-      background: rgba(255,255,255,0.1);
+    .carousel-btn:hover {
+      background: rgba(255,255,255,0.2);
     }
 
-    .channel-item.active {
-      background: rgba(239, 68, 68, 0.3);
-      border: 1px solid rgba(239, 68, 68, 0.5);
+    .carousel-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
 
-    .channel-img {
-      width: 40px;
-      height: 40px;
+    .carousel-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .carousel-channel-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #333;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .carousel-channel-name {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .carousel-channel-tagline {
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .now-playing {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .now-playing-img {
+      width: 48px;
+      height: 48px;
       border-radius: 8px;
       object-fit: cover;
       background: #333;
+      flex-shrink: 0;
     }
 
-    .channel-info {
+    .now-playing-info {
       flex: 1;
       min-width: 0;
     }
 
-    .channel-name {
-      font-size: 14px;
+    .now-playing-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .now-playing-title {
+      font-size: 13px;
       font-weight: 600;
       margin-bottom: 2px;
       white-space: nowrap;
@@ -247,12 +288,26 @@
       text-overflow: ellipsis;
     }
 
-    .channel-tagline {
+    .now-playing-artist {
       font-size: 12px;
-      color: #888;
+      color: #aaa;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .live-indicator {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
     }
 
     .hidden {
@@ -293,6 +348,17 @@
     <div class="track-info">
       <div id="trackTitle" class="track-title">KracRadio</div>
       <div id="trackArtist" class="track-artist">Sélectionne une station</div>
+    </div>
+
+    <!-- Now Playing (Radio only) -->
+    <div id="nowPlaying" class="now-playing hidden">
+      <img id="nowPlayingImg" class="now-playing-img" src="/logo192.png" alt="Now Playing" />
+      <div class="now-playing-info">
+        <div class="now-playing-label">🎵 En cours</div>
+        <div id="nowPlayingTitle" class="now-playing-title">—</div>
+        <div id="nowPlayingArtist" class="now-playing-artist">—</div>
+      </div>
+      <div class="live-indicator"></div>
     </div>
 
     <div id="progressContainer" class="progress-container hidden">
@@ -336,11 +402,26 @@
       <span id="volumeText" class="volume-text">75%</span>
     </div>
 
-    <div class="channel-selector">
-      <button id="channelToggle" class="channel-toggle">
-        📻 Changer de station
-      </button>
-      <div id="channelList" class="channel-list hidden"></div>
+    <!-- Channel Carousel (Radio only) -->
+    <div id="channelCarousel" class="channel-carousel hidden">
+      <div class="carousel-title">Stations Radio</div>
+      <div class="carousel-container">
+        <button id="carouselPrev" class="carousel-btn">
+          <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          </svg>
+        </button>
+        <div id="carouselItem" class="carousel-item">
+          <img class="carousel-channel-img" src="/logo192.png" alt="Channel" />
+          <div class="carousel-channel-name">—</div>
+          <div class="carousel-channel-tagline">—</div>
+        </div>
+        <button id="carouselNext" class="carousel-btn">
+          <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -366,17 +447,31 @@
     const durationEl = document.getElementById('duration');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const channelToggle = document.getElementById('channelToggle');
-    const channelList = document.getElementById('channelList');
+    const channelCarousel = document.getElementById('channelCarousel');
+    const carouselItem = document.getElementById('carouselItem');
+    const carouselPrev = document.getElementById('carouselPrev');
+    const carouselNext = document.getElementById('carouselNext');
+    const nowPlaying = document.getElementById('nowPlaying');
+    const nowPlayingImg = document.getElementById('nowPlayingImg');
+    const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+    const nowPlayingArtist = document.getElementById('nowPlayingArtist');
 
     let currentType = 'radio';
     let channels = [];
     let currentChannel = null;
+    let currentChannelIndex = 0;
+    let nowPlayingData = null;
+    let nowPlayingInterval = null;
 
     // Load channels
     if (initialData.channels) {
       channels = initialData.channels;
-      renderChannels();
+      // Find current channel index
+      if (initialData.current) {
+        currentChannelIndex = channels.findIndex(ch => ch.key === initialData.current.key);
+        if (currentChannelIndex === -1) currentChannelIndex = 0;
+      }
+      updateCarousel();
     }
 
     // Initialize with current playing data
@@ -388,6 +483,11 @@
         if (initialData.playing) {
           audio.play().catch(e => console.warn('Auto-play blocked:', e));
         }
+      }
+      // Start fetching now playing if radio
+      if (initialData.currentType === 'radio') {
+        fetchNowPlaying();
+        nowPlayingInterval = setInterval(fetchNowPlaying, 15000);
       }
     }
 
@@ -405,7 +505,13 @@
         progressContainer.classList.remove('hidden');
         prevBtn.classList.remove('hidden');
         nextBtn.classList.remove('hidden');
-        channelToggle.classList.add('hidden');
+        channelCarousel.classList.add('hidden');
+        nowPlaying.classList.add('hidden');
+        // Stop fetching now playing
+        if (nowPlayingInterval) {
+          clearInterval(nowPlayingInterval);
+          nowPlayingInterval = null;
+        }
       } else {
         currentType = 'radio';
         trackTitle.textContent = data.title || data.name || 'Radio';
@@ -414,43 +520,58 @@
         progressContainer.classList.add('hidden');
         prevBtn.classList.add('hidden');
         nextBtn.classList.add('hidden');
-        channelToggle.classList.remove('hidden');
+        channelCarousel.classList.remove('hidden');
+        nowPlaying.classList.remove('hidden');
+        // Start fetching now playing
+        if (!nowPlayingInterval) {
+          fetchNowPlaying();
+          nowPlayingInterval = setInterval(fetchNowPlaying, 15000);
+        }
       }
     }
 
-    function renderChannels() {
-      channelList.innerHTML = '';
-      channels.forEach(ch => {
-        const item = document.createElement('div');
-        item.className = 'channel-item';
-        if (currentChannel && ch.key === currentChannel.key) {
-          item.classList.add('active');
+    function updateCarousel() {
+      if (channels.length === 0) return;
+
+      const ch = channels[currentChannelIndex];
+      const img = carouselItem.querySelector('.carousel-channel-img');
+      const name = carouselItem.querySelector('.carousel-channel-name');
+      const tagline = carouselItem.querySelector('.carousel-channel-tagline');
+
+      img.src = ch.image || '/logo192.png';
+      img.onerror = () => { img.src = '/logo192.png'; };
+      name.textContent = ch.name;
+      tagline.textContent = ch.tagline || '';
+
+      // Update button states
+      carouselPrev.disabled = currentChannelIndex === 0;
+      carouselNext.disabled = currentChannelIndex === channels.length - 1;
+    }
+
+    async function fetchNowPlaying() {
+      if (!currentChannel || !currentChannel.apiUrl) return;
+
+      try {
+        const res = await fetch(currentChannel.apiUrl, { cache: 'no-store' });
+        const json = await res.json();
+        const np = json.now_playing || json.nowPlaying || {};
+        const song = np.song || {};
+
+        if (song.title || song.artist) {
+          nowPlayingTitle.textContent = song.title || '—';
+          nowPlayingArtist.textContent = song.artist || '—';
+
+          // Try to get album art
+          if (song.art) {
+            nowPlayingImg.src = song.art;
+            nowPlayingImg.onerror = () => { nowPlayingImg.src = '/logo192.png'; };
+          } else {
+            nowPlayingImg.src = '/logo192.png';
+          }
         }
-
-        item.innerHTML = `
-          <img class="channel-img" src="${ch.image}" alt="${ch.name}" onerror="this.src='/logo192.png'" />
-          <div class="channel-info">
-            <div class="channel-name">${ch.name}</div>
-            <div class="channel-tagline">${ch.tagline || ''}</div>
-          </div>
-        `;
-
-        item.addEventListener('click', () => {
-          currentChannel = ch;
-          audio.src = ch.streamUrl;
-          audio.play();
-          updateUI({
-            currentType: 'radio',
-            title: ch.name,
-            subtitle: ch.tagline,
-            image: ch.image
-          });
-          renderChannels(); // Re-render to update active state
-          channelList.classList.add('hidden');
-        });
-
-        channelList.appendChild(item);
-      });
+      } catch (e) {
+        console.warn('Failed to fetch now playing:', e);
+      }
     }
 
     // Play/Pause
@@ -507,9 +628,36 @@
       audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
     });
 
-    // Channel selector toggle
-    channelToggle.addEventListener('click', () => {
-      channelList.classList.toggle('hidden');
+    // Carousel navigation
+    carouselPrev.addEventListener('click', () => {
+      if (currentChannelIndex > 0) {
+        currentChannelIndex--;
+        updateCarousel();
+      }
+    });
+
+    carouselNext.addEventListener('click', () => {
+      if (currentChannelIndex < channels.length - 1) {
+        currentChannelIndex++;
+        updateCarousel();
+      }
+    });
+
+    // Click on carousel item to switch channel
+    carouselItem.addEventListener('click', () => {
+      const ch = channels[currentChannelIndex];
+      if (!ch) return;
+
+      currentChannel = ch;
+      audio.src = ch.streamUrl;
+      audio.play();
+
+      updateUI({
+        currentType: 'radio',
+        title: ch.name,
+        subtitle: ch.tagline,
+        image: ch.image
+      });
     });
 
     function formatTime(seconds) {
