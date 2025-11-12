@@ -203,7 +203,7 @@ export default function PlayerBar() {
           </div>
           <div className="flex items-center gap-3 min-w-[220px] justify-end pr-2">
             <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
+              <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
             </button>
             <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
@@ -341,7 +341,7 @@ export default function PlayerBar() {
           </div>
           <div className="text-xs tabular-nums opacity-80 w-12">{duration ? mmss(duration) : '--:--'}</div>
           <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
-            <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12.1 21.35l-1.1-1.01C5.14 15.28 2 12.36 2 8.99 2 6.42 4.42 4 6.99 4c1.74 0 3.41.81 4.51 2.09C12.59 4.81 14.26 4 16 4 18.58 4 21 6.42 21 8.99c0 3.37-3.14 6.29-8.99 11.35l-1.91 1.01z"/></svg>
+            <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
           </button>
           <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
