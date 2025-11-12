@@ -51,6 +51,12 @@ Google OAuth est maintenant **100% fonctionnel** pour KracRadio!
 - ✅ Client Secret: Configuré
 - ✅ Callback URL: `https://gpcedzaflhiucwyjgdai.supabase.co/auth/v1/callback`
 
+**Configuration URL (Authentication → URL Configuration):**
+- ✅ Site URL: `https://kracradio.com` (production) OU `http://localhost:3000` (dev)
+- ✅ Redirect URLs:
+  - `https://kracradio.com/**` (wildcard pour production)
+  - `http://localhost:3000/**` (wildcard pour dev)
+
 ## Flux d'authentification
 
 1. **Utilisateur clique "Continuer avec Google"**

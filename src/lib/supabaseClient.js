@@ -17,7 +17,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // Évite les conflits avec les hash params
-    flowType: 'pkce' // Plus sécurisé
+    flowType: 'pkce', // Plus sécurisé
+    // Don't use Site URL for OAuth redirects - we'll specify explicitly
+    redirectTo: undefined
   },
   global: {
     headers: {
