@@ -172,16 +172,33 @@ export function AuthProvider({ children }) {
       setUser(null);
       setUserRole(null);
 
-      // Clear storage to ensure no stale data remains
-      localStorage.clear();
+      // Clear only Supabase auth keys instead of wiping everything
+      // This preserves user preferences like theme, language, etc.
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       sessionStorage.clear();
-      console.log('[Auth] Local storage cleared');
+      console.log('[Auth] Auth storage cleared');
     } catch (e) {
       console.error('[Auth] signOut exception:', e);
       // Even on error, force cleanup
       setUser(null);
       setUserRole(null);
-      localStorage.clear();
+
+      // Clear only Supabase auth keys on error too
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       sessionStorage.clear();
       throw e; // Re-throw to let caller handle
     } finally {
