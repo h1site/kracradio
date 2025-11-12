@@ -22,19 +22,16 @@ export function AuthProvider({ children }) {
 
     async function init() {
       console.log('[Auth] init() starting...');
+
+      // If we're in OAuth callback, skip init entirely - let onAuthStateChange handle it
+      if (isOAuthCallback) {
+        console.log('[Auth] OAuth callback detected, skipping init - onAuthStateChange will handle it');
+        return;
+      }
+
       try {
         console.log('[Auth] Getting session...');
-
-        // Add timeout to getSession to prevent hanging during OAuth callback
-        const getSessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((resolve) =>
-          setTimeout(() => {
-            console.warn('[Auth] getSession timeout, returning empty session');
-            resolve({ data: { session: null }, error: null });
-          }, 3000)
-        );
-
-        const { data } = await Promise.race([getSessionPromise, timeoutPromise]);
+        const { data } = await supabase.auth.getSession();
         console.log('[Auth] Session retrieved:', data?.session?.user?.email || 'no session');
 
         if (!mounted) {
@@ -48,7 +45,6 @@ export function AuthProvider({ children }) {
 
         if (currentUser) {
           console.log('[Auth] User exists, setting default role to user (temporarily skipping profiles table)');
-          // TEMPORARILY SKIP profiles table query to isolate the blocking issue
           setUserRole('user');
           console.log('[Auth] Role set to user');
         } else {
@@ -64,19 +60,10 @@ export function AuthProvider({ children }) {
           setUserRole(null);
         }
       } finally {
-        console.log('[Auth] init() finally block reached, mounted:', mounted);
-
-        // If we're in OAuth callback, keep loading true until SIGNED_IN event
-        if (isOAuthCallback) {
-          console.log('[Auth] OAuth callback detected, keeping loading true until SIGNED_IN');
-          initialLoadComplete = true;
-        } else if (mounted) {
+        if (mounted) {
           console.log('[Auth] Setting loading to false');
           setLoading(false);
           console.log('[Auth] Loading set to false');
-          initialLoadComplete = true;
-        } else {
-          console.log('[Auth] Component unmounted, NOT setting loading to false');
         }
       }
       console.log('[Auth] init() function completed');
