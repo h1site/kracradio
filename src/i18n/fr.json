@@ -338,9 +338,11 @@
   },
   "player": {
     "selectPrompt": "Sélectionne une chaîne — Clique Écouter",
-    "likeComingSoon": "J’aime (à venir)",
+    "likeComingSoon": "J'aime (à venir)",
     "settings": "Paramètres",
     "share": "Partager",
+    "openExternal": "Lecteur externe",
+    "openExternalTooltip": "Ouvrir dans votre lecteur audio",
     "volume": "Volume",
     "podcastLabel": "Podcast",
     "play": "Lire",

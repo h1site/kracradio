@@ -214,6 +214,41 @@ export function AudioPlayerProvider({ children }) {
     console.log('[AudioPlayer] Seeked to:', targetTime);
   };
 
+  /**
+   * Open current audio in external/default player
+   * Creates a temporary link to trigger system's default media player
+   */
+  const openInExternalPlayer = () => {
+    let url = null;
+
+    if (currentType === 'radio' && current?.streamUrl) {
+      url = current.streamUrl;
+    } else if (currentType === 'podcast' && podcastMeta?.audioUrl) {
+      url = podcastMeta.audioUrl;
+    }
+
+    if (!url) return;
+
+    // Create a temporary anchor element to trigger download/open behavior
+    // This works better than window.open() for media files
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+
+    // For Safari/iOS, we need to set download attribute to trigger system player
+    // For desktop, the browser will decide based on content-type
+    const filename = currentType === 'radio'
+      ? `${current?.name || 'stream'}.mp3`
+      : `${podcastMeta?.title || 'podcast'}.mp3`;
+    link.download = filename;
+
+    // Trigger click
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const value = useMemo(
     () => ({
       audio: audioRef.current,
@@ -228,7 +263,8 @@ export function AudioPlayerProvider({ children }) {
       playChannel,
       playPodcast,
       seek,
-      setCurrent
+      setCurrent,
+      openInExternalPlayer
     }),
     [current, currentType, podcastMeta, playing, volume]
   );

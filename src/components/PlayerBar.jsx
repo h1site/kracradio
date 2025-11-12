@@ -7,7 +7,7 @@ import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
 
 export default function PlayerBar() {
-  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
+  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek, openInExternalPlayer } = useAudio();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
@@ -20,6 +20,7 @@ export default function PlayerBar() {
   const likeLabel = player.likeComingSoon ?? site.like ?? 'J’aime (à venir)';
   const settingsLabel = player.settings ?? site.settings ?? 'Paramètres';
   const shareLabel = player.share ?? site.share ?? 'Partager';
+  const openExternalLabel = player.openExternal ?? 'Lecteur externe';
   const volumeLabel = player.volume ?? 'Volume';
   const podcastLabel = player.podcastLabel ?? 'Podcast';
   const channelLabel = site.channelLabel ?? 'Channel';
@@ -159,6 +160,17 @@ export default function PlayerBar() {
             <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
+            <button
+              className="icon-btn"
+              title={openExternalLabel}
+              aria-label={openExternalLabel}
+              onClick={openInExternalPlayer}
+              disabled={!current}
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5">
+                <path fill="currentColor" d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+            </button>
             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
               <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
             </svg>
@@ -272,6 +284,17 @@ export default function PlayerBar() {
           </button>
           <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
+          </button>
+          <button
+            className="icon-btn"
+            title={openExternalLabel}
+            aria-label={openExternalLabel}
+            onClick={openInExternalPlayer}
+            disabled={!current}
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5">
+              <path fill="currentColor" d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+            </svg>
           </button>
           <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
             <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
