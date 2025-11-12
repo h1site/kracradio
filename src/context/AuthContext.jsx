@@ -31,7 +31,17 @@ export function AuthProvider({ children }) {
 
       try {
         console.log('[Auth] Getting session...');
-        const { data } = await supabase.auth.getSession();
+
+        // Add timeout to prevent hanging
+        const getSessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => {
+            console.warn('[Auth] getSession timeout after 3s');
+            resolve({ data: { session: null }, error: null });
+          }, 3000)
+        );
+
+        const { data } = await Promise.race([getSessionPromise, timeoutPromise]);
         console.log('[Auth] Session retrieved:', data?.session?.user?.email || 'no session');
 
         if (!mounted) {
