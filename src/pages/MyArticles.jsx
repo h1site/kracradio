@@ -13,7 +13,7 @@ export default function MyArticles() {
   const profile = t?.profile ?? {};
   const myArticles = t?.myArticles ?? {};
 
-  if (!user) return <Navigate to="/auth/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
 
   useEffect(() => {
     let mounted = true;

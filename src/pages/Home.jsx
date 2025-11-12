@@ -343,7 +343,7 @@ export default function Home() {
               </div>
             </div>
             <Link
-              to="/auth/signup"
+              to="/signup"
               className="mt-6 inline-block w-full text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
             >
               {t.home?.createAccountCta || 'Créer un compte gratuitement'}

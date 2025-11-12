@@ -83,7 +83,7 @@ export default function AuthUpdatePassword() {
       } else {
         await supabase.auth.signOut();
         alert(T.passwordUpdated || 'Mot de passe mis à jour avec succès!');
-        navigate('/auth/login');
+        navigate('/login');
       }
     } catch (e2) {
       console.error('Error updating password:', e2);
@@ -99,7 +99,7 @@ export default function AuthUpdatePassword() {
         lang={lang}
         title={T.updatePassword || 'Mettre à jour le mot de passe'}
         description="Mettre à jour votre mot de passe KracRadio"
-        path="/auth/update-password"
+        path="/update-password"
         type="website"
       />
 
@@ -183,7 +183,7 @@ export default function AuthUpdatePassword() {
               </div>
             </div>
             <Link
-              to="/auth/reset-password"
+              to="/reset-password"
               className="btn-primary w-full h-11 rounded-xl font-semibold inline-block text-center"
             >
               Demander un nouveau lien

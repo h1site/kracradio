@@ -20,6 +20,7 @@ import AuthResetPassword from '../pages/AuthResetPassword';
 import AuthUpdatePassword from '../pages/AuthUpdatePassword';
 import AuthVerifyEmail from '../pages/AuthVerifyEmail';
 import AuthResendVerification from '../pages/AuthResendVerification';
+import AuthCallback from '../pages/AuthCallback';
 import ArticleEditor from '../pages/ArticleEditor';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -40,6 +41,8 @@ import AdminPanel from '../pages/AdminPanel';
 import PodcastEditor from '../pages/PodcastEditor';
 import CommunityDashboard from '../pages/CommunityDashboard';
 import PublicProfile from '../pages/PublicProfile';
+import LikedSongs from '../pages/LikedSongs';
+import Charts from '../pages/Charts';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -78,13 +81,14 @@ export default function App() {
           <Route path="/article/:slug" element={<Article />} />
 
           {/* Auth */}
-          <Route path="/auth/login" element={<AuthLogin />} />
-          <Route path="/auth/register" element={<AuthRegister />} />
-          <Route path="/auth/confirm-email" element={<AuthConfirmEmail />} />
-          <Route path="/auth/verify-email" element={<AuthVerifyEmail />} />
-          <Route path="/auth/resend-verification" element={<AuthResendVerification />} />
-          <Route path="/auth/reset-password" element={<AuthResetPassword />} />
-          <Route path="/auth/update-password" element={<AuthUpdatePassword />} />
+          <Route path="/login" element={<AuthLogin />} />
+          <Route path="/register" element={<AuthRegister />} />
+          <Route path="/confirm-email" element={<AuthConfirmEmail />} />
+          <Route path="/verify-email" element={<AuthVerifyEmail />} />
+          <Route path="/resend-verification" element={<AuthResendVerification />} />
+          <Route path="/reset-password" element={<AuthResetPassword />} />
+          <Route path="/update-password" element={<AuthUpdatePassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Profil personnel (protégé, route exacte) */}
           <Route
@@ -107,6 +111,17 @@ export default function App() {
 
           {/* Profil public par slug/username (après /profile exacte) */}
           <Route path="/profile/:username" element={<PublicProfile />} />
+
+          {/* Liked Songs (protected) */}
+          <Route
+            path="/liked-songs"
+            element={
+              <ProtectedRoute>
+                <LikedSongs />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/dashboard/articles/mine"
             element={
@@ -156,6 +171,10 @@ export default function App() {
           <Route path="/podcasts" element={<PodcastsNew />} />
           <Route path="/podcasts/submit" element={<Podcasts />} />
           <Route path="/podcast/:id" element={<PodcastDetail />} />
+
+          {/* Charts - Public access */}
+          <Route path="/charts" element={<Charts />} />
+          <Route path="/charts/:channelKey" element={<Charts />} />
           <Route
             path="/dashboard"
             element={

@@ -12,37 +12,51 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    let initialLoadComplete = false;
+
+    // Check if we're in an OAuth callback flow
+    const isOAuthCallback = window.location.pathname === '/auth/callback' &&
+                            window.location.search.includes('code=');
+
+    console.log('[Auth] useEffect starting, isOAuthCallback:', isOAuthCallback);
 
     async function init() {
+      console.log('[Auth] init() starting...');
       try {
-        const { data } = await supabase.auth.getSession();
-        if (!mounted) return;
+        console.log('[Auth] Getting session...');
+
+        // Add timeout to getSession to prevent hanging during OAuth callback
+        const getSessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => {
+            console.warn('[Auth] getSession timeout, returning empty session');
+            resolve({ data: { session: null }, error: null });
+          }, 3000)
+        );
+
+        const { data } = await Promise.race([getSessionPromise, timeoutPromise]);
+        console.log('[Auth] Session retrieved:', data?.session?.user?.email || 'no session');
+
+        if (!mounted) {
+          console.log('[Auth] Component unmounted, exiting init');
+          return;
+        }
 
         const currentUser = data?.session?.user ?? null;
+        console.log('[Auth] Setting user:', currentUser?.email || 'null');
         setUser(currentUser);
 
         if (currentUser) {
-          // Fetch the real role from profiles table
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', currentUser.id)
-              .single();
-
-            if (profileError) {
-              console.warn('[Auth] Failed to fetch user role:', profileError);
-              setUserRole('user'); // Default to 'user' if fetch fails
-            } else {
-              setUserRole(profileData?.role || 'user');
-            }
-          } catch (err) {
-            console.warn('[Auth] Error fetching user role:', err);
-            setUserRole('user');
-          }
+          console.log('[Auth] User exists, setting default role to user (temporarily skipping profiles table)');
+          // TEMPORARILY SKIP profiles table query to isolate the blocking issue
+          setUserRole('user');
+          console.log('[Auth] Role set to user');
         } else {
+          console.log('[Auth] No user, setting role to null');
           setUserRole(null);
         }
+
+        console.log('[Auth] init() try block completed successfully');
       } catch (e) {
         console.error('[Auth] init error:', e);
         if (mounted) {
@@ -50,10 +64,22 @@ export function AuthProvider({ children }) {
           setUserRole(null);
         }
       } finally {
-        if (mounted) {
+        console.log('[Auth] init() finally block reached, mounted:', mounted);
+
+        // If we're in OAuth callback, keep loading true until SIGNED_IN event
+        if (isOAuthCallback) {
+          console.log('[Auth] OAuth callback detected, keeping loading true until SIGNED_IN');
+          initialLoadComplete = true;
+        } else if (mounted) {
+          console.log('[Auth] Setting loading to false');
           setLoading(false);
+          console.log('[Auth] Loading set to false');
+          initialLoadComplete = true;
+        } else {
+          console.log('[Auth] Component unmounted, NOT setting loading to false');
         }
       }
+      console.log('[Auth] init() function completed');
     }
 
     init();
@@ -69,26 +95,18 @@ export function AuthProvider({ children }) {
       }
 
       const currentUser = session?.user ?? null;
+      console.log('[Auth] onAuthStateChange setting user:', currentUser?.email || 'null');
       setUser(currentUser);
 
       if (currentUser) {
-        // Fetch the real role from profiles table
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .single();
+        console.log('[Auth] Setting role to user (skipping profiles table)');
+        // TEMPORARILY SKIP profiles table query to avoid blocking
+        setUserRole('user');
 
-          if (profileError) {
-            console.warn('[Auth] Failed to fetch user role on auth change:', profileError);
-            setUserRole('user');
-          } else {
-            setUserRole(profileData?.role || 'user');
-          }
-        } catch (err) {
-          console.warn('[Auth] Error fetching user role on auth change:', err);
-          setUserRole('user');
+        // If this is a SIGNED_IN event during OAuth callback, set loading to false NOW
+        if (event === 'SIGNED_IN' && isOAuthCallback) {
+          console.log('[Auth] SIGNED_IN during OAuth callback, setting loading to false immediately');
+          setLoading(false);
         }
       } else {
         setUserRole(null);
@@ -129,7 +147,7 @@ export function AuthProvider({ children }) {
   const signUp = async ({ email, password }) => {
     // Configuration pour l'envoi d'email de confirmation
     const options = {
-      emailRedirectTo: `${process.env.REACT_APP_URL || window.location.origin}/auth/verify-email`
+      emailRedirectTo: `${process.env.REACT_APP_URL || window.location.origin}/verify-email`
     };
 
     const { data, error } = await supabase.auth.signUp({
@@ -139,6 +157,25 @@ export function AuthProvider({ children }) {
     });
 
     if (error) throw new Error(error.message || 'Sign-up failed');
+    return data;
+  };
+
+  const signInWithGoogle = async () => {
+    // Use PKCE flow which works better with localhost
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    });
+
+    if (error) throw new Error(error.message || 'Google sign-in failed');
+
+    // The browser will redirect automatically, don't need to return anything
     return data;
   };
 
@@ -218,6 +255,7 @@ export function AuthProvider({ children }) {
     loading,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
     isAdmin,
     isCreator,

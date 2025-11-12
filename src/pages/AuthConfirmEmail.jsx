@@ -85,7 +85,7 @@ export default function AuthConfirmEmail() {
             {L.resendLink}
           </p>
           <Link
-            to="/auth/resend-verification"
+            to="/resend-verification"
             className="text-red-600 dark:text-red-500 hover:underline font-medium"
           >
             {L.resendButton}
@@ -94,7 +94,7 @@ export default function AuthConfirmEmail() {
 
         {/* Bouton retour */}
         <Link
-          to="/auth/login"
+          to="/login"
           className="inline-flex items-center gap-2 text-red-600 dark:text-red-500 hover:underline"
         >
           {L.backToLogin}

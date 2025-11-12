@@ -7,14 +7,19 @@ export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log('[ProtectedRoute] loading:', loading, 'user:', user?.email);
+
   if (loading) {
+    console.log('[ProtectedRoute] Still loading, returning null');
     // Keep it minimal to avoid layout shifts
     return null;
   }
 
   if (!user) {
-    return <Navigate to="/auth/login" replace state={{ from: location }} />;
+    console.log('[ProtectedRoute] No user, redirecting to /login');
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  console.log('[ProtectedRoute] User authenticated, rendering children');
   return children;
 }

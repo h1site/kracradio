@@ -26,7 +26,7 @@ export default function AuthVerifyEmail() {
     setMessage('Votre email a été vérifié avec succès !');
 
     const timer = setTimeout(() => {
-      navigate('/auth/login');
+      navigate('/login');
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -38,7 +38,7 @@ export default function AuthVerifyEmail() {
         lang={lang}
         title="Vérification d'email"
         description="Vérifiez votre adresse email"
-        path="/auth/verify-email"
+        path="/verify-email"
         type="website"
       />
 
@@ -95,7 +95,7 @@ export default function AuthVerifyEmail() {
               </p>
               <p className="text-text-secondary mb-6">{message}</p>
               <Link
-                to="/auth/register"
+                to="/register"
                 className="btn-primary inline-block"
               >
                 Retour à l'inscription

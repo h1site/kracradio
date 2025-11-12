@@ -7,12 +7,32 @@ import { useProfile } from '../hooks/useCommunity';
 import WelcomeTutorial from '../components/WelcomeTutorial';
 
 export default function Profile() {
+  console.log('[Profile] Component rendering...');
+
   const { t } = useI18n();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { profile } = useProfile(user?.id);
+
+  console.log('[Profile] User loaded:', user?.email);
+
+  // Temporarily disable useProfile to see if that's causing the issue
+  const profile = null;
+  // const { profile } = useProfile(user?.id) || { profile: null };
+
   const [showTutorial, setShowTutorial] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  console.log('[Profile] About to render JSX');
+
+  // Handle OAuth callback hash fragment
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      console.log('[Profile] OAuth callback detected, removing hash from URL');
+      // Clean up the URL without triggering navigation
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   // Vérifier si c'est la première visite
   useEffect(() => {
@@ -143,6 +163,36 @@ export default function Profile() {
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
           >
             {t?.profile?.accessCommunity || 'Access Community'}
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </Link>
+        </div>
+      </section>
+
+      {/* Liked Songs Card */}
+      <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-950 mt-6">
+        <div className="flex flex-col items-center justify-center gap-6 text-center md:flex-row md:text-left">
+          <div className="flex-shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-pink-500">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 text-white" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-black dark:text-white">
+              {t?.profile?.likedSongsTitle || 'My Liked Songs'}
+            </h2>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              {t?.profile?.likedSongsDesc || 'View and manage your favorite songs from all channels'}
+            </p>
+          </div>
+          <Link
+            to="/liked-songs"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-pink-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
+          >
+            {t?.profile?.viewLikedSongs || 'View Liked Songs'}
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
               <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
             </svg>

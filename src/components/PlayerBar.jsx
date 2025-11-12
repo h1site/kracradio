@@ -1,18 +1,24 @@
 // src/components/PlayerBar.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAudio } from '../context/AudioPlayerContext';
+import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
+import { addSongLike, removeSongLike, isSongLiked } from '../lib/supabase';
 import PlayerBarMobile from './PlayerBarMobile';
 import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
 
 export default function PlayerBar() {
   const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
   const tickRef = useRef(null);
   const ipodButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -170,6 +176,84 @@ export default function PlayerBar() {
 
   // Prépare les infos selon le type (radio ou podcast)
   const isPodcast = currentType === 'podcast';
+
+  // Check if current song is liked when song changes
+  useEffect(() => {
+    if (!user) {
+      setIsLiked(false);
+      return;
+    }
+
+    const checkLiked = async () => {
+      try {
+        const title = isPodcast ? podcastMeta?.title : meta?.title;
+        const artist = isPodcast ? podcastMeta?.podcastTitle : meta?.artist;
+
+        if (!title || !artist || !current?.key) {
+          setIsLiked(false);
+          return;
+        }
+
+        const liked = await isSongLiked({
+          channelKey: current.key,
+          title,
+          artist
+        });
+        setIsLiked(liked);
+      } catch (error) {
+        console.error('Error checking if song is liked:', error);
+        setIsLiked(false);
+      }
+    };
+
+    checkLiked();
+  }, [user, meta?.title, meta?.artist, podcastMeta?.title, podcastMeta?.podcastTitle, current?.key, isPodcast]);
+
+  // Handler pour le bouton like
+  const handleLikeClick = async () => {
+    // Redirect to login if not authenticated
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const title = isPodcast ? podcastMeta?.title : meta?.title;
+    const artist = isPodcast ? podcastMeta?.podcastTitle : meta?.artist;
+    const art = isPodcast
+      ? (podcastMeta?.image || podcastMeta?.podcastImage)
+      : meta?.art;
+
+    if (!title || !artist || !current?.key) {
+      console.warn('Cannot like: missing song information');
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        // Unlike
+        await removeSongLike({
+          channelKey: current.key,
+          title,
+          artist
+        });
+        setIsLiked(false);
+      } else {
+        // Like
+        await addSongLike({
+          channelKey: current.key,
+          channelName: current.name,
+          title,
+          artist,
+          albumArt: art
+        });
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  // Prépare les infos affichées
   const mobileArt = isPodcast
     ? (podcastMeta?.image || podcastMeta?.podcastImage || '/channels/default.webp')
     : (meta?.art || current?.image || '/channels/default.webp');
@@ -202,7 +286,13 @@ export default function PlayerBar() {
             )}
           </div>
           <div className="flex items-center gap-3 min-w-[220px] justify-end pr-2">
-            <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
+            <button
+              className="icon-btn"
+              title={likeLabel}
+              aria-label={likeLabel}
+              onClick={handleLikeClick}
+              style={{ opacity: isLiked ? 1 : 0.5, filter: isLiked ? 'brightness(1.5)' : 'none' }}
+            >
               <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
             </button>
             <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
@@ -340,7 +430,13 @@ export default function PlayerBar() {
             </div>
           </div>
           <div className="text-xs tabular-nums opacity-80 w-12">{duration ? mmss(duration) : '--:--'}</div>
-          <button className="icon-btn" title={likeLabel} aria-label={likeLabel}>
+          <button
+            className="icon-btn"
+            title={likeLabel}
+            aria-label={likeLabel}
+            onClick={handleLikeClick}
+            style={{ opacity: isLiked ? 1 : 0.5, filter: isLiked ? 'brightness(1.5)' : 'none' }}
+          >
             <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
           </button>
           <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>

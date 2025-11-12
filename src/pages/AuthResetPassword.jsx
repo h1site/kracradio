@@ -21,7 +21,7 @@ export default function AuthResetPassword() {
     setSuccess(false);
 
     try {
-      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/auth/update-password`;
+      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/update-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo
       });
@@ -44,7 +44,7 @@ export default function AuthResetPassword() {
         lang={lang}
         title={T.resetPassword || 'Réinitialiser le mot de passe'}
         description="Réinitialiser votre mot de passe KracRadio"
-        path="/auth/reset-password"
+        path="/reset-password"
         type="website"
       />
 
@@ -102,7 +102,7 @@ export default function AuthResetPassword() {
             </div>
 
             <Link
-              to="/auth/login"
+              to="/login"
               className="block text-center text-sm text-accent hover:text-accent-hover hover:underline"
             >
               {T.backToLogin || 'Retour à la connexion'}
@@ -135,7 +135,7 @@ export default function AuthResetPassword() {
 
             <div className="text-center">
               <Link
-                to="/auth/login"
+                to="/login"
                 className="text-sm text-accent hover:text-accent-hover hover:underline"
               >
                 {T.backToLogin || 'Retour à la connexion'}

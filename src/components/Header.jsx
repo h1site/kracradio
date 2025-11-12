@@ -62,13 +62,13 @@ export default function Header() {
             {!user ? (
               <>
                 <Link
-                  to="/auth/login"
+                  to="/login"
                   className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
                 >
                   {t?.auth?.login ?? 'Connexion'}
                 </Link>
                 <Link
-                  to="/auth/register"
+                  to="/register"
                   className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
                 >
                   {t?.auth?.register ?? 'Inscription'}

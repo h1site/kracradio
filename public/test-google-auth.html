@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Google OAuth - KracRadio</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; margin-top: 0; }
+    button {
+      background: #4285F4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover { background: #357ae8; }
+    .info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid #2196F3;
+    }
+    .error {
+      background: #ffebee;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid #f44336;
+      color: #c62828;
+    }
+    .success {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid #4caf50;
+      color: #2e7d32;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+    ol { padding-left: 20px; }
+    li { margin: 8px 0; }
+    #result { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔍 Diagnostic Google OAuth - KracRadio</h1>
+
+    <div class="info">
+      <strong>🎯 Ce que ce test va faire:</strong>
+      <ol>
+        <li>Vérifier la configuration Supabase</li>
+        <li>Tester l'endpoint OAuth Google</li>
+        <li>Vous rediriger vers Google pour l'authentification</li>
+      </ol>
+    </div>
+
+    <button onclick="testOAuth()">🚀 Tester Google OAuth</button>
+    <button onclick="showConfig()">📋 Voir la Configuration</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://gpcedzaflhiucwyjgdai.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwY2VkemFmbGhpdWN3eWpnZGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxNzgzMzAsImV4cCI6MjA3NDc1NDMzMH0.sMkG7VMYRFWF1dKY_XPyQ-6iAJ1BYHKcye1R-CNO3ho';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    window.testOAuth = async function() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<div class="info">⏳ Test en cours...</div>';
+
+      try {
+        // Test 1: Vérifier Supabase
+        resultDiv.innerHTML += '<div class="info">✓ Connexion Supabase OK</div>';
+
+        // Test 2: Essayer signInWithOAuth
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin + '/profile'
+          }
+        });
+
+        if (error) {
+          resultDiv.innerHTML = `
+            <div class="error">
+              <h3>❌ Erreur détectée</h3>
+              <p><strong>Message:</strong> ${error.message}</p>
+              <p><strong>Code:</strong> ${error.status || 'N/A'}</p>
+              <hr>
+              <h4>💡 Solutions possibles:</h4>
+              <ol>
+                <li><strong>Si erreur "Provider not enabled":</strong>
+                  <ul>
+                    <li>Allez sur: <code>https://supabase.com/dashboard/project/gpcedzaflhiucwyjgdai/auth/providers</code></li>
+                    <li>Activez le provider Google (toggle vert)</li>
+                    <li>Ajoutez Client ID et Client Secret de Google Cloud Console</li>
+                  </ul>
+                </li>
+                <li><strong>Si erreur "Invalid credentials":</strong>
+                  <ul>
+                    <li>Vérifiez que le Client ID et Secret sont corrects dans Supabase</li>
+                  </ul>
+                </li>
+              </ol>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="success">
+              <h3>✅ Configuration OK!</h3>
+              <p>Google OAuth est correctement configuré.</p>
+              <p>Redirection vers Google dans 3 secondes...</p>
+            </div>
+          `;
+
+          // Redirect after 3 seconds
+          setTimeout(() => {
+            if (data.url) {
+              window.location.href = data.url;
+            }
+          }, 3000);
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <h3>❌ Erreur critique</h3>
+            <p>${err.message}</p>
+            <pre>${JSON.stringify(err, null, 2)}</pre>
+          </div>
+        `;
+      }
+    };
+
+    window.showConfig = function() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `
+        <div class="info">
+          <h3>📋 Configuration requise</h3>
+
+          <h4>1️⃣ Dans Google Cloud Console:</h4>
+          <ol>
+            <li>Aller sur: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console - Credentials</a></li>
+            <li>Créer "OAuth client ID" (Web application)</li>
+            <li><strong>Authorized redirect URIs</strong> - Ajouter EXACTEMENT:
+              <br><code>https://gpcedzaflhiucwyjgdai.supabase.co/auth/v1/callback</code>
+            </li>
+            <li>Notez le <strong>Client ID</strong> et <strong>Client Secret</strong></li>
+          </ol>
+
+          <h4>2️⃣ Dans Supabase Dashboard:</h4>
+          <ol>
+            <li>Aller sur: <a href="https://supabase.com/dashboard/project/gpcedzaflhiucwyjgdai/auth/providers" target="_blank">Supabase - Auth Providers</a></li>
+            <li>Trouver "Google" et activer le toggle</li>
+            <li>Coller le Client ID et Client Secret de Google</li>
+            <li>Cliquer "Save"</li>
+          </ol>
+
+          <h4>3️⃣ URLs importantes:</h4>
+          <ul>
+            <li><strong>Supabase URL:</strong> <code>https://gpcedzaflhiucwyjgdai.supabase.co</code></li>
+            <li><strong>Callback URL:</strong> <code>https://gpcedzaflhiucwyjgdai.supabase.co/auth/v1/callback</code></li>
+            <li><strong>Redirect après auth:</strong> <code>${window.location.origin}/profile</code></li>
+          </ul>
+        </div>
+      `;
+    };
+  </script>
+</body>
+</html>

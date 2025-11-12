@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Google OAuth - KracRadio</title>
+</head>
+<body>
+  <h1>Test Google OAuth</h1>
+  <button onclick="testGoogleOAuth()">Test Google Sign-In</button>
+  <div id="result"></div>
+
+  <script>
+    async function testGoogleOAuth() {
+      const supabaseUrl = 'https://gpcedzaflhiucwyjgdai.supabase.co';
+      const redirectUrl = window.location.origin + '/profile';
+
+      const url = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+
+      document.getElementById('result').innerHTML = `
+        <p>Redirecting to: <code>${url}</code></p>
+        <p>If this doesn't work, check:</p>
+        <ol>
+          <li>Google OAuth is enabled in Supabase</li>
+          <li>Client ID and Secret are configured</li>
+          <li>Redirect URI is: <code>https://gpcedzaflhiucwyjgdai.supabase.co/auth/v1/callback</code></li>
+        </ol>
+      `;
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        window.location.href = url;
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

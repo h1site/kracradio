@@ -19,7 +19,7 @@ export default function AuthResendVerification() {
     setMessage('');
 
     try {
-      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/auth/verify-email`;
+      const redirectTo = `${process.env.REACT_APP_URL || window.location.origin}/verify-email`;
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
@@ -47,7 +47,7 @@ export default function AuthResendVerification() {
         lang={lang}
         title="Renvoyer l'email de vérification"
         description="Renvoyer l'email de vérification"
-        path="/auth/resend-verification"
+        path="/resend-verification"
         type="website"
       />
 
@@ -129,7 +129,7 @@ export default function AuthResendVerification() {
             💡 Astuce : Vérifiez votre dossier spam
           </p>
           <p>
-            <Link to="/auth/login" className="text-accent hover:underline">
+            <Link to="/login" className="text-accent hover:underline">
               Retour à la connexion
             </Link>
           </p>
