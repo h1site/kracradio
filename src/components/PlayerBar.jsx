@@ -309,7 +309,7 @@ export default function PlayerBar() {
             <img
               src="/icons/dark/ipod.svg"
               alt="iPod"
-              className="w-5 h-5"
+              style={{ width: '1.75rem', height: '1.75rem' }}
             />
           </button>
         </div>
