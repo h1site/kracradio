@@ -343,6 +343,7 @@
     "share": "Share",
     "openExternal": "External player",
     "openExternalTooltip": "Open in your audio player",
+    "openStandalone": "iPod Player",
     "volume": "Volume",
     "podcastLabel": "Podcast",
     "play": "Play",

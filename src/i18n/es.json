@@ -343,6 +343,7 @@
     "share": "Compartir",
     "openExternal": "Reproductor externo",
     "openExternalTooltip": "Abrir en tu reproductor de audio",
+    "openStandalone": "Reproductor iPod",
     "volume": "Volumen",
     "podcastLabel": "Podcast",
     "play": "Reproducir",

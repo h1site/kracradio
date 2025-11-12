@@ -5,13 +5,15 @@ import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
+import StandalonePlayer from './StandalonePlayer';
 
 export default function PlayerBar() {
-  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek, openInExternalPlayer } = useAudio();
+  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const tickRef = useRef(null);
+  const [showStandalonePlayer, setShowStandalonePlayer] = useState(false);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -162,13 +164,13 @@ export default function PlayerBar() {
             </button>
             <button
               className="icon-btn"
-              title={openExternalLabel}
-              aria-label={openExternalLabel}
-              onClick={openInExternalPlayer}
-              disabled={!current}
+              title={player.openStandalone ?? 'Lecteur iPod'}
+              aria-label={player.openStandalone ?? 'Lecteur iPod'}
+              onClick={() => setShowStandalonePlayer(true)}
+              disabled={!current && currentType !== 'podcast'}
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5">
-                <path fill="currentColor" d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                <path fill="currentColor" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-5-1c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
               </svg>
             </button>
             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
@@ -287,13 +289,13 @@ export default function PlayerBar() {
           </button>
           <button
             className="icon-btn"
-            title={openExternalLabel}
-            aria-label={openExternalLabel}
-            onClick={openInExternalPlayer}
-            disabled={!current}
+            title={player.openStandalone ?? 'Lecteur iPod'}
+            aria-label={player.openStandalone ?? 'Lecteur iPod'}
+            onClick={() => setShowStandalonePlayer(true)}
+            disabled={!current && currentType !== 'podcast'}
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5">
-              <path fill="currentColor" d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              <path fill="currentColor" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-5-1c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
             </svg>
           </button>
           <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
@@ -311,6 +313,11 @@ export default function PlayerBar() {
           />
         </div>
       </div>
+
+      {/* Standalone Player Modal */}
+      {showStandalonePlayer && (
+        <StandalonePlayer onClose={() => setShowStandalonePlayer(false)} />
+      )}
     </div>
   );
 }
