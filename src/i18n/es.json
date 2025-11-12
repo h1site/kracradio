@@ -344,6 +344,7 @@
     "openExternal": "Reproductor externo",
     "openExternalTooltip": "Abrir en tu reproductor de audio",
     "openStandalone": "Reproductor iPod",
+    "newFeatureTooltip": "Nuevo reproductor independiente",
     "volume": "Volumen",
     "podcastLabel": "Podcast",
     "play": "Reproducir",

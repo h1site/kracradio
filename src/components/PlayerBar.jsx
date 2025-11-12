@@ -6,6 +6,7 @@ import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
 import { channels } from '../data/channels';
+import NewFeatureTooltip from './NewFeatureTooltip';
 
 export default function PlayerBar() {
   const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
@@ -13,6 +14,8 @@ export default function PlayerBar() {
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const tickRef = useRef(null);
+  const ipodButtonRef = useRef(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -29,6 +32,19 @@ export default function PlayerBar() {
   const pauseLabel = player.pause ?? site.pause ?? 'Pause';
   const progressLabel = player.progressAria ?? 'Barre de progression - cliquer pour naviguer';
   const liveLabel = player.live ?? 'LIVE';
+
+  // Check if this is first time seeing the iPod button
+  useEffect(() => {
+    const hasSeenIpodFeature = localStorage.getItem('kracradio_ipod_feature_seen');
+    if (!hasSeenIpodFeature) {
+      // Show tooltip after a short delay
+      const timer = setTimeout(() => {
+        setShowTooltip(true);
+        localStorage.setItem('kracradio_ipod_feature_seen', 'true');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Open standalone player window
   const openStandalonePlayer = () => {
@@ -194,17 +210,6 @@ export default function PlayerBar() {
             <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
-            <button
-              className="icon-btn"
-              title={player.openStandalone ?? 'Lecteur iPod'}
-              aria-label={player.openStandalone ?? 'Lecteur iPod'}
-              onClick={openStandalonePlayer}
-              disabled={!current && currentType !== 'podcast'}
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5">
-                <path fill="currentColor" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-5-1c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-              </svg>
-            </button>
             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
               <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
             </svg>
@@ -267,7 +272,7 @@ export default function PlayerBar() {
           )}
         </div>
 
-        {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode */}
+        {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode + iPod Button */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={togglePlay}
@@ -290,7 +295,29 @@ export default function PlayerBar() {
               </>
             )}
           </div>
+
+          {/* iPod Player Button */}
+          <button
+            ref={ipodButtonRef}
+            onClick={openStandalonePlayer}
+            disabled={!current && currentType !== 'podcast'}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={player.openStandalone ?? 'Lecteur iPod'}
+            title={player.openStandalone ?? 'Lecteur iPod'}
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5">
+              <path fill="currentColor" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-5-1c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+            </svg>
+          </button>
         </div>
+
+        {/* New Feature Tooltip */}
+        {showTooltip && (
+          <NewFeatureTooltip
+            targetRef={ipodButtonRef}
+            onClose={() => setShowTooltip(false)}
+          />
+        )}
 
         {/* Bloc 6 — Progress + Temps + Like / Settings / Share / Volume */}
         <div className="flex items-center gap-3 min-w-[360px]" style={{ paddingRight: '40px' }}>
@@ -318,17 +345,6 @@ export default function PlayerBar() {
           </button>
           <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
-          </button>
-          <button
-            className="icon-btn"
-            title={player.openStandalone ?? 'Lecteur iPod'}
-            aria-label={player.openStandalone ?? 'Lecteur iPod'}
-            onClick={openStandalonePlayer}
-            disabled={!current && currentType !== 'podcast'}
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5">
-              <path fill="currentColor" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-5-1c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-            </svg>
           </button>
           <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
             <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>

@@ -102,6 +102,10 @@
     .track-info {
       text-align: center;
       margin-bottom: 20px;
+      overflow: hidden;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .track-title {
@@ -109,11 +113,40 @@
       font-weight: bold;
       margin-bottom: 8px;
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: visible;
+      position: relative;
+    }
+
+    .track-title.scrolling {
+      animation: marquee 12s linear infinite;
+      display: inline-block;
+      padding-left: 100%;
+      will-change: transform;
+    }
+
+    @keyframes marquee {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
     }
 
     .track-artist {
       font-size: 14px;
       color: #aaa;
+      white-space: nowrap;
+      overflow: visible;
+      position: relative;
+    }
+
+    .track-artist.scrolling {
+      animation: marquee 12s linear infinite;
+      display: inline-block;
+      padding-left: 100%;
+      will-change: transform;
     }
 
     .progress-container {
@@ -336,9 +369,9 @@
 
     <!-- Now Playing (Radio only) -->
     <div id="nowPlaying" class="now-playing hidden">
-      <img id="nowPlayingImg" class="now-playing-img" src="/logo192.png" alt="Now Playing" />
+      <img id="nowPlayingImg" class="now-playing-img" src="/logo192.png" alt="Station" />
       <div class="now-playing-info">
-        <div class="now-playing-label">🎵 En cours</div>
+        <div class="now-playing-label">📻 Station</div>
         <div id="nowPlayingTitle" class="now-playing-title">—</div>
         <div id="nowPlayingArtist" class="now-playing-artist">—</div>
       </div>
@@ -460,7 +493,7 @@
       // Start fetching now playing if radio
       if (initialData.currentType === 'radio') {
         fetchNowPlaying();
-        nowPlayingInterval = setInterval(fetchNowPlaying, 15000);
+        nowPlayingInterval = setInterval(fetchNowPlaying, 5000);
       }
     }
 
@@ -468,6 +501,27 @@
     audio.volume = (initialData.volume || 0.75);
     volumeSlider.value = Math.round(audio.volume * 100);
     volumeText.textContent = volumeSlider.value + '%';
+
+    // Helper function to check if text needs scrolling
+    function checkTextOverflow(element, maxWidth = 350) {
+      // Create a temporary span to measure the text width
+      const temp = document.createElement('span');
+      temp.style.visibility = 'hidden';
+      temp.style.position = 'absolute';
+      temp.style.whiteSpace = 'nowrap';
+      temp.style.fontSize = window.getComputedStyle(element).fontSize;
+      temp.style.fontWeight = window.getComputedStyle(element).fontWeight;
+      temp.textContent = element.textContent;
+      document.body.appendChild(temp);
+      const width = temp.offsetWidth;
+      document.body.removeChild(temp);
+
+      if (width > maxWidth) {
+        element.classList.add('scrolling');
+      } else {
+        element.classList.remove('scrolling');
+      }
+    }
 
     function updateUI(data) {
       if (data.currentType === 'podcast') {
@@ -485,10 +539,18 @@
           clearInterval(nowPlayingInterval);
           nowPlayingInterval = null;
         }
+        // Check for text overflow
+        setTimeout(() => {
+          checkTextOverflow(trackTitle);
+          checkTextOverflow(trackArtist);
+        }, 100);
       } else {
         currentType = 'radio';
         trackTitle.textContent = data.title || data.name || 'Radio';
         trackArtist.textContent = data.subtitle || data.tagline || '';
+        // Show channel image in "Now Playing" section
+        nowPlayingImg.src = data.image || '/logo192.png';
+        // Album art starts with channel image, will be updated by fetchNowPlaying if song art is available
         albumArt.src = data.image || '/logo192.png';
         progressContainer.classList.add('hidden');
         prevBtn.classList.add('hidden');
@@ -498,9 +560,14 @@
         // Start fetching now playing
         if (!nowPlayingInterval) {
           fetchNowPlaying();
-          nowPlayingInterval = setInterval(fetchNowPlaying, 15000);
+          nowPlayingInterval = setInterval(fetchNowPlaying, 5000);
         }
         updateCarousel();
+        // Check for text overflow
+        setTimeout(() => {
+          checkTextOverflow(trackTitle);
+          checkTextOverflow(trackArtist);
+        }, 100);
       }
     }
 
@@ -525,13 +592,21 @@
           nowPlayingTitle.textContent = song.title || '—';
           nowPlayingArtist.textContent = song.artist || '—';
 
-          // Try to get album art
+          // Update main album art with song artwork
           if (song.art) {
-            nowPlayingImg.src = song.art;
-            nowPlayingImg.onerror = () => { nowPlayingImg.src = '/logo192.png'; };
+            albumArt.src = song.art;
+            albumArt.onerror = () => {
+              albumArt.src = currentChannel.image || '/logo192.png';
+            };
           } else {
-            nowPlayingImg.src = '/logo192.png';
+            albumArt.src = currentChannel.image || '/logo192.png';
           }
+
+          // Check for text overflow on track info
+          setTimeout(() => {
+            checkTextOverflow(trackTitle);
+            checkTextOverflow(trackArtist);
+          }, 100);
         }
       } catch (e) {
         console.warn('Failed to fetch now playing:', e);

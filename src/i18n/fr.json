@@ -344,6 +344,7 @@
     "openExternal": "Lecteur externe",
     "openExternalTooltip": "Ouvrir dans votre lecteur audio",
     "openStandalone": "Lecteur iPod",
+    "newFeatureTooltip": "Nouveau lecteur indépendant",
     "volume": "Volume",
     "podcastLabel": "Podcast",
     "play": "Lire",
