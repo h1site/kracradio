@@ -149,6 +149,14 @@
       will-change: transform;
     }
 
+    .radio-frequency {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
     .progress-container {
       margin-bottom: 20px;
     }
@@ -365,6 +373,7 @@
     <div class="track-info">
       <div id="trackTitle" class="track-title">KracRadio</div>
       <div id="trackArtist" class="track-artist">Sélectionne une station</div>
+      <div id="radioFrequency" class="radio-frequency hidden">FM 00.0 MHz</div>
     </div>
 
     <!-- Now Playing (Radio only) -->
@@ -461,6 +470,7 @@
     const nowPlayingImg = document.getElementById('nowPlayingImg');
     const nowPlayingTitle = document.getElementById('nowPlayingTitle');
     const nowPlayingArtist = document.getElementById('nowPlayingArtist');
+    const radioFrequency = document.getElementById('radioFrequency');
 
     let currentType = 'radio';
     let channels = [];
@@ -468,6 +478,17 @@
     let currentChannelIndex = 0;
     let nowPlayingData = null;
     let nowPlayingInterval = null;
+
+    // FM frequencies for each channel (realistic FM band: 88.0 - 108.0 MHz)
+    const channelFrequencies = {
+      'krac': '101.5',
+      'ebm': '95.7',
+      'electro': '98.3',
+      'metal': '106.9',
+      'jazz': '89.1',
+      'francophonie': '103.7',
+      'rock': '97.5'
+    };
 
     // Load channels
     if (initialData.channels) {
@@ -529,6 +550,7 @@
         trackTitle.textContent = data.title || 'Podcast';
         trackArtist.textContent = data.subtitle || '';
         albumArt.src = data.image || '/logo192.png';
+        radioFrequency.classList.add('hidden');
         progressContainer.classList.remove('hidden');
         prevBtn.classList.remove('hidden');
         nextBtn.classList.remove('hidden');
@@ -548,6 +570,11 @@
         currentType = 'radio';
         trackTitle.textContent = data.title || data.name || 'Radio';
         trackArtist.textContent = data.subtitle || data.tagline || '';
+        // Show radio frequency
+        const channelKey = data.key || currentChannel?.key;
+        const frequency = channelKey ? channelFrequencies[channelKey] || '00.0' : '00.0';
+        radioFrequency.textContent = `FM ${frequency} MHz`;
+        radioFrequency.classList.remove('hidden');
         // Show channel image in "Now Playing" section
         nowPlayingImg.src = data.image || '/logo192.png';
         // Album art starts with channel image, will be updated by fetchNowPlaying if song art is available
@@ -693,7 +720,8 @@
         currentType: 'radio',
         title: ch.name,
         subtitle: ch.tagline,
-        image: ch.image
+        image: ch.image,
+        key: ch.key
       });
     }
 
