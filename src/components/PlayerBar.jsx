@@ -274,7 +274,7 @@ export default function PlayerBar() {
         </div>
 
         {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode + iPod Button */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0" style={{ paddingRight: '50px' }}>
           <button
             onClick={togglePlay}
             className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0"

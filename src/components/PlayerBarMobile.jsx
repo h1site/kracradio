@@ -111,7 +111,7 @@ export default function PlayerBarMobile() {
       </button>
 
       {/* Infos */}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1" style={{ paddingRight: '50px' }}>
         <div className="text-white text-sm font-semibold truncate" title={title}>
           {title}
         </div>
