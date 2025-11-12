@@ -46,19 +46,20 @@ export default function PlayerBar() {
       tagline: current?.tagline
     };
 
-    // Store data in window object for popup to access
+    // Store data in both window and localStorage for player to access
     window.standalonePlayerData = data;
+    localStorage.setItem('kracradio_player_data', JSON.stringify(data));
 
-    // Open popup window
+    // Open popup window with minimal chrome
     const width = 400;
     const height = 700;
-    const left = (window.screen.width - width) / 2;
-    const top = (window.screen.height - height) / 2;
+    const left = Math.floor((window.screen.width - width) / 2);
+    const top = Math.floor((window.screen.height - height) / 2);
 
     window.open(
       '/standalone-player.html',
       'KracRadioPlayer',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=yes,directories=no,status=no,chrome=no`
     );
   };
 

@@ -3,7 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KracRadio" />
   <title>KracRadio Player</title>
+  <link rel="manifest" href="/player-manifest.json" />
+  <link rel="apple-touch-icon" href="/logo192.png" />
   <style>
     * {
       margin: 0;
@@ -384,8 +390,20 @@
   <audio id="audio" preload="none"></audio>
 
   <script>
-    // Get initial data from opener window
-    const initialData = window.opener?.standalonePlayerData || {};
+    // Get initial data from opener window or localStorage
+    let initialData = window.opener?.standalonePlayerData || {};
+
+    // Fallback to localStorage if no opener data
+    if (!initialData.channels) {
+      try {
+        const storedData = localStorage.getItem('kracradio_player_data');
+        if (storedData) {
+          initialData = JSON.parse(storedData);
+        }
+      } catch (e) {
+        console.warn('Could not load player data from localStorage:', e);
+      }
+    }
 
     const audio = document.getElementById('audio');
     const playPauseBtn = document.getElementById('playPauseBtn');
