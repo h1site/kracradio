@@ -33,6 +33,7 @@
       width: 100%;
       max-width: 300px;
       margin: 0 auto 20px;
+      position: relative;
     }
 
     .album-art {
@@ -42,6 +43,54 @@
       object-fit: cover;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       background: #333;
+    }
+
+    /* Carousel navigation on album art */
+    .art-carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+      pointer-events: none;
+    }
+
+    .art-carousel-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      pointer-events: auto;
+      opacity: 0;
+    }
+
+    .album-art-container:hover .art-carousel-btn {
+      opacity: 1;
+    }
+
+    .art-carousel-btn:hover {
+      background: rgba(0,0,0,0.8);
+      transform: scale(1.1);
+    }
+
+    .art-carousel-btn:disabled {
+      opacity: 0 !important;
+      cursor: not-allowed;
+    }
+
+    .art-carousel-btn svg {
+      width: 20px;
+      height: 20px;
     }
 
     .track-info {
@@ -162,90 +211,6 @@
       border: none;
     }
 
-    .channel-carousel {
-      margin-top: auto;
-      padding: 16px 0;
-      background: rgba(0,0,0,0.3);
-      border-radius: 16px;
-    }
-
-    .carousel-title {
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .carousel-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 12px;
-    }
-
-    .carousel-btn {
-      width: 32px;
-      height: 32px;
-      flex-shrink: 0;
-      border: none;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-    }
-
-    .carousel-btn:hover {
-      background: rgba(255,255,255,0.2);
-    }
-
-    .carousel-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .carousel-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .carousel-channel-img {
-      width: 64px;
-      height: 64px;
-      border-radius: 12px;
-      object-fit: cover;
-      background: #333;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .carousel-channel-name {
-      font-size: 14px;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    .carousel-channel-tagline {
-      font-size: 11px;
-      color: #888;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
 
     .now-playing {
       background: rgba(0,0,0,0.3);
@@ -343,6 +308,19 @@
   <div class="player-container">
     <div class="album-art-container">
       <img id="albumArt" class="album-art" src="/logo192.png" alt="Album Art" />
+      <!-- Carousel navigation on top of image (Radio only) -->
+      <div id="artCarouselNav" class="art-carousel-nav hidden">
+        <button id="artCarouselPrev" class="art-carousel-btn">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          </svg>
+        </button>
+        <button id="artCarouselNext" class="art-carousel-btn">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="track-info">
@@ -401,28 +379,6 @@
       <input id="volumeSlider" type="range" min="0" max="100" value="75" class="volume-slider" />
       <span id="volumeText" class="volume-text">75%</span>
     </div>
-
-    <!-- Channel Carousel (Radio only) -->
-    <div id="channelCarousel" class="channel-carousel hidden">
-      <div class="carousel-title">Stations Radio</div>
-      <div class="carousel-container">
-        <button id="carouselPrev" class="carousel-btn">
-          <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-          </svg>
-        </button>
-        <div id="carouselItem" class="carousel-item">
-          <img class="carousel-channel-img" src="/logo192.png" alt="Channel" />
-          <div class="carousel-channel-name">—</div>
-          <div class="carousel-channel-tagline">—</div>
-        </div>
-        <button id="carouselNext" class="carousel-btn">
-          <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
   </div>
 
   <audio id="audio" preload="none"></audio>
@@ -447,10 +403,9 @@
     const durationEl = document.getElementById('duration');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const channelCarousel = document.getElementById('channelCarousel');
-    const carouselItem = document.getElementById('carouselItem');
-    const carouselPrev = document.getElementById('carouselPrev');
-    const carouselNext = document.getElementById('carouselNext');
+    const artCarouselNav = document.getElementById('artCarouselNav');
+    const artCarouselPrev = document.getElementById('artCarouselPrev');
+    const artCarouselNext = document.getElementById('artCarouselNext');
     const nowPlaying = document.getElementById('nowPlaying');
     const nowPlayingImg = document.getElementById('nowPlayingImg');
     const nowPlayingTitle = document.getElementById('nowPlayingTitle');
@@ -505,7 +460,7 @@
         progressContainer.classList.remove('hidden');
         prevBtn.classList.remove('hidden');
         nextBtn.classList.remove('hidden');
-        channelCarousel.classList.add('hidden');
+        artCarouselNav.classList.add('hidden');
         nowPlaying.classList.add('hidden');
         // Stop fetching now playing
         if (nowPlayingInterval) {
@@ -520,32 +475,23 @@
         progressContainer.classList.add('hidden');
         prevBtn.classList.add('hidden');
         nextBtn.classList.add('hidden');
-        channelCarousel.classList.remove('hidden');
+        artCarouselNav.classList.remove('hidden');
         nowPlaying.classList.remove('hidden');
         // Start fetching now playing
         if (!nowPlayingInterval) {
           fetchNowPlaying();
           nowPlayingInterval = setInterval(fetchNowPlaying, 15000);
         }
+        updateCarousel();
       }
     }
 
     function updateCarousel() {
       if (channels.length === 0) return;
 
-      const ch = channels[currentChannelIndex];
-      const img = carouselItem.querySelector('.carousel-channel-img');
-      const name = carouselItem.querySelector('.carousel-channel-name');
-      const tagline = carouselItem.querySelector('.carousel-channel-tagline');
-
-      img.src = ch.image || '/logo192.png';
-      img.onerror = () => { img.src = '/logo192.png'; };
-      name.textContent = ch.name;
-      tagline.textContent = ch.tagline || '';
-
       // Update button states
-      carouselPrev.disabled = currentChannelIndex === 0;
-      carouselNext.disabled = currentChannelIndex === channels.length - 1;
+      artCarouselPrev.disabled = currentChannelIndex === 0;
+      artCarouselNext.disabled = currentChannelIndex === channels.length - 1;
     }
 
     async function fetchNowPlaying() {
@@ -628,24 +574,22 @@
       audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
     });
 
-    // Carousel navigation
-    carouselPrev.addEventListener('click', () => {
+    // Carousel navigation on album art
+    artCarouselPrev.addEventListener('click', () => {
       if (currentChannelIndex > 0) {
         currentChannelIndex--;
-        updateCarousel();
+        switchToChannel(channels[currentChannelIndex]);
       }
     });
 
-    carouselNext.addEventListener('click', () => {
+    artCarouselNext.addEventListener('click', () => {
       if (currentChannelIndex < channels.length - 1) {
         currentChannelIndex++;
-        updateCarousel();
+        switchToChannel(channels[currentChannelIndex]);
       }
     });
 
-    // Click on carousel item to switch channel
-    carouselItem.addEventListener('click', () => {
-      const ch = channels[currentChannelIndex];
+    function switchToChannel(ch) {
       if (!ch) return;
 
       currentChannel = ch;
@@ -658,7 +602,7 @@
         subtitle: ch.tagline,
         image: ch.image
       });
-    });
+    }
 
     function formatTime(seconds) {
       if (!isFinite(seconds)) return '0:00';
