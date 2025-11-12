@@ -307,7 +307,7 @@ export default function PlayerBar() {
             title={player.openStandalone ?? 'Lecteur iPod'}
           >
             <img
-              src="/icons/light/ipod.svg"
+              src="/icons/dark/ipod.svg"
               alt="iPod"
               className="w-5 h-5"
             />
