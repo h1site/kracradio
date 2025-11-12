@@ -373,7 +373,7 @@
     <div class="track-info">
       <div id="trackTitle" class="track-title">KracRadio</div>
       <div id="trackArtist" class="track-artist">Sélectionne une station</div>
-      <div id="radioFrequency" class="radio-frequency hidden">FM 00.0 MHz</div>
+      <div id="radioFrequency" class="radio-frequency hidden">00.0 MHz</div>
     </div>
 
     <!-- Now Playing (Radio only) -->
@@ -573,7 +573,7 @@
         // Show radio frequency
         const channelKey = data.key || currentChannel?.key;
         const frequency = channelKey ? channelFrequencies[channelKey] || '00.0' : '00.0';
-        radioFrequency.textContent = `FM ${frequency} MHz`;
+        radioFrequency.textContent = `${frequency} MHz`;
         radioFrequency.classList.remove('hidden');
         // Show channel image in "Now Playing" section
         nowPlayingImg.src = data.image || '/logo192.png';
