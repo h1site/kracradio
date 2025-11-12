@@ -44,9 +44,26 @@ export function AuthProvider({ children }) {
         setUser(currentUser);
 
         if (currentUser) {
-          console.log('[Auth] User exists, setting default role to user (temporarily skipping profiles table)');
-          setUserRole('user');
-          console.log('[Auth] Role set to user');
+          console.log('[Auth] User exists, fetching role from profiles table');
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', currentUser.id)
+              .maybeSingle();
+
+            if (profileError) {
+              console.warn('[Auth] Failed to fetch user role:', profileError);
+              setUserRole('user');
+            } else {
+              const role = profileData?.role || 'user';
+              setUserRole(role);
+              console.log('[Auth] Role set to:', role);
+            }
+          } catch (err) {
+            console.warn('[Auth] Error fetching user role:', err);
+            setUserRole('user');
+          }
         } else {
           console.log('[Auth] No user, setting role to null');
           setUserRole(null);
@@ -86,9 +103,26 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
 
       if (currentUser) {
-        console.log('[Auth] Setting role to user (skipping profiles table)');
-        // TEMPORARILY SKIP profiles table query to avoid blocking
-        setUserRole('user');
+        console.log('[Auth] Fetching role from profiles table on auth change');
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.warn('[Auth] Failed to fetch user role on auth change:', profileError);
+            setUserRole('user');
+          } else {
+            const role = profileData?.role || 'user';
+            setUserRole(role);
+            console.log('[Auth] Role set to:', role);
+          }
+        } catch (err) {
+          console.warn('[Auth] Error fetching user role on auth change:', err);
+          setUserRole('user');
+        }
 
         // If this is a SIGNED_IN event during OAuth callback, set loading to false NOW
         if (event === 'SIGNED_IN' && isOAuthCallback) {
