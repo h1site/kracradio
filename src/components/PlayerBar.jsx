@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAudio } from '../context/AudioPlayerContext';
 import { useI18n } from '../i18n';
-import { useTheme } from '../context/ThemeContext';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
@@ -18,7 +17,6 @@ export default function PlayerBar() {
   const ipodButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const { t } = useI18n();
-  const { theme } = useTheme();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
   const selectPrompt = player.selectPrompt ?? 'Sélectionne une chaîne — Clique Écouter';
@@ -309,7 +307,7 @@ export default function PlayerBar() {
             title={player.openStandalone ?? 'Lecteur iPod'}
           >
             <img
-              src={theme === 'dark' ? '/icons/light/ipod.svg' : '/icons/dark/ipod.svg'}
+              src="/icons/light/ipod.svg"
               alt="iPod"
               className="w-5 h-5"
             />
