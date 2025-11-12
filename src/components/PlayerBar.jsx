@@ -59,7 +59,8 @@ export default function PlayerBar() {
       subtitle: currentType === 'radio' ? current?.tagline : podcastMeta?.podcastTitle,
       image: currentType === 'radio' ? current?.image : (podcastMeta?.image || podcastMeta?.podcastImage),
       name: current?.name,
-      tagline: current?.tagline
+      tagline: current?.tagline,
+      key: current?.key
     };
 
     // Store data in both window and localStorage for player to access
