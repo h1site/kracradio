@@ -147,7 +147,7 @@ export function AuthProvider({ children }) {
   const signUp = async ({ email, password }) => {
     // Configuration pour l'envoi d'email de confirmation
     const options = {
-      emailRedirectTo: `${process.env.REACT_APP_URL || window.location.origin}/verify-email`
+      emailRedirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/verify-email`
     };
 
     const { data, error } = await supabase.auth.signUp({
@@ -165,7 +165,7 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
