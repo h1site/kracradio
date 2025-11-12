@@ -514,7 +514,7 @@
       // Start fetching now playing if radio
       if (initialData.currentType === 'radio') {
         fetchNowPlaying();
-        nowPlayingInterval = setInterval(fetchNowPlaying, 5000);
+        nowPlayingInterval = setInterval(fetchNowPlaying, 2000);
       }
     }
 
@@ -587,7 +587,7 @@
         // Start fetching now playing
         if (!nowPlayingInterval) {
           fetchNowPlaying();
-          nowPlayingInterval = setInterval(fetchNowPlaying, 5000);
+          nowPlayingInterval = setInterval(fetchNowPlaying, 2000);
         }
         updateCarousel();
         // Check for text overflow
