@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KracRadio Player</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .player-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .album-art-container {
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 20px;
+    }
+
+    .album-art {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      background: #333;
+    }
+
+    .track-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .track-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .track-artist {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .progress-container {
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .control-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .control-btn.primary {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+    }
+
+    .control-btn.primary:hover {
+      background: linear-gradient(135deg, #dc2626, #ea580c);
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+
+    .volume-slider {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    .channel-selector {
+      margin-top: auto;
+    }
+
+    .channel-toggle {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .channel-toggle:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .channel-list {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .channel-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .channel-list::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+    }
+
+    .channel-list::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+
+    .channel-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .channel-item.active {
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .channel-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #333;
+    }
+
+    .channel-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .channel-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-tagline {
+      font-size: 12px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .control-btn.primary svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .volume-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .volume-text {
+      font-size: 12px;
+      color: #888;
+      width: 40px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+    <div class="album-art-container">
+      <img id="albumArt" class="album-art" src="/logo192.png" alt="Album Art" />
+    </div>
+
+    <div class="track-info">
+      <div id="trackTitle" class="track-title">KracRadio</div>
+      <div id="trackArtist" class="track-artist">Sélectionne une station</div>
+    </div>
+
+    <div id="progressContainer" class="progress-container hidden">
+      <div id="progressBar" class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="prevBtn" class="control-btn hidden">
+        <svg viewBox="0 0 24 24">
+          <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+      </button>
+
+      <button id="playPauseBtn" class="control-btn primary">
+        <svg id="playIcon" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+      </button>
+
+      <button id="nextBtn" class="control-btn hidden">
+        <svg viewBox="0 0 24 24">
+          <path d="M12.01 19V15l5 5-5 5v-4c-4.42 0-8-3.58-8-8s3.58-8 8-8v2c-3.31 0-6 2.69-6 6s2.69 6 6 6z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="volume-container">
+      <svg class="volume-icon" viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+      </svg>
+      <input id="volumeSlider" type="range" min="0" max="100" value="75" class="volume-slider" />
+      <span id="volumeText" class="volume-text">75%</span>
+    </div>
+
+    <div class="channel-selector">
+      <button id="channelToggle" class="channel-toggle">
+        📻 Changer de station
+      </button>
+      <div id="channelList" class="channel-list hidden"></div>
+    </div>
+  </div>
+
+  <audio id="audio" preload="none"></audio>
+
+  <script>
+    // Get initial data from opener window
+    const initialData = window.opener?.standalonePlayerData || {};
+
+    const audio = document.getElementById('audio');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const albumArt = document.getElementById('albumArt');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeText = document.getElementById('volumeText');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const channelToggle = document.getElementById('channelToggle');
+    const channelList = document.getElementById('channelList');
+
+    let currentType = 'radio';
+    let channels = [];
+    let currentChannel = null;
+
+    // Load channels
+    if (initialData.channels) {
+      channels = initialData.channels;
+      renderChannels();
+    }
+
+    // Initialize with current playing data
+    if (initialData.current) {
+      currentChannel = initialData.current;
+      updateUI(initialData);
+      if (initialData.streamUrl) {
+        audio.src = initialData.streamUrl;
+        if (initialData.playing) {
+          audio.play().catch(e => console.warn('Auto-play blocked:', e));
+        }
+      }
+    }
+
+    // Set initial volume
+    audio.volume = (initialData.volume || 0.75);
+    volumeSlider.value = Math.round(audio.volume * 100);
+    volumeText.textContent = volumeSlider.value + '%';
+
+    function updateUI(data) {
+      if (data.currentType === 'podcast') {
+        currentType = 'podcast';
+        trackTitle.textContent = data.title || 'Podcast';
+        trackArtist.textContent = data.subtitle || '';
+        albumArt.src = data.image || '/logo192.png';
+        progressContainer.classList.remove('hidden');
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+        channelToggle.classList.add('hidden');
+      } else {
+        currentType = 'radio';
+        trackTitle.textContent = data.title || data.name || 'Radio';
+        trackArtist.textContent = data.subtitle || data.tagline || '';
+        albumArt.src = data.image || '/logo192.png';
+        progressContainer.classList.add('hidden');
+        prevBtn.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        channelToggle.classList.remove('hidden');
+      }
+    }
+
+    function renderChannels() {
+      channelList.innerHTML = '';
+      channels.forEach(ch => {
+        const item = document.createElement('div');
+        item.className = 'channel-item';
+        if (currentChannel && ch.key === currentChannel.key) {
+          item.classList.add('active');
+        }
+
+        item.innerHTML = `
+          <img class="channel-img" src="${ch.image}" alt="${ch.name}" onerror="this.src='/logo192.png'" />
+          <div class="channel-info">
+            <div class="channel-name">${ch.name}</div>
+            <div class="channel-tagline">${ch.tagline || ''}</div>
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          currentChannel = ch;
+          audio.src = ch.streamUrl;
+          audio.play();
+          updateUI({
+            currentType: 'radio',
+            title: ch.name,
+            subtitle: ch.tagline,
+            image: ch.image
+          });
+          renderChannels(); // Re-render to update active state
+          channelList.classList.add('hidden');
+        });
+
+        channelList.appendChild(item);
+      });
+    }
+
+    // Play/Pause
+    playPauseBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      playIcon.classList.add('hidden');
+      pauseIcon.classList.remove('hidden');
+    });
+
+    audio.addEventListener('pause', () => {
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+    });
+
+    // Volume
+    volumeSlider.addEventListener('input', (e) => {
+      const value = parseInt(e.target.value);
+      audio.volume = value / 100;
+      volumeText.textContent = value + '%';
+    });
+
+    // Progress (for podcasts)
+    audio.addEventListener('timeupdate', () => {
+      if (currentType === 'podcast' && audio.duration) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = percent + '%';
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        durationEl.textContent = formatTime(audio.duration);
+      }
+    });
+
+    progressBar.addEventListener('click', (e) => {
+      if (currentType === 'podcast' && audio.duration) {
+        const rect = progressBar.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = x / rect.width;
+        audio.currentTime = percent * audio.duration;
+      }
+    });
+
+    // Skip buttons (±15s)
+    prevBtn.addEventListener('click', () => {
+      audio.currentTime = Math.max(0, audio.currentTime - 15);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
+    });
+
+    // Channel selector toggle
+    channelToggle.addEventListener('click', () => {
+      channelList.classList.toggle('hidden');
+    });
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+
+    // Keep playing even if main window closes
+    window.addEventListener('beforeunload', (e) => {
+      // Don't stop audio
+    });
+  </script>
+</body>
+</html>

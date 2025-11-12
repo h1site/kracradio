@@ -5,7 +5,7 @@ import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import PlayerBarMobile from './PlayerBarMobile';
-import StandalonePlayer from './StandalonePlayer';
+import { channels } from '../data/channels';
 
 export default function PlayerBar() {
   const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
@@ -13,7 +13,6 @@ export default function PlayerBar() {
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const tickRef = useRef(null);
-  const [showStandalonePlayer, setShowStandalonePlayer] = useState(false);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -30,6 +29,38 @@ export default function PlayerBar() {
   const pauseLabel = player.pause ?? site.pause ?? 'Pause';
   const progressLabel = player.progressAria ?? 'Barre de progression - cliquer pour naviguer';
   const liveLabel = player.live ?? 'LIVE';
+
+  // Open standalone player window
+  const openStandalonePlayer = () => {
+    const data = {
+      channels,
+      current,
+      currentType,
+      volume,
+      playing,
+      streamUrl: currentType === 'radio' ? current?.streamUrl : podcastMeta?.audioUrl,
+      title: currentType === 'radio' ? current?.name : podcastMeta?.title,
+      subtitle: currentType === 'radio' ? current?.tagline : podcastMeta?.podcastTitle,
+      image: currentType === 'radio' ? current?.image : (podcastMeta?.image || podcastMeta?.podcastImage),
+      name: current?.name,
+      tagline: current?.tagline
+    };
+
+    // Store data in window object for popup to access
+    window.standalonePlayerData = data;
+
+    // Open popup window
+    const width = 400;
+    const height = 700;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+
+    window.open(
+      '/standalone-player.html',
+      'KracRadioPlayer',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+    );
+  };
 
   // Poll AzuraCast toutes les 15s (seulement pour radio)
   useEffect(() => {
@@ -166,7 +197,7 @@ export default function PlayerBar() {
               className="icon-btn"
               title={player.openStandalone ?? 'Lecteur iPod'}
               aria-label={player.openStandalone ?? 'Lecteur iPod'}
-              onClick={() => setShowStandalonePlayer(true)}
+              onClick={openStandalonePlayer}
               disabled={!current && currentType !== 'podcast'}
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -291,7 +322,7 @@ export default function PlayerBar() {
             className="icon-btn"
             title={player.openStandalone ?? 'Lecteur iPod'}
             aria-label={player.openStandalone ?? 'Lecteur iPod'}
-            onClick={() => setShowStandalonePlayer(true)}
+            onClick={openStandalonePlayer}
             disabled={!current && currentType !== 'podcast'}
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -313,11 +344,6 @@ export default function PlayerBar() {
           />
         </div>
       </div>
-
-      {/* Standalone Player Modal */}
-      {showStandalonePlayer && (
-        <StandalonePlayer onClose={() => setShowStandalonePlayer(false)} />
-      )}
     </div>
   );
 }
