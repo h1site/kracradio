@@ -304,7 +304,7 @@ export default function PlayerBar() {
             ref={ipodButtonRef}
             onClick={openStandalonePlayer}
             disabled={!current && currentType !== 'podcast'}
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center w-10 h-10 hover:opacity-70 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={player.openStandalone ?? 'Lecteur iPod'}
             title={player.openStandalone ?? 'Lecteur iPod'}
           >
