@@ -43,6 +43,7 @@ import CommunityDashboard from '../pages/CommunityDashboard';
 import PublicProfile from '../pages/PublicProfile';
 import LikedSongs from '../pages/LikedSongs';
 import Charts from '../pages/Charts';
+import PrivacyPolicy from '../pages/PrivacyPolicy';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -203,6 +204,7 @@ export default function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* Fallback */}
           <Route path="*" element={<Home />} />
