@@ -57,6 +57,15 @@ export default function Header() {
             >
               KEMP3.app
             </a>
+            {/* Android APK */}
+            <a
+              href="/kracradio.apk"
+              download
+              className="px-3 py-1 rounded-md border border-green-500/40 text-green-400 hover:bg-green-500/20 text-sm flex items-center gap-1"
+              title="Télécharger l'APK Android - Autorisez les sources inconnues dans vos paramètres"
+            >
+              📱 Android APK
+            </a>
 
             {/* Auth — même style que les autres boutons, sans changer le look */}
             {!user ? (

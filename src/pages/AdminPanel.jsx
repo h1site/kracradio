@@ -48,6 +48,8 @@ const STRINGS = {
     artists: 'Artistes',
     import: 'Importer',
     importing: 'Import en cours...',
+    importAll: 'Importer tous les podcasts',
+    importingAll: 'Import en cours...',
     lastSync: 'Dernier import',
     never: 'Jamais',
     verified: 'Vérifié',
@@ -107,6 +109,8 @@ const STRINGS = {
     artists: 'Artists',
     import: 'Import',
     importing: 'Importing...',
+    importAll: 'Import All Podcasts',
+    importingAll: 'Importing...',
     lastSync: 'Last sync',
     never: 'Never',
     verified: 'Verified',
@@ -166,6 +170,8 @@ const STRINGS = {
     artists: 'Artistas',
     import: 'Importar',
     importing: 'Importando...',
+    importAll: 'Importar Todos los Podcasts',
+    importingAll: 'Importando...',
     lastSync: 'Última sincronización',
     never: 'Nunca',
     verified: 'Verificado',
@@ -200,7 +206,8 @@ export default function AdminPanel() {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState(null); // null or podcast ID being imported
+  const [importingAll, setImportingAll] = useState(false);
 
   // Filters
   const [userFilter, setUserFilter] = useState('');
@@ -451,7 +458,7 @@ export default function AdminPanel() {
   };
 
   const handleImportPodcast = async (podcastId, rssUrl) => {
-    setImporting(true);
+    setImporting(podcastId);
     setMessage(null);
     try {
       const result = await importPodcastEpisodes(supabase, podcastId, rssUrl);
@@ -464,7 +471,45 @@ export default function AdminPanel() {
       console.error('Error importing podcast:', error);
       setMessage({ type: 'error', text: error.message });
     } finally {
-      setImporting(false);
+      setImporting(null);
+    }
+  };
+
+  const handleImportAll = async () => {
+    if (!window.confirm(`Importer tous les ${rssFeeds.length} podcasts ?`)) return;
+
+    setImportingAll(true);
+    setMessage(null);
+
+    let totalImported = 0;
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const podcast of rssFeeds) {
+        setImporting(podcast.id);
+        try {
+          const result = await importPodcastEpisodes(supabase, podcast.id, podcast.rss_url);
+          totalImported += result.imported;
+          successCount++;
+          console.log(`✅ ${podcast.title}: ${result.imported} épisodes importés`);
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ ${podcast.title}:`, error.message);
+        }
+      }
+
+      setMessage({
+        type: successCount > 0 ? 'success' : 'error',
+        text: `✅ Import terminé: ${totalImported} nouveaux épisodes (${successCount} réussis, ${errorCount} échoués)`
+      });
+      await loadRssFeeds();
+    } catch (error) {
+      console.error('Error during bulk import:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setImporting(null);
+      setImportingAll(false);
     }
   };
 
@@ -767,7 +812,7 @@ export default function AdminPanel() {
       {/* RSS Feeds Table */}
       {activeTab === 'rss' && (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
-          <div className="p-4">
+          <div className="p-4 space-y-3">
             <input
               type="text"
               placeholder={L.filter}
@@ -775,6 +820,24 @@ export default function AdminPanel() {
               onChange={(e) => setRssFilter(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
             />
+            {filteredRss.length > 0 && (
+              <button
+                onClick={handleImportAll}
+                disabled={importingAll || importing !== null}
+                className="w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {importingAll ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    {L.importingAll}
+                  </>
+                ) : (
+                  <>
+                    🔄 {L.importAll}
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -805,10 +868,19 @@ export default function AdminPanel() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleImportPodcast(rss.id, rss.rss_url)}
-                          disabled={importing}
-                          className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={importing !== null || importingAll}
+                          className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
-                          🔄 {importing ? L.importing : L.import}
+                          {importing === rss.id ? (
+                            <>
+                              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                              {L.importing}
+                            </>
+                          ) : (
+                            <>
+                              🔄 {L.import}
+                            </>
+                          )}
                         </button>
                         <Link
                           to={`/dashboard/podcasts/edit/${rss.id}`}
@@ -818,7 +890,8 @@ export default function AdminPanel() {
                         </Link>
                         <button
                           onClick={() => handleDeleteRss(rss.id, rss.title)}
-                          className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                          disabled={importing !== null || importingAll}
+                          className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           🗑️ {L.delete}
                         </button>

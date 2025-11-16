@@ -38,9 +38,24 @@ export default function Home() {
   const [recentPosts, setRecentPosts] = useState([]);
   const [latestBlog, setLatestBlog] = useState(null);
   const [latestPodcast, setLatestPodcast] = useState(null);
+  const [showApkBanner, setShowApkBanner] = useState(true);
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
+
+  // Vérifier si le banner a déjà été fermé
+  useEffect(() => {
+    const bannerDismissed = localStorage.getItem('apkBannerDismissed');
+    if (bannerDismissed === 'true') {
+      setShowApkBanner(false);
+    }
+  }, []);
+
+  // Fermer le banner et sauvegarder dans localStorage
+  const dismissBanner = () => {
+    setShowApkBanner(false);
+    localStorage.setItem('apkBannerDismissed', 'true');
+  };
 
   // Charger les 3 derniers posts
   useEffect(() => {
@@ -168,6 +183,49 @@ export default function Home() {
         type="website"
         alternates
       />
+
+      {/* MOBILE APK BANNER - Visible uniquement sur mobile */}
+      {showApkBanner && (
+        <div className="lg:hidden mb-4 mx-4 relative">
+          <div className="block w-full rounded-lg border border-green-500/40 bg-gradient-to-r from-green-500/10 to-green-600/10 p-4 relative">
+            {/* Bouton Fermer */}
+            <button
+              onClick={dismissBanner}
+              className="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+              aria-label="Fermer"
+            >
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Contenu du banner */}
+            <a
+              href="/kracradio.apk"
+              download
+              className="block hover:opacity-90 transition-opacity"
+            >
+              <div className="flex items-start gap-3 pr-6">
+                <div className="flex-shrink-0 text-3xl">📱</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-green-600 dark:text-green-400 font-bold text-sm mb-1">
+                    Télécharger l'application Android
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                    Obtenez la meilleure expérience d'écoute. <span className="font-semibold">Important:</span> Autorisez les sources inconnues dans vos paramètres Android.
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                    <span>Télécharger maintenant</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* HERO */}
       <section className="w-full px-0 pb-0">

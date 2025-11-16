@@ -238,6 +238,20 @@ export default function MobileMenu({ open, onClose }) {
             </a>
           </div>
 
+          {/* Android APK Download */}
+          <div className="mt-2 px-1">
+            <a
+              href="/kracradio.apk"
+              download
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-green-500/40 text-green-600 dark:text-green-400 bg-green-500/5 hover:bg-green-500/10 text-sm font-medium"
+            >
+              📱 <span>Télécharger Android APK</span>
+            </a>
+            <p className="mt-1 px-2 text-xs text-center opacity-60">
+              Autorisez les sources inconnues • Bientôt sur Google Play
+            </p>
+          </div>
+
           {/* Réseaux sociaux */}
           <div className="mt-4 pt-3 border-t border-current/10 flex items-center justify-center gap-5">
             <a
