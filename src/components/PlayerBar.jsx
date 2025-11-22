@@ -1,8 +1,9 @@
 // src/components/PlayerBar.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAudio } from '../context/AudioPlayerContext';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../hooks/useCommunity';
 import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
@@ -14,6 +15,7 @@ import NewFeatureTooltip from './NewFeatureTooltip';
 export default function PlayerBar() {
   const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
   const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
   const navigate = useNavigate();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
@@ -31,6 +33,7 @@ export default function PlayerBar() {
   const settingsLabel = player.settings ?? site.settings ?? 'Paramètres';
   const shareLabel = player.share ?? site.share ?? 'Partager';
   const openExternalLabel = player.openExternal ?? 'Lecteur externe';
+  const profileLink = profile?.artist_slug ? `/profile/${profile.artist_slug}` : '/profile';
   const volumeLabel = player.volume ?? 'Volume';
   const podcastLabel = player.podcastLabel ?? 'Podcast';
   const channelLabel = site.channelLabel ?? 'Channel';
@@ -295,9 +298,9 @@ export default function PlayerBar() {
             >
               <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
             </button>
-            <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
-            </button>
+            <Link to={profileLink} className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
+              <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
+            </Link>
             <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
@@ -439,9 +442,9 @@ export default function PlayerBar() {
           >
             <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
           </button>
-          <button className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
-            <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8m8.94 4a7 7 0 0 0-.14-1.5l2.11-1.65l-2-3.46l-2.49 1a7.1 7.1 0 0 0-2.61-1.51l-.39-2.65h-4l-.39 2.65c-.95.27-1.83.74-2.61-1.51l-2.49-1l-2 3.46L3.2 10.5A7 7 0 0 0 3.06 12c0 .51.05 1.01.14 1.5L1.09 15.15l2 3.46l2.49-1c.78.77 1.66 1.24 2.61 1.51l.39 2.65h4l.39-2.65c.95-.27 1.83-.74 2.61-1.51l2.49 1l2-3.46l-2.11-1.65c.09-.49.14-.99.14-1.5Z"/></svg>
-          </button>
+          <Link to={profileLink} className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
+            <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
+          </Link>
           <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
             <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
           </button>
