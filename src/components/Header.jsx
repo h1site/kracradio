@@ -67,6 +67,16 @@ export default function Header() {
               📱 Android APK
             </a>
 
+            {/* Submit Music - Only for authenticated users */}
+            {user && (
+              <Link
+                to="/submit-music"
+                className="px-3 py-1 rounded-md border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 text-sm flex items-center gap-1"
+              >
+                🎵 {t?.nav?.submitMusic ?? 'Submit Music'}
+              </Link>
+            )}
+
             {/* Auth — même style que les autres boutons, sans changer le look */}
             {!user ? (
               <>

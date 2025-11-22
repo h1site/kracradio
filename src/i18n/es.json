@@ -71,7 +71,8 @@
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "logout": "Cerrar sesión",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "submitMusic": "Enviar Música"
   },
   "auth": {
     "login": "Iniciar sesión",

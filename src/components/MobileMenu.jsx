@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../i18n';
+import { useAuth } from '../context/AuthContext';
 import { channels } from '../data/channels';
 
 function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
@@ -24,6 +25,7 @@ function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
 export default function MobileMenu({ open, onClose }) {
   const { isDark } = useTheme();
   const { t } = useI18n();
+  const { user } = useAuth();
   const location = useLocation();
 
   const [channelsOpen, setChannelsOpen] = React.useState(false);
@@ -251,6 +253,19 @@ export default function MobileMenu({ open, onClose }) {
               Autorisez les sources inconnues • Bientôt sur Google Play
             </p>
           </div>
+
+          {/* Submit Music - Only for authenticated users */}
+          {user && (
+            <div className="mt-2 px-1">
+              <NavLink
+                to="/submit-music"
+                onClick={onClose}
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-purple-500/40 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/10 text-sm font-medium"
+              >
+                🎵 <span>{t?.nav?.submitMusic ?? 'Submit Music'}</span>
+              </NavLink>
+            </div>
+          )}
 
           {/* Réseaux sociaux */}
           <div className="mt-4 pt-3 border-t border-current/10 flex items-center justify-center gap-5">

@@ -71,7 +71,8 @@
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
-    "profile": "Profile"
+    "profile": "Profile",
+    "submitMusic": "Submit Music"
   },
   "auth": {
     "login": "Log in",
