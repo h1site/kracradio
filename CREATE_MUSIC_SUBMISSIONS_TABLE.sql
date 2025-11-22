@@ -75,8 +75,7 @@ SELECT 'Table created successfully!' AS message;
 SELECT
   column_name,
   data_type,
-  is_nullable,
-  column_default
+  is_nullable
 FROM information_schema.columns
 WHERE table_name = 'music_submissions'
 ORDER BY ordinal_position;
