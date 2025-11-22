@@ -1,6 +1,6 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
@@ -153,6 +153,7 @@ export default function Dashboard() {
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
   const { user, userRole, isCreator, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [podcasts, setPodcasts] = useState([]);
   const [articles, setArticles] = useState([]);
@@ -174,6 +175,17 @@ export default function Dashboard() {
       loadArticles();
     }
   }, [user]);
+
+  // Handle URL parameters for direct actions
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const action = searchParams.get('action');
+
+    if (tab === 'podcasts' && action === 'new' && user) {
+      // Redirect to podcast form when URL has ?tab=podcasts&action=new
+      navigate('/dashboard/podcasts/edit');
+    }
+  }, [searchParams, user, navigate]);
 
   const loadArticles = async () => {
     try {
