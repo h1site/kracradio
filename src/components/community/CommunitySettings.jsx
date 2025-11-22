@@ -14,6 +14,7 @@ export default function CommunitySettings() {
 
   const [settings, setSettings] = useState({
     is_public: false,
+    username: '',
     artist_slug: '',
     bio: '',
     location: '',
@@ -30,6 +31,7 @@ export default function CommunitySettings() {
     if (profile) {
       setSettings({
         is_public: profile.is_public || false,
+        username: profile.username || '',
         artist_slug: profile.artist_slug || '',
         bio: profile.bio || '',
         location: profile.location || '',
@@ -158,6 +160,7 @@ export default function CommunitySettings() {
 
     try {
       await updateProfile(user.id, {
+        username: settings.username,
         artist_slug: settings.artist_slug,
         bio: settings.bio,
         location: settings.location,
@@ -291,6 +294,25 @@ export default function CommunitySettings() {
         <h3 className="text-xl font-semibold text-text-primary mb-4">
           ✏️ {t.community.settings.profileInfo}
         </h3>
+
+        {/* Username */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-text-primary mb-2">
+            👤 {t.community.settings.username || 'Nom d\'utilisateur'}
+          </label>
+          <input
+            type="text"
+            value={settings.username}
+            onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
+            placeholder="username"
+            className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
+                     text-text-primary placeholder-text-secondary
+                     focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <p className="text-xs text-text-secondary mt-1">
+            📝 Votre nom d'utilisateur (ex: karpe_25, rhenoir, etc.). Peut contenir des lettres, chiffres et underscores.
+          </p>
+        </div>
 
         {/* Nom d'artiste / Slug */}
         <div className="mb-6">

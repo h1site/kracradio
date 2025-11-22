@@ -43,6 +43,18 @@
     "latestPosts": "Derniers posts",
     "noPosts": "Aucun post pour le moment",
     "viewAllPosts": "Voir tous les posts",
+    "submitMusicTitle": "Soumettez votre musique à la radio",
+    "submitMusicDesc": "Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d'auditeurs!",
+    "submitMusicCta": "Soumettre ma musique",
+    "discoverArtists": "Découvrir les artistes",
+    "featuredPodcasts": "Podcasts en vedette",
+    "noPodcasts": "Aucun podcast pour le moment",
+    "listen": "Écouter",
+    "viewAll": "Voir tout",
+    "latestArticles": "Derniers articles",
+    "noArticles": "Aucun article pour le moment",
+    "readMore": "Lire plus",
+    "writtenBy": "Par",
     "latestArticle": "Dernier article",
     "noArticle": "Aucun article pour le moment",
     "readArticle": "Lire l'article",
@@ -169,9 +181,9 @@
     "dashboardDesc": "Gérez vos podcasts, vos articles de blog et suivez leurs performances",
     "accessDashboard": "➡️ Accéder au tableau de bord",
     "manageAccount": "Gérez votre compte",
-    "communityTitle": "🌐 Ma Communauté",
-    "communityDesc": "Gérez votre profil public, vos liens musicaux et interagissez avec d'autres artistes",
-    "accessCommunity": "➡️ Accéder à la communauté",
+    "communityTitle": "🌐 Mon Profil Public",
+    "communityDesc": "Gérez votre profil d'artiste, vos liens musicaux et interagissez avec d'autres artistes",
+    "accessCommunity": "➡️ Gérer mon profil",
     "publicProfileTitle": "Mon Profil Public",
     "publicProfileDesc": "Votre profil est visible publiquement",
     "viewMyProfile": "Voir mon profil",
@@ -198,7 +210,7 @@
       "step3": {
         "title": "🌐 Publier votre profil artiste",
         "description": "Créez votre présence en ligne et connectez-vous avec d'autres artistes.",
-        "action": "⚠️ Important : Allez dans 'Ma Communauté' et activez 'Profil public' pour être visible !"
+        "action": "⚠️ Important : Allez dans 'Mon Profil Public' et activez 'Profil public' pour être visible !"
       }
     }
   },
@@ -354,8 +366,8 @@
     "live": "EN DIRECT"
   },
   "community": {
-    "title": "Ma Communauté",
-    "description": "Gérez votre profil public, vos liens musicaux et vos paramètres",
+    "title": "Mon Profil Public",
+    "description": "Gérez votre profil d'artiste, vos liens musicaux et vos paramètres",
     "viewProfile": "Voir Profil",
     "backToSettings": "Retour Paramètres",
     "save": "Enregistrer",

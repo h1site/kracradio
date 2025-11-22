@@ -187,7 +187,7 @@ export async function listPublishedArticles({ limit = 24, offset = 0 } = {}) {
     // Fetch authors
     const { data: authors } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .in('id', authorIds);
 
     // Create author map

@@ -5,6 +5,8 @@ import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
 import ChannelCarousel from '../components/ChannelCarousel';
+import ArticleCarousel from '../components/ArticleCarousel';
+import PodcastCarousel from '../components/PodcastCarousel';
 import GoogleAd from '../components/ads/GoogleAd';
 import daily from '../data/daily-schedule.json';
 import { useAudio } from '../context/AudioPlayerContext';
@@ -35,9 +37,8 @@ function fmtRange(start, end, lang) {
 export default function Home() {
   const { t, lang } = useI18n();
   const { current, playing, playChannel, togglePlay } = useAudio();
-  const [recentPosts, setRecentPosts] = useState([]);
-  const [latestBlog, setLatestBlog] = useState(null);
-  const [latestPodcast, setLatestPodcast] = useState(null);
+  const [latestBlogs, setLatestBlogs] = useState([]);
+  const [latestPodcasts, setLatestPodcasts] = useState([]);
   const [showApkBanner, setShowApkBanner] = useState(true);
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
@@ -57,82 +58,104 @@ export default function Home() {
     localStorage.setItem('apkBannerDismissed', 'true');
   };
 
-  // Charger les 3 derniers posts
+  // Charger les 3 derniers blogs
   useEffect(() => {
-    const loadRecentPosts = async () => {
+    const loadLatestBlogs = async () => {
       const { data } = await supabase
-        .from('posts')
-        .select('*')
-        .is('deleted_at', null)
-        .is('reply_to_id', null)
+        .from('articles')
+        .select('id, slug, title, excerpt, content, cover_url, featured_image, user_id, created_at')
+        .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(3);
 
-      if (data) {
-        const userIds = [...new Set(data.map(p => p.user_id))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, username, artist_slug, avatar_url, is_verified')
-          .in('id', userIds);
+      if (data && data.length > 0) {
+        // Charger les auteurs avec leur avatar
+        const userIds = [...new Set(data.map(a => a.user_id).filter(Boolean))];
+        console.log('🔍 Articles user_ids:', userIds);
 
-        const profilesMap = {};
-        if (profiles) {
-          profiles.forEach(p => { profilesMap[p.id] = p; });
+        if (userIds.length === 0) {
+          console.warn('⚠️ AUCUN user_id trouvé dans les articles! Les articles n\'ont pas d\'auteur assigné.');
+          setLatestBlogs(data.map(article => ({
+            ...article,
+            author_name: null,
+            author_avatar: null,
+            author_id: null
+          })));
+          return;
         }
 
-        setRecentPosts(data.map(post => ({
-          ...post,
-          author: profilesMap[post.user_id] || null
-        })));
+        const { data: authors, error: authorsError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (authorsError) {
+          console.error('❌ Erreur chargement auteurs:', authorsError);
+        }
+
+        console.log('👥 Auteurs chargés:', authors);
+
+        const authorMap = {};
+        if (authors) {
+          authors.forEach(author => {
+            authorMap[author.id] = author;
+            console.log(`   - ${author.username} (${author.id}): avatar=${author.avatar_url || 'none'}`);
+          });
+        }
+
+        // Ajouter les auteurs aux articles
+        const articlesWithAuthors = data.map(article => {
+          const author = authorMap[article.user_id];
+          const result = {
+            ...article,
+            author_name: author?.username || null,
+            author_avatar: author?.avatar_url || null,
+            author_id: article.user_id
+          };
+          console.log(`📄 Article "${article.title}": author=${result.author_name}, avatar=${result.author_avatar}`);
+          return result;
+        });
+
+        setLatestBlogs(articlesWithAuthors);
       }
     };
 
-    loadRecentPosts();
+    loadLatestBlogs();
   }, []);
 
-  // Charger le dernier blog
+  // Charger 3 podcasts aléatoires
   useEffect(() => {
-    const loadLatestBlog = async () => {
-      const { data } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) setLatestBlog(data);
-    };
-
-    loadLatestBlog();
-  }, []);
-
-  // Charger un podcast aléatoire
-  useEffect(() => {
-    const loadRandomPodcast = async () => {
-      // D'abord, compter le nombre total de podcasts
+    const loadRandomPodcasts = async () => {
       const { count } = await supabase
         .from('user_podcasts')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
       if (count && count > 0) {
-        // Générer un offset aléatoire
-        const randomOffset = Math.floor(Math.random() * count);
+        // Générer 3 offsets aléatoires uniques
+        const offsets = new Set();
+        while (offsets.size < Math.min(3, count)) {
+          offsets.add(Math.floor(Math.random() * count));
+        }
 
-        // Récupérer le podcast à cet offset
-        const { data } = await supabase
-          .from('user_podcasts')
-          .select('*')
-          .eq('is_active', true)
-          .range(randomOffset, randomOffset)
-          .single();
+        // Récupérer les podcasts
+        const podcasts = [];
+        for (const offset of offsets) {
+          const { data } = await supabase
+            .from('user_podcasts')
+            .select('*')
+            .eq('is_active', true)
+            .range(offset, offset)
+            .single();
 
-        if (data) setLatestPodcast(data);
+          if (data) podcasts.push(data);
+        }
+
+        setLatestPodcasts(podcasts);
       }
     };
 
-    loadRandomPodcast();
+    loadRandomPodcasts();
   }, []);
 
   const segments = useMemo(() => {
@@ -331,9 +354,36 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="px-5 py-10">
-        <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
-      </div>
+      {/* Section Soumettre Musique à la Radio */}
+      <section className="px-5 py-12">
+        <div className="bg-gradient-to-br from-purple-600/10 via-purple-500/5 to-pink-500/10 dark:from-purple-600/20 dark:via-purple-500/10 dark:to-pink-500/20 rounded-2xl p-8 md:p-12 border border-purple-500/20">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg">
+              <span className="text-4xl">🎵</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
+              {t.home?.submitMusicTitle || 'Soumettez votre musique à la radio'}
+            </h2>
+            <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto">
+              {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/submit-music"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
+              </Link>
+              <Link
+                to="/artists"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-purple-500/40 text-purple-600 dark:text-purple-400 rounded-xl font-bold text-lg hover:bg-purple-500/10 transition-colors"
+              >
+                {t.home?.discoverArtists || 'Découvrir les artistes'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Carrousel */}
       <section className="w-full relative z-10 overflow-visible">
@@ -347,197 +397,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Features + 3 derniers posts */}
-      <section className="px-5 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Bloc 1 - Features & Bénéfices */}
-          <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary">
-                {t.home?.joinCommunity || 'Rejoignez la communauté'}
-              </h2>
+      {/* Section Podcasts Carrousel */}
+      <section className="w-full relative z-10 overflow-visible pb-12 pt-8">
+        <div className="px-5 flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+                <path d="M12 2a9 9 0 0 0-9 9v7.5A2.5 2.5 0 0 0 5.5 21h1a2.5 2.5 0 0 0 2.5-2.5V15a2.5 2.5 0 0 0-2.5-2.5h-.5v-1A7 7 0 0 1 19 11.5v1h-.5A2.5 2.5 0 0 0 16 15v3.5a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 0 2.5-2.5V11a9 9 0 0 0-9-9z"/>
+              </svg>
             </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">🎵</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.shareMusic || 'Partagez votre musique'}</h3>
-                  <p className="text-sm text-text-secondary">{t.home?.shareMusicDesc || 'Diffusez vos créations et connectez-vous avec des fans'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">🎙️</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.createPodcast || 'Créez votre podcast'}</h3>
-                  <p className="text-sm text-text-secondary">{t.home?.createPodcastDesc || 'Lancez votre émission et développez votre audience'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">✍️</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.publishArticles || 'Publiez vos articles'}</h3>
-                  <p className="text-sm text-text-secondary">{t.home?.publishArticlesDesc || 'Partagez vos idées et histoires avec la communauté'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">💬</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-primary mb-1">{t.home?.interact || 'Interagissez en temps réel'}</h3>
-                  <p className="text-sm text-text-secondary">{t.home?.interactDesc || 'Commentez, aimez et suivez vos artistes préférés'}</p>
-                </div>
-              </div>
-            </div>
-            <Link
-              to="/signup"
-              className="mt-6 inline-block w-full text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
-            >
-              {t.home?.createAccountCta || 'Créer un compte gratuitement'}
-            </Link>
+            <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.featuredPodcasts || 'Podcasts en vedette'}</h2>
           </div>
-
-          {/* Bloc 2 - 3 derniers posts */}
-          <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary">{t.home?.latestPosts || 'Derniers posts'}</h2>
-            </div>
-            <div className="space-y-4">
-              {recentPosts.length === 0 ? (
-                <p className="text-text-secondary text-center py-8">{t.home?.noPosts || 'Aucun post pour le moment'}</p>
-              ) : (
-                recentPosts.map(post => (
-                  <div key={post.id} className="border-b border-border pb-4 last:border-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      {post.author?.avatar_url ? (
-                        <img src={post.author.avatar_url} alt={post.author.username} className="w-8 h-8 rounded-full" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-semibold text-sm">
-                          {post.author?.username?.[0]?.toUpperCase() || '?'}
-                        </div>
-                      )}
-                      <Link
-                        to={post.author?.artist_slug ? `/profile/${post.author.artist_slug}` : `/profile/${post.user_id}`}
-                        className="font-semibold text-text-primary hover:text-accent transition-colors"
-                      >
-                        {post.author?.username || 'Utilisateur'}
-                      </Link>
-                    </div>
-                    <p className="text-text-primary text-sm line-clamp-2">{post.content}</p>
-                  </div>
-                ))
-              )}
-            </div>
-            <Link
-              to="/dashboard"
-              className="mt-6 inline-block w-full text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
-            >
-              {t.home?.viewAllPosts || 'Voir tous les posts'}
-            </Link>
-          </div>
+          <Link
+            to="/podcasts"
+            className="text-accent hover:text-accent-hover font-semibold text-sm flex items-center gap-1"
+          >
+            {t.home?.viewAll || 'Voir tout'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
+        <PodcastCarousel podcasts={latestPodcasts} />
       </section>
 
+      {/* Section Blog Carrousel */}
+      <section className="w-full relative z-10 overflow-visible pb-12">
+        <div className="px-5 flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.latestArticles || 'Derniers articles'}</h2>
+          </div>
+          <Link
+            to="/articles"
+            className="text-accent hover:text-accent-hover font-semibold text-sm flex items-center gap-1"
+          >
+            {t.home?.viewAll || 'Voir tout'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+        <ArticleCarousel articles={latestBlogs} />
+      </section>
+
+      {/* Publicité Google Ads */}
       <div className="px-5 py-10">
         <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
       </div>
-
-      {/* Section Blog + Podcast */}
-      <section className="px-5 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Bloc 1 - Dernier blog */}
-          <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary">{t.home?.latestArticle || 'Dernier article'}</h2>
-            </div>
-            {latestBlog ? (
-              <>
-                <h3 className="text-xl font-semibold text-text-primary mb-3">{latestBlog.title}</h3>
-                <p className="text-text-secondary mb-4 line-clamp-3">{latestBlog.content?.substring(0, 200)}...</p>
-                <div className="flex gap-4">
-                  <Link
-                    to={`/article/${latestBlog.slug}`}
-                    className="flex-1 text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
-                  >
-                    {t.home?.readArticle || "Lire l'article"}
-                  </Link>
-                  <Link
-                    to="/blog"
-                    className="flex-1 text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
-                  >
-                    {t.home?.allBlogs || 'Tous les blogs'}
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="text-text-secondary text-center py-8">{t.home?.noArticle || 'Aucun article pour le moment'}</p>
-            )}
-          </div>
-
-          {/* Bloc 2 - Podcast aléatoire */}
-          <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M12 2a9 9 0 0 0-9 9v7.5A2.5 2.5 0 0 0 5.5 21h1a2.5 2.5 0 0 0 2.5-2.5V15a2.5 2.5 0 0 0-2.5-2.5h-.5v-1A7 7 0 0 1 19 11.5v1h-.5A2.5 2.5 0 0 0 16 15v3.5a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 0 2.5-2.5V11a9 9 0 0 0-9-9z"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary">{t.home?.podcastOfDay || 'Podcast du jour'}</h2>
-            </div>
-            {latestPodcast ? (
-              <>
-                {latestPodcast.image_url && (
-                  <img src={latestPodcast.image_url} alt={latestPodcast.title} className="w-full h-48 object-cover rounded-lg mb-4" />
-                )}
-                <h3 className="text-xl font-semibold text-text-primary mb-2">{latestPodcast.title}</h3>
-                {latestPodcast.author && (
-                  <p className="text-sm text-text-secondary mb-3">Par {latestPodcast.author}</p>
-                )}
-                <p className="text-text-secondary mb-4 line-clamp-3">{latestPodcast.description}</p>
-                <div className="flex gap-4">
-                  <a
-                    href={latestPodcast.website_url || latestPodcast.rss_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 text-center px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-accent-hover transition-colors"
-                  >
-                    {t.home?.discover || 'Découvrir'}
-                  </a>
-                  <Link
-                    to="/podcasts"
-                    className="flex-1 text-center px-6 py-3 border border-accent text-accent rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
-                  >
-                    {t.home?.allPodcasts || 'Tous les podcasts'}
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="text-text-secondary text-center py-8">{t.home?.noPodcast || 'Aucun podcast pour le moment'}</p>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* Espacement en bas - 30px sur mobile au lieu de la cale pour le player */}
       <div className="pb-[30px] sm:pb-0" />
