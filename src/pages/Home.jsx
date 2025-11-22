@@ -379,8 +379,8 @@ export default function Home() {
 
 
       {/* Section Articles & Podcasts - Magazine Style */}
-      <section className="w-full relative z-10 overflow-visible py-16">
-        <div className="max-w-7xl mx-auto px-5">
+      <section className="w-full relative z-10 overflow-visible py-16 px-[10px]">
+        <div>
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
               Dernières Nouvelles
