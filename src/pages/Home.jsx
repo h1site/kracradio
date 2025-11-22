@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
+import { useTheme } from '../context/ThemeContext';
 import { channels } from '../data/channels';
 import ChannelCarousel from '../components/ChannelCarousel';
 import ArticleCarousel from '../components/ArticleCarousel';
@@ -13,6 +14,23 @@ import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
 
 const KRAC_KEY = 'kracradio';
+
+// Composant pour les icônes - comme dans Sidebar.jsx
+function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
+  const { isDark } = useTheme();
+  const src = `/icons/${isDark ? 'dark' : 'light'}/${name}.svg`;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = '/icons/default.svg';
+      }}
+    />
+  );
+}
 
 function toTodayDate(timeStr) {
   const [hhRaw, mmRaw] = (timeStr || '00:00').split(':');
@@ -58,7 +76,7 @@ export default function Home() {
     localStorage.setItem('apkBannerDismissed', 'true');
   };
 
-  // Charger les 3 derniers blogs
+  // Charger les 4 derniers blogs
   useEffect(() => {
     const loadLatestBlogs = async () => {
       const { data } = await supabase
@@ -66,7 +84,7 @@ export default function Home() {
         .select('id, slug, title, excerpt, content, cover_url, featured_image, user_id, created_at')
         .eq('status', 'published')
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(4);
 
       if (data && data.length > 0) {
         // Charger les auteurs avec leur avatar
@@ -397,52 +415,129 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Podcasts Carrousel */}
+      {/* Section Articles & Podcasts - 2 Colonnes */}
       <section className="w-full relative z-10 overflow-visible pb-12 pt-8">
-        <div className="px-5 flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                <path d="M12 2a9 9 0 0 0-9 9v7.5A2.5 2.5 0 0 0 5.5 21h1a2.5 2.5 0 0 0 2.5-2.5V15a2.5 2.5 0 0 0-2.5-2.5h-.5v-1A7 7 0 0 1 19 11.5v1h-.5A2.5 2.5 0 0 0 16 15v3.5a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 0 2.5-2.5V11a9 9 0 0 0-9-9z"/>
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.featuredPodcasts || 'Podcasts en vedette'}</h2>
-          </div>
-          <Link
-            to="/podcasts"
-            className="text-accent hover:text-accent-hover font-semibold text-sm flex items-center gap-1"
-          >
-            {t.home?.viewAll || 'Voir tout'}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-        <PodcastCarousel podcasts={latestPodcasts} />
-      </section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-5">
 
-      {/* Section Blog Carrousel */}
-      <section className="w-full relative z-10 overflow-visible pb-12">
-        <div className="px-5 flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-              </svg>
+          {/* Colonne 1: Derniers Articles (4 articles en grille 2x2) */}
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <IconImg name="paper" className="w-6 h-6 brightness-0 invert" />
+                </div>
+                <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.latestArticles || 'Derniers articles'}</h2>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.latestArticles || 'Derniers articles'}</h2>
+
+            {/* Grille 2x2 d'articles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {latestBlogs.slice(0, 4).map((article) => {
+                const imageUrl = article.featured_image || article.cover_url;
+                return (
+                  <Link
+                    key={article.id}
+                    to={`/article/${article.slug}`}
+                    className="group block bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
+                  >
+                    {imageUrl ? (
+                      <div className="aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        <img
+                          src={imageUrl}
+                          alt={article.title}
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video w-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+                        <IconImg name="paper" className="w-12 h-12 opacity-30" />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="text-base font-semibold text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2">
+                        {article.title}
+                      </h3>
+                      {article.excerpt && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Bouton Voir plus */}
+            <Link
+              to="/articles"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
+            >
+              {t.home?.viewAll || 'Voir plus'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
-          <Link
-            to="/articles"
-            className="text-accent hover:text-accent-hover font-semibold text-sm flex items-center gap-1"
-          >
-            {t.home?.viewAll || 'Voir tout'}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+
+          {/* Colonne 2: Podcasts en vedette (cartes verticales) */}
+          <div className="bg-gray-100 dark:bg-gray-800/50 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                  <IconImg name="mic" className="w-6 h-6 brightness-0 invert" />
+                </div>
+                <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.featuredPodcasts || 'Podcasts en vedette'}</h2>
+              </div>
+            </div>
+
+            {/* Liste verticale de podcasts */}
+            <div className="space-y-4 mb-6">
+              {latestPodcasts.slice(0, 3).map((podcast) => (
+                <div
+                  key={podcast.id}
+                  className="group flex gap-4 bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all p-4"
+                >
+                  {podcast.image_url ? (
+                    <img
+                      src={podcast.image_url}
+                      alt={podcast.title}
+                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-gradient-to-br from-green-200 to-emerald-300 dark:from-green-700 dark:to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <IconImg name="mic" className="w-8 h-8 opacity-50" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold text-black dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors line-clamp-2 mb-1">
+                      {podcast.title}
+                    </h3>
+                    {podcast.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {podcast.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bouton Voir plus */}
+            <Link
+              to="/podcasts"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
+            >
+              {t.home?.viewAll || 'Voir plus'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
         </div>
-        <ArticleCarousel articles={latestBlogs} />
       </section>
 
       {/* Publicité Google Ads */}

@@ -108,6 +108,37 @@ export default function Article() {
 
   return (
     <div style={containerStyle}>
+      <style>{`
+        .article-content p {
+          margin-bottom: 1.25em;
+          line-height: 1.75;
+        }
+        .article-content p:last-child {
+          margin-bottom: 0;
+        }
+        .article-content h1,
+        .article-content h2,
+        .article-content h3 {
+          margin-top: 1.5em;
+          margin-bottom: 0.75em;
+        }
+        .article-content ul,
+        .article-content ol {
+          margin-bottom: 1.25em;
+          padding-left: 1.5em;
+        }
+        .article-content li {
+          margin-bottom: 0.5em;
+        }
+        .article-content blockquote {
+          margin: 1.5em 0;
+          padding-left: 1em;
+          border-left: 4px solid #e5e7eb;
+        }
+        .dark .article-content blockquote {
+          border-left-color: #374151;
+        }
+      `}</style>
       <article className="max-w-6xl w-full pb-20">
       {/* Action buttons - Top Right */}
       <div className="flex justify-end gap-3 mb-6">
@@ -172,7 +203,7 @@ export default function Article() {
       </div>
 
       {/* Content */}
-      <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
+      <div className="prose prose-lg dark:prose-invert max-w-none mb-12 article-content">
         <div dangerouslySetInnerHTML={{ __html: langContent.content }} />
       </div>
 
