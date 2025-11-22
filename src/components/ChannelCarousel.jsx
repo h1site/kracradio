@@ -92,16 +92,16 @@ export default function ChannelCarousel({ channels }) {
   const animateMomentum = () => {
     cancelAnimationFrame(st.current.raf);
     const step = () => {
-      st.current.v *= 0.95;
+      st.current.v *= 0.92; // Friction légèrement plus douce (était 0.95)
       let next = st.current.tx + st.current.v * (1 / 60);
       if (next > st.current.max) { next = (next + st.current.max) / 2; st.current.v *= 0.5; }
       else if (next < st.current.min) { next = (next + st.current.min) / 2; st.current.v *= 0.5; }
       st.current.tx = next;
       applyTx(next);
-      if (Math.abs(st.current.v) > 20) st.current.raf = requestAnimationFrame(step);
+      if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step); // Seuil réduit (était 20)
       else { st.current.tx = clamp(st.current.tx, st.current.min, st.current.max); applyTx(st.current.tx); }
     };
-    if (Math.abs(st.current.v) > 20) st.current.raf = requestAnimationFrame(step);
+    if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step); // Seuil réduit (était 20)
   };
 
   const onPointerUp = (e) => {
@@ -112,9 +112,10 @@ export default function ChannelCarousel({ channels }) {
   };
 
   const onWheel = (e) => {
+    e.preventDefault(); // Empêche le scroll de page
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    st.current.v = delta * 10;
-    st.current.tx = clamp(st.current.tx - delta, st.current.min - 200, st.current.max + 200);
+    st.current.v = delta * 5; // Réduction de la vélocité (était 10)
+    st.current.tx = clamp(st.current.tx - delta * 1.5, st.current.min - 200, st.current.max + 200); // Mouvement plus doux
     applyTx(st.current.tx);
     animateMomentum();
   };
@@ -136,8 +137,13 @@ export default function ChannelCarousel({ channels }) {
       >
         <div
           ref={rowRef}
-          className="flex gap-5 will-change-transform"
-          style={{ transform: 'translate3d(0,0,0)' }}
+          className="flex gap-5"
+          style={{
+            transform: 'translate3d(0,0,0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            perspective: 1000
+          }}
         >
           {channels.map((ch) => (
             <div key={ch.key} className="shrink-0 w-[260px] sm:w-[280px] md:w-[300px]">
