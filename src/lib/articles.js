@@ -131,7 +131,7 @@ export async function fetchArticleBySlug(slug) {
   if (data && data.user_id) {
     const { data: author } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, artist_slug')
       .eq('id', data.user_id)
       .single();
 
@@ -139,6 +139,7 @@ export async function fetchArticleBySlug(slug) {
       data.author = author;
       data.author_name = author.username;
       data.author_avatar = author.avatar_url;
+      data.author_slug = author.artist_slug;
       data.author_id = data.user_id; // alias for compatibility
     }
   }
@@ -189,7 +190,7 @@ export async function listPublishedArticles({ limit = 24, offset = 0 } = {}) {
     // Fetch authors
     const { data: authors } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, artist_slug')
       .in('id', authorIds);
 
     // Create author map

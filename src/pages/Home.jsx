@@ -436,6 +436,7 @@ export default function Home() {
                 const imageUrl = article.featured_image || article.cover_url;
                 const authorName = article.author_name || 'Anonyme';
                 const authorAvatar = article.author_avatar;
+                const authorSlug = article.author?.artist_slug || article.author_name;
                 const cleanAuthorName = authorName.replace(/[@_]/g, '');
 
                 return (
@@ -473,7 +474,7 @@ export default function Home() {
                           </div>
                         )}
                         <Link
-                          to={`/profile/${authorName}`}
+                          to={`/profile/${authorSlug}`}
                           className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
