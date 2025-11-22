@@ -8,6 +8,7 @@ import { radioStationJsonLd } from '../seo/jsonld';
 import { useI18n } from '../i18n';
 import { getNowPlaying, getRecentTracks } from '../utils/azura';
 import GoogleAd from '../components/ads/GoogleAd';
+import { useUI } from '../context/UIContext';
 
 const RED = '#E50914';
 
@@ -20,6 +21,12 @@ export default function Channel() {
   const channel = channels.find((c) => c.key === key);
   const { lang, t } = useI18n();
   const { current, playing, playStream, togglePlay } = useAudio();
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+
+  const containerStyle = {
+    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
+    transition: 'margin-left 300ms ease',
+  };
 
   if (!channel) return <Navigate to="/" replace />;
 
@@ -53,13 +60,7 @@ export default function Channel() {
   const description = `Écoute ${channel.name} en direct sur KracRadio.`;
 
   return (
-    <main
-      className={`
-        container-max ${VIEW_HEIGHT_CLASS} overflow-hidden
-        bg-white text-black dark:bg-[#1e1e1e] dark:text-white
-        pt-4 pb-3 px-5
-      `}
-    >
+    <main style={containerStyle} className="px-8">
       <Seo
         lang={lang}
         title={title}
@@ -71,126 +72,109 @@ export default function Channel() {
         jsonLd={radioStationJsonLd(channel, lang)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 h-full">
-        {/* Colonne gauche : visuel plein cadre + bouton Tune In TOUJOURS visible */}
-        <div className="lg:col-span-1 grid grid-rows-[1fr_auto] gap-3 h-full min-h-0">
-          <div className="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#151515]">
-            <img
-              src={channel.image || '/channels/default.webp'}
-              alt={channel.name}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={onTuneClick}
-            className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl font-semibold text-white hover:opacity-95 transition"
-            style={{ backgroundColor: RED }}
-          >
-            {isPlayingThis ? (
-              <>
-                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M8 5h3v14H8V5zm5 0h3v14h-3V5z"/></svg>
-                Pause
-              </>
-            ) : (
-              <>
-                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
-                {t?.site?.tuneIn || 'Écouter'}
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Colonne droite : titre + retour, Now Playing (gras), Historique (UPPERCASE) */}
-        <div className="lg:col-span-2 flex flex-col h-full min-h-0 overflow-hidden">
-          {/* Titre station + bouton retour */}
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold leading-tight uppercase">
-              {channel.name}
-            </h1>
-
+      {/* Hero Section */}
+      <div className="relative w-full h-[60vh] bg-cover bg-center text-white -mx-8 mb-8" style={{ backgroundImage: `url(${channel.image})` }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <div className="relative z-10 flex flex-col justify-between h-full">
+          <div className="pt-8 px-8">
             <Link
               to="/"
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-black/20 text-black hover:bg-black/5
-                         dark:border-white/20 dark:text-white dark:hover:bg-white/10 transition"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors self-start"
               aria-label="Retour à l'accueil"
               title="Retour à l'accueil"
             >
-              <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
                 <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20v-2z"/>
               </svg>
             </Link>
           </div>
-
-          {/* Zone info: Now Playing + Last Tracks — occupe la hauteur restante */}
-          <div className="mt-3 flex-1 grid grid-rows-[auto,1fr] gap-4 min-h-0">
-            {/* EN LECTURE — image à gauche, textes à droite */}
-            <section className="rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#151515] p-3">
-              <div
-                className="text-[11px] uppercase tracking-wide mb-2 font-bold"
-                style={{ color: RED }}
-              >
-                {t?.site?.nowPlaying || 'En lecture'}
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* pochette */}
-                <img
-                  src={now?.art || channel.image || '/channels/default.webp'}
-                  alt=""
-                  loading="lazy"
-                  className="w-16 h-16 rounded object-cover border border-neutral-200 dark:border-white/10"
-                />
-
-                {/* titre + artiste */}
-                <div className="min-w-0">
-                  <div className="font-semibold text-sm truncate">
-                    {now?.title || '—'}
-                  </div>
-                  <div className="text-xs text-neutral-700 dark:text-white truncate">
-                    {now?.artist || '—'}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* HISTORIQUE — uppercased title, scroll interne garanti */}
-            <section className="rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#151515] p-3 flex flex-col min-h-0">
-              <h2 className="text-sm font-semibold mb-2 uppercase text-black dark:text-white">
-                {t?.site?.lastTracks || '10 dernières chansons'}
-              </h2>
-
-              <ul className="flex-1 overflow-auto divide-y divide-neutral-200 dark:divide-white/10 pr-1">
-                {recent.length === 0 && (
-                  <li className="py-2 text-sm text-black dark:text-white">—</li>
-                )}
-
-                {recent.map((trk, idx) => (
-                  <li key={idx} className="py-2 flex items-center gap-3">
-                    <img
-                      src={trk?.art || channel.image || '/channels/default.webp'}
-                      alt=""
-                      loading="lazy"
-                      className="w-9 h-9 rounded object-cover border border-neutral-200 dark:border-white/10"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium truncate text-black dark:text-white">
-                        {trk?.title || '—'}
-                      </div>
-                      <div className="text-xs truncate text-neutral-700 dark:text-white">
-                        {trk?.artist || ''}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          <div className="max-w-4xl p-8">
+            <h1 className="text-5xl md:text-7xl font-black leading-tight drop-shadow-lg mb-4 uppercase">
+              {channel.name}
+            </h1>
+            <button
+              type="button"
+              onClick={onTuneClick}
+              className="group transition duration-200 focus:outline-none flex items-center justify-center gap-4 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              {isPlayingThis ? (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="5" width="4" height="14" rx="1" />
+                    <rect x="14" y="5" width="4" height="14" rx="1" />
+                  </svg>
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <span>{t?.site?.tuneIn || 'Écouter'}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6">
+      <div className="py-8">
+        {/* Now Playing Section */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold uppercase mb-4 text-gray-900 dark:text-white">
+            {t?.site?.nowPlaying || 'En lecture'}
+          </h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex items-center gap-6">
+            <img
+              src={now?.art || channel.image || '/channels/default.webp'}
+              alt=""
+              loading="lazy"
+              className="w-24 h-24 rounded-lg object-cover"
+            />
+            <div className="min-w-0">
+              <div className="font-bold text-xl text-gray-900 dark:text-white truncate">
+                {now?.title || '—'}
+              </div>
+              <div className="text-gray-600 dark:text-gray-400 text-lg truncate">
+                {now?.artist || '—'}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Tracks Section */}
+        <section>
+          <h2 className="text-2xl font-bold uppercase mb-4 text-gray-900 dark:text-white">
+            {t?.site?.lastTracks || '10 dernières chansons'}
+          </h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              {recent.length === 0 && (
+                <li className="py-3 text-gray-500 dark:text-gray-400">—</li>
+              )}
+              {recent.map((trk, idx) => (
+                <li key={idx} className="py-3 flex items-center gap-4">
+                  <img
+                    src={trk?.art || channel.image || '/channels/default.webp'}
+                    alt=""
+                    loading="lazy"
+                    className="w-12 h-12 rounded-md object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-bold text-gray-900 dark:text-white truncate">
+                      {trk?.title || '—'}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {trk?.artist || ''}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <div className="mt-8">
           <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
         </div>
       </div>

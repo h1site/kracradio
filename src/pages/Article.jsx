@@ -42,6 +42,22 @@ export default function Article() {
   const [relatedArticles, setRelatedArticles] = useState([]);
   const [notFound, setNotFound] = useState(false);
   const carouselRef = useRef(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+
+  const handleScroll = () => {
+    const el = document.documentElement;
+    const totalHeight = el.scrollHeight - el.clientHeight;
+    if (totalHeight > 0) {
+      setReadingProgress((el.scrollTop / totalHeight) * 100);
+    } else {
+      setReadingProgress(0);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -97,11 +113,9 @@ export default function Article() {
   }
 
   const containerStyle = {
-    paddingTop: '0',
-    paddingLeft: '0',
-    paddingRight: '0',
-    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
-    transition: 'margin-left 300ms ease',
+    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
+    paddingRight: isDesktop ? 32 : 32,
+    transition: 'padding-left 300ms ease',
   };
 
   const imageUrl = article.featured_image || article.cover_url;
@@ -116,6 +130,12 @@ export default function Article() {
 
   return (
     <div style={containerStyle} className="min-h-screen bg-white dark:bg-black">
+      {/* Reading Progress Bar */}
+      <div
+        className="fixed top-0 left-0 h-1 bg-red-500 z-50 transition-all duration-150"
+        style={{ width: `${readingProgress}%` }}
+      />
+
       <style>{`
         .article-content p {
           margin-bottom: 1.5em;
@@ -186,7 +206,7 @@ export default function Article() {
 
       {/* Hero Section avec Image en plein écran */}
       {imageUrl && (
-        <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
+        <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden -mx-8">
           <img
             src={imageUrl}
             alt={langContent.title}
@@ -277,7 +297,7 @@ export default function Article() {
 
       {/* Article sans image - Layout alternatif */}
       {!imageUrl && (
-        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-black py-16 px-8">
+        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-black py-16 px-8 -mx-8">
           <div className="max-w-5xl mx-auto">
             {/* Action buttons */}
             <div className="flex justify-end gap-3 mb-8">

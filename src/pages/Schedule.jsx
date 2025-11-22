@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
-import daily from '../data/daily-schedule.json'; // ← 24 h fixes (title, start, end, image)
+import daily from '../data/daily-schedule.json';
+import { useUI } from '../context/UIContext';
 
 const KRAC_KEY = 'kracradio';
 
@@ -30,6 +31,13 @@ function fmtRange(start, end, lang) {
 
 export default function Schedule() {
   const { lang, t } = useI18n();
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+
+  const containerStyle = {
+    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
+    paddingRight: isDesktop ? 32 : 32,
+    transition: 'padding-left 300ms ease',
+  };
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
@@ -49,7 +57,7 @@ export default function Schedule() {
       };
     }).sort((a, b) => a.start - b.start);
     return arr;
-  }, [daily, kracImage]);
+  }, [kracImage]);
 
   // Now & Next
   const { current, next } = useMemo(() => {
@@ -78,33 +86,21 @@ export default function Schedule() {
       month: 'long'
     }).format(new Date());
   }, [lang]);
-
+  
   return (
-    <div className="min-h-screen pl-[30px] ">
+    <div style={containerStyle} className="min-h-screen">
       {/* En-tête */}
-      <div className="pb-6">
-        <div className="flex items-center gap-3 mb-3">
-          <img
-            src={kracImage}
-            alt={krac?.name || 'KracRadio'}
-            className="h-12 w-12 rounded-lg"
-          />
-          <div>
-            <h1 className="text-2xl font-bold dark:text-white uppercase">
-              {krac?.name || 'KracRadio'}
-            </h1>
-            <p className="text-sm text-black/70 dark:text-white/70">
-              {t?.nav?.schedule || 'Horaire'} — 24h
-            </p>
-          </div>
-        </div>
-        <h2 className="text-base font-medium text-black/80 dark:text-white/80">
+      <div className="bg-gray-900 text-white -mx-8 -mt-8 px-8 py-12 mb-8">
+        <h1 className="text-4xl md:text-6xl font-black uppercase">
+          {t?.nav?.schedule || 'Horaire'}
+        </h1>
+        <p className="text-lg text-red-400 font-semibold mt-2">
           {todayLabel}
-        </h2>
+        </p>
       </div>
 
-      {/* Grille 4 colonnes x 3 rangées (desktop) / 1 colonne (mobile) */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 sm:grid-rows-3 gap-4 pb-6 pr-[30px]">
+      {/* Grille d'horaire */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
         {segments.map((it) => {
           const isCurrent = current?.id === it.id;
           const isNext = next?.id === it.id;
@@ -112,40 +108,43 @@ export default function Schedule() {
           return (
             <article
               key={it.id}
-              className={`relative rounded-xl overflow-hidden ${
-                isCurrent ? 'ring-2 ring-red-600' : ''
+              className={`group relative rounded-2xl overflow-hidden shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl ${
+                isCurrent ? 'ring-4 ring-red-500' : 'ring-1 ring-black/10'
               }`}
             >
-              <div className="relative h-64">
+              <div className="relative h-80">
                 <img
                   src={it.image}
                   alt={it.title}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
 
                 {isCurrent && (
                   <div className="absolute top-4 right-4">
-                    <span className="inline-block px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase">
-                      {t?.schedule?.nowPlaying || 'En lecture'}
+                    <span className="inline-block px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase tracking-wider">
+                      {t?.schedule?.nowPlaying || 'En direct'}
                     </span>
                   </div>
                 )}
 
                 {isNext && !isCurrent && (
                   <div className="absolute top-4 right-4">
-                    <span className="inline-block px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold uppercase">
+                    <span className="inline-block px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider">
                       {t?.schedule?.upNext || 'À suivre'}
                     </span>
                   </div>
                 )}
 
-                <div className="absolute left-5 right-5 bottom-5">
-                  <h3 className="text-white text-xl font-bold uppercase mb-1 drop-shadow-lg">
+                <div className="absolute left-5 right-5 bottom-5 text-white">
+                  <p className="font-semibold text-red-400 mb-1">
+                    {fmtRange(it.start, it.end, lang)}
+                  </p>
+                  <h3 className="text-2xl font-black uppercase mb-2 drop-shadow-lg">
                     {it.title}
                   </h3>
-                  <p className="text-white/90 text-sm font-medium drop-shadow">
-                    {fmtRange(it.start, it.end, lang)}
+                  <p className="text-white/80 text-sm line-clamp-2">
+                    {it.description}
                   </p>
                 </div>
               </div>
@@ -155,7 +154,7 @@ export default function Schedule() {
       </div>
 
       {/* Info bas de page */}
-      <div className="pb-8 pr-[30px]">
+      <div className="pb-8">
         <div className="rounded-xl bg-neutral-100 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 p-5">
           <h3 className="text-sm font-bold dark:text-white uppercase mb-2">
             {t?.nav?.channels || 'Chaînes spécialisées'}

@@ -215,7 +215,7 @@ export default function Home() {
   const isKracPlaying = playing && current?.key === KRAC_KEY;
 
   return (
-    <div className="-mt-5">
+    <div className="">
       <Seo
         lang={lang}
         title={t.meta?.homeTitle}
@@ -270,306 +270,217 @@ export default function Home() {
 
       {/* HERO */}
       <section className="w-full px-0 pb-0">
-        <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-b-2xl overflow-hidden border border-neutral-800">
-            {/* Bloc 1 — En lecture */}
-            <div
-              className="group relative h-64 lg:h-80"
-              style={{
-                backgroundImage: `url(${currentSeg?.image || kracImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-              <div className="absolute left-5 right-5 top-4 flex items-center gap-2">
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow uppercase">
-                  {t.home?.nowOnKrac || 'Présentement sur KracRadio'}
-                </div>
+        <div
+          className="relative w-full h-[80vh] bg-cover bg-center text-white"
+          style={{ backgroundImage: `url(${currentSeg?.image || kracImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+          
+          <div className="relative z-10 flex flex-col justify-end h-full p-8 md:p-12">
+            <div className="max-w-4xl">
+              <div className="text-sm uppercase tracking-widest font-semibold text-red-400 mb-2">
+                {t?.site?.nowPlaying || 'En lecture'}
               </div>
-
-              <div className="absolute left-5 right-5 bottom-5">
-                <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
-                  {t?.site?.nowPlaying || 'En lecture'}
-                </div>
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {currentSeg?.title || '—'}
-                </div>
-                <div className="text-white/90 text-sm font-medium mt-1">
-                  {currentSeg ? fmtRange(currentSeg.start, currentSeg.end, lang) : '—'}
-                </div>
+              <h1 className="text-5xl md:text-7xl font-black leading-tight drop-shadow-lg mb-4">
+                {currentSeg?.title || 'Musique en continu'}
+              </h1>
+              <div className="text-white/90 text-lg font-medium mb-8">
+                {currentSeg ? fmtRange(currentSeg.start, currentSeg.end, lang) : '—'}
               </div>
-
-              {/* BOUTON ÉCOUTER */}
-              <div className="absolute right-5 bottom-5">
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 <button
                   type="button"
                   aria-label={t.home?.listenCta || 'Écouter'}
                   aria-pressed={isKracPlaying}
-                  className="transition duration-200 focus:outline-none"
+                  className="group transition duration-200 focus:outline-none flex items-center justify-center gap-4 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                   onClick={() =>
                     (current?.key === KRAC_KEY ? togglePlay() : playChannel(KRAC_KEY))
                   }
                 >
-                  <span className="inline-flex items-center rounded-full border border-white/30 bg-black/70 backdrop-blur px-3 pr-4 py-2 text-white shadow-sm hover:bg-black/80 hover:border-white/50 focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-black">
-                    <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-600">
-                      {isKracPlaying ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-                          <rect x="6" y="5" width="4" height="14" rx="1" />
-                          <rect x="14" y="5" width="4" height="14" rx="1" />
-                        </svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {t.home?.listenCta || 'Écouter'}
-                    </span>
+                  {isKracPlaying ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="5" width="4" height="14" rx="1" />
+                      <rect x="14" y="5" width="4" height="14" rx="1" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                  <span>
+                    {isKracPlaying ? 'En direct' : (t.home?.listenCta || 'Écouter')}
                   </span>
                 </button>
-              </div>
-            </div>
-
-            {/* Bloc 2 — À suivre */}
-            <div
-              className="relative h-64 lg:h-80"
-              style={{
-                backgroundImage: `url(${nextSeg?.image || kracImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute left-5 right-5 bottom-5">
-                <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-2">
-                  {t?.schedule?.upNext || 'À suivre'}
-                </div>
-                <div className="text-white text-2xl font-extrabold leading-tight drop-shadow">
-                  {nextSeg?.title || '—'}
-                </div>
-                <div className="text-white/90 text-sm font-medium mt-1 mb-3">
-                  {nextSeg ? fmtRange(nextSeg.start, nextSeg.end, lang) : '—'}
-                </div>
-
-                <div className="w-full flex justify-end">
-                  <a
-                    href="/schedule"
-                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg font-semibold border border-red-700/60 bg-red-600 hover:bg-red-700 text-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/70 focus:ring-offset-2 focus:ring-offset-black transition"
-                  >
-                    {t.home?.viewScheduleCta || 'Consulter notre horaire'}
-                  </a>
-                </div>
+                
+                {nextSeg && (
+                  <div className="border-l-2 border-white/20 pl-6">
+                    <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-1">
+                      {t?.schedule?.upNext || 'À suivre'}
+                    </div>
+                    <div className="text-white text-lg font-bold leading-tight">
+                      {nextSeg.title}
+                    </div>
+                    <div className="text-white/70 text-sm font-medium mb-2">
+                      {fmtRange(nextSeg.start, nextSeg.end, lang)}
+                    </div>
+                    <Link to="/schedule" className="text-white font-semibold text-sm inline-flex items-center gap-2 hover:text-red-400 transition-colors">
+                      {t.home?.viewScheduleCta || 'Voir l\'horaire'}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
-          {/* pas d’espace sous le hero */}
         </div>
       </section>
 
       {/* Section Soumettre Musique à la Radio */}
-      <section className="px-5 py-12">
-        <div className="bg-gradient-to-br from-purple-600/10 via-purple-500/5 to-pink-500/10 dark:from-purple-600/20 dark:via-purple-500/10 dark:to-pink-500/20 rounded-2xl p-8 md:p-12 border border-purple-500/20">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg">
-              <span className="text-4xl">🎵</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-              {t.home?.submitMusicTitle || 'Soumettez votre musique à la radio'}
-            </h2>
-            <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto">
-              {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/submit-music"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
-              </Link>
-              <Link
-                to="/artists"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-purple-500/40 text-purple-600 dark:text-purple-400 rounded-xl font-bold text-lg hover:bg-purple-500/10 transition-colors"
-              >
-                {t.home?.discoverArtists || 'Découvrir les artistes'}
-              </Link>
-            </div>
+      <section className="py-16 bg-gray-900 text-white dark">
+        <div className="max-w-4xl mx-auto text-center px-5">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+            {t.home?.submitMusicTitle || 'Soumettez votre musique'}
+          </h2>
+          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+            {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/submit-music"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
+            </Link>
+            <Link
+              to="/artists"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-gray-600 text-white rounded-full font-bold text-lg hover:bg-gray-800 transition-colors"
+            >
+              {t.home?.discoverArtists || 'Découvrir les artistes'}
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Carrousel */}
-      <section className="w-full relative z-10 overflow-visible">
-        <div className="px-5 md:px-5 px-0 pt-0">
-          <h2 className="text-xl font-semibold text-black dark:text-white mb-3 pt-5 uppercase px-5 md:px-0">
-            {t.home?.channelsHeading}
+      {/* Carrousel des chaînes */}
+      <section className="w-full relative z-10 overflow-visible py-16 bg-gray-100 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
+          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+            {t.home?.channelsHeading || 'Nos Chaînes Musicales'}
           </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            Explorez notre sélection de chaînes thématiques pour tous les goûts.
+          </p>
         </div>
         <div className="overflow-visible">
           <ChannelCarousel channels={channels} />
         </div>
       </section>
 
-      {/* Section Articles & Podcasts - 2 Colonnes */}
-      <section className="w-full relative z-10 overflow-visible pb-12 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 px-5">
 
-          {/* Colonne 1: Derniers Articles (60% - 3/5) */}
-          <div className="lg:col-span-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
-                  <IconImg name="paper" className="w-6 h-6 brightness-0 invert" />
-                </div>
-                <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.latestArticles || 'Derniers articles'}</h2>
-              </div>
-            </div>
-
-            {/* Grille 2x2 d'articles */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-              {latestBlogs.slice(0, 4).map((article) => {
-                const imageUrl = article.featured_image || article.cover_url;
-                const authorName = article.author_name || 'Anonyme';
-                const authorAvatar = article.author_avatar;
-                const authorSlug = article.author_slug || article.author_name;
-                const cleanAuthorName = authorName.replace(/[@_]/g, '');
-
-                return (
-                  <Link
-                    key={article.id}
-                    to={`/article/${article.slug}`}
-                    className="group block bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
-                  >
-                    {imageUrl ? (
-                      <div className="aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <img
-                          src={imageUrl}
-                          alt={article.title}
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video w-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
-                        <IconImg name="paper" className="w-12 h-12 opacity-30" />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      {/* Auteur avec avatar */}
-                      <div className="flex items-center gap-2 mb-2">
-                        {authorAvatar ? (
-                          <img
-                            src={authorAvatar}
-                            alt={authorName}
-                            className="w-6 h-6 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
-                            {cleanAuthorName.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <Link
-                          to={`/profile/${authorSlug}`}
-                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {authorName}
-                        </Link>
-                      </div>
-
-                      <h3 className="text-base font-semibold text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2">
-                        {article.title}
-                      </h3>
-                      {article.excerpt && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Bouton Voir plus */}
-            <Link
-              to="/articles"
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-6"
-            >
-              {t.home?.viewAll || 'Voir plus'}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+      {/* Section Articles & Podcasts - Magazine Style */}
+      <section className="w-full relative z-10 overflow-visible py-16">
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+              Dernières Nouvelles
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Les dernières nouvelles et podcasts de la scène musicale.
+            </p>
           </div>
 
-          {/* Colonne 2: Podcasts en vedette (40% - 2/5) */}
-          <div className="lg:col-span-2 bg-gray-100 dark:bg-gray-800/50 rounded-2xl p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                  <IconImg name="mic" className="w-6 h-6 brightness-0 invert" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Featured Article */}
+            {latestBlogs.length > 0 && (
+              <div className="lg:col-span-2">
+                <Link to={`/article/${latestBlogs[0].slug}`} className="group block">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                    <img
+                      src={latestBlogs[0].featured_image || latestBlogs[0].cover_url}
+                      alt={latestBlogs[0].title}
+                      className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-8">
+                      <h3 className="text-3xl font-black text-white leading-tight drop-shadow-lg">
+                        {latestBlogs[0].title}
+                      </h3>
+                      <p className="text-gray-300 mt-2 line-clamp-2">
+                        {latestBlogs[0].excerpt}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* Podcasts */}
+            <div className="lg:col-span-1">
+              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6 h-full">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Podcasts en vedette</h3>
+                <div className="space-y-4">
+                  {latestPodcasts.slice(0, 3).map((podcast) => (
+                    <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group flex items-center gap-4 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+                      <img
+                        src={podcast.image_url}
+                        alt={podcast.title}
+                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-red-500 line-clamp-2">
+                          {podcast.title}
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                          {podcast.description}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-                <h2 className="text-2xl font-bold text-text-primary uppercase">{t.home?.featuredPodcasts || 'Podcasts en vedette'}</h2>
+                <Link to="/podcasts" className="mt-6 block text-center w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                  Tous les podcasts
+                </Link>
               </div>
             </div>
+          </div>
 
-            {/* Liste verticale de podcasts */}
-            <div className="space-y-4 flex-1">
-              {latestPodcasts.slice(0, 3).map((podcast) => (
-                <div
-                  key={podcast.id}
-                  className="group flex gap-4 bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all p-4"
-                >
-                  {podcast.image_url ? (
-                    <img
-                      src={podcast.image_url}
-                      alt={podcast.title}
-                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-gradient-to-br from-green-200 to-emerald-300 dark:from-green-700 dark:to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <IconImg name="mic" className="w-8 h-8 opacity-50" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-black dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors line-clamp-2 mb-1">
-                      {podcast.title}
-                    </h3>
-                    {podcast.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {podcast.description}
-                      </p>
-                    )}
+          {/* Other articles */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            {latestBlogs.slice(1, 4).map((article) => (
+              <Link key={article.id} to={`/article/${article.slug}`} className="group block">
+                <div className="relative rounded-xl overflow-hidden shadow-lg">
+                  <img
+                    src={article.featured_image || article.cover_url}
+                    alt={article.title}
+                    className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <h4 className="font-bold text-white leading-tight drop-shadow-md">
+                      {article.title}
+                    </h4>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Bouton Voir plus */}
-            <Link
-              to="/podcasts"
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg mt-6"
-            >
-              {t.home?.viewAll || 'Voir plus'}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+              </Link>
+            ))}
           </div>
-
+           <div className="mt-12 text-center">
+              <Link
+              to="/articles"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-800 text-white rounded-full font-bold text-lg hover:bg-black transition-all"
+              >
+              {t.home?.viewAll || 'Voir tous les articles'}
+              </Link>
+          </div>
         </div>
       </section>
 
       {/* Publicité Google Ads */}
-      <div className="px-5 py-10">
-        <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
+      <div className="py-10">
+        <div className="px-5">
+          <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
+        </div>
       </div>
 
       {/* Espacement en bas - 30px sur mobile au lieu de la cale pour le player */}
