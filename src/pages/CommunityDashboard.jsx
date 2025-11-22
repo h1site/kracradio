@@ -1,6 +1,7 @@
 // src/pages/CommunityDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
@@ -13,6 +14,7 @@ import { useProfile } from '../hooks/useCommunity';
 export default function CommunityDashboard() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('settings');
   const [showTutorial, setShowTutorial] = useState(false);
@@ -54,7 +56,13 @@ export default function CommunityDashboard() {
         description={t.community.description}
       />
 
-      <div className="min-h-screen bg-bg-primary" style={{ paddingTop: '20px', paddingLeft: '30px', paddingRight: '30px' }}>
+      <div
+        className="min-h-screen bg-bg-primary px-8 pt-5"
+        style={{
+          marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+          transition: 'margin-left 300ms ease'
+        }}
+      >
         {/* Header avec boutons */}
         <div className="flex items-center justify-between mb-6">
           <div>

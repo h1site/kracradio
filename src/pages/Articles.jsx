@@ -5,12 +5,13 @@ import Seo from '../seo/Seo';
 import { listPublishedArticles } from '../lib/articles';
 import { useI18n } from '../i18n';
 import GoogleAd from '../components/ads/GoogleAd';
+import { useUI } from '../context/UIContext';
 
 const STRINGS = {
   fr: {
     metaTitle: 'Articles — KracRadio',
     metaDesc: 'Découvrez nos articles sur la musique, la culture et l\'actualité musicale.',
-    heroBadge: 'Articles',
+    heroBadge: 'Blogue',
     heroTitle: 'Articles',
     heroSubtitle: 'Découvrez nos derniers articles sur la musique, la culture et l\'actualité musicale.',
     loading: 'Chargement en cours...',
@@ -22,7 +23,7 @@ const STRINGS = {
   en: {
     metaTitle: 'Articles — KracRadio',
     metaDesc: 'Discover our articles about music, culture and music news.',
-    heroBadge: 'Articles',
+    heroBadge: 'Blog',
     heroTitle: 'Articles',
     heroSubtitle: 'Discover our latest articles about music, culture and music news.',
     loading: 'Loading...',
@@ -34,7 +35,7 @@ const STRINGS = {
   es: {
     metaTitle: 'Artículos — KracRadio',
     metaDesc: 'Descubre nuestros artículos sobre música, cultura y actualidad musical.',
-    heroBadge: 'Artículos',
+    heroBadge: 'Blog',
     heroTitle: 'Artículos',
     heroSubtitle: 'Descubre nuestros últimos artículos sobre música, cultura y actualidad musical.',
     loading: 'Cargando...',
@@ -48,6 +49,13 @@ const STRINGS = {
 export default function Articles() {
   const { lang } = useI18n();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+
+  const containerStyle = {
+    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
+    paddingRight: isDesktop ? 32 : 32,
+    transition: 'padding-left 300ms ease',
+  };
 
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +69,13 @@ export default function Articles() {
         const data = await listPublishedArticles({ limit: 20 });
         console.log('Articles data received:', data);
         if (mounted) {
-          setRows(data || []);
+          // Sort by published_at descending (newest first)
+          const sorted = (data || []).sort((a, b) => {
+            const dateA = new Date(a.published_at || a.created_at);
+            const dateB = new Date(b.published_at || b.created_at);
+            return dateB - dateA; // Newest first
+          });
+          setRows(sorted);
           setLoading(false);
           setError(null);
         }
@@ -79,7 +93,7 @@ export default function Articles() {
   }, []);
 
   return (
-    <main className="container-max pr-[30px] pl-[20px]">
+    <main style={containerStyle}>
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -88,21 +102,19 @@ export default function Articles() {
         type="website"
       />
 
-      <header className="pb-12">
-        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
-          {L.heroBadge}
-        </span>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-          {L.heroTitle}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-          {L.heroSubtitle}
-        </p>
+      <header className="bg-gray-900 text-white -mx-8 -mt-8 px-8 py-16 mb-8">
+        <div className="max-w-4xl">
+          <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-400">
+            {L.heroBadge}
+          </span>
+          <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase">
+            {L.heroTitle}
+          </h1>
+          <p className="mt-4 max-w-3xl text-lg text-gray-300">
+            {L.heroSubtitle}
+          </p>
+        </div>
       </header>
-
-      <div className="pb-10">
-        <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
-      </div>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -123,110 +135,102 @@ export default function Articles() {
           <p className="text-base text-gray-600 dark:text-gray-400">{L.empty}</p>
         </div>
       ) : (
-        <div className="space-y-8 pb-16">
-          {rows.map((article, index) => {
-            let excerpt = article.excerpt || '';
-            // si excerpt vide mais content JSON, essaye d'en tirer l'excerpt de la langue active
-            if (!excerpt && typeof article.content === 'string' && article.content.trim().startsWith('{')) {
-              try {
-                const p = JSON.parse(article.content);
-                excerpt = p?.[lang]?.excerpt || '';
-              } catch {/* ignore */}
-            }
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16">
+            {rows.map((article, index) => {
+              let excerpt = article.excerpt || '';
+              if (!excerpt && typeof article.content === 'string' && article.content.trim().startsWith('{')) {
+                try {
+                  const p = JSON.parse(article.content);
+                  excerpt = p?.[lang]?.excerpt || '';
+                } catch {/* ignore */}
+              }
+              const imageUrl = article.featured_image || article.cover_url;
 
-            const imageUrl = article.featured_image || article.cover_url;
+              if (index === 0) {
+                const publishDate = article.published_at ? new Date(article.published_at).toLocaleDateString(lang, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : '';
 
-            return (
-              <React.Fragment key={article.slug}>
-                <article
-                  className="group border-b border-gray-200 dark:border-gray-800 pb-8 last:border-b-0"
-                >
-                  <Link to={`/article/${article.slug}`} className="block">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* Bloc 1: Image rectangle à gauche */}
-                    {imageUrl && (
-                      <div className="w-full md:w-72 flex-shrink-0">
-                        <div className="aspect-[3/2] w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                          <img
-                            src={imageUrl}
-                            alt={article.title}
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
+                return (
+                  <React.Fragment key={article.slug}>
+                    <article className="group md:col-span-2 lg:col-span-3 relative rounded-2xl overflow-hidden shadow-lg">
+                      <Link to={`/article/${article.slug}`} className="block">
+                        <div className="h-96">
+                          {imageUrl && (
+                            <img
+                              src={imageUrl}
+                              alt={article.title}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                         </div>
+                        <div className="absolute bottom-0 left-0 p-8 text-white">
+                          {/* Author info */}
+                          <div className="flex items-center gap-3 mb-4">
+                            {article.profile?.avatar_url && (
+                              <img
+                                src={article.profile.avatar_url}
+                                alt={article.profile.username || 'Author'}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                              />
+                            )}
+                            <div className="text-sm">
+                              <div className="font-semibold text-white">
+                                {article.profile?.username || 'Auteur'}
+                              </div>
+                              {publishDate && (
+                                <div className="text-gray-300 text-xs">
+                                  {publishDate}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <h2 className="text-4xl font-black leading-tight drop-shadow-lg mb-2 group-hover:text-red-400 transition-colors">
+                            {article.title}
+                          </h2>
+                          <p className="text-gray-300 line-clamp-2">{excerpt}</p>
+                        </div>
+                      </Link>
+                    </article>
+                  </React.Fragment>
+                )
+              }
+
+              return (
+                <article key={article.slug} className="group relative rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+                   <Link to={`/article/${article.slug}`} className="block">
+                    {imageUrl && (
+                      <div className="aspect-video w-full overflow-hidden">
+                        <img
+                          src={imageUrl}
+                          alt={article.title}
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
                       </div>
                     )}
-
-                    {/* Bloc 2: Contenu vertical à droite */}
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      {/* Ligne 1: Tags à gauche + Date à droite */}
-                      <div className="flex items-center justify-between mb-3">
-                        {/* Tags à gauche */}
-                        <div className="flex items-center gap-2">
-                          {article.categories && article.categories.length > 0 ? (
-                            article.categories.slice(0, 2).map((category, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center rounded-md bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-400 uppercase tracking-wide"
-                              >
-                                {category}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="inline-flex items-center rounded-md bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 uppercase tracking-wide">
-                              {L.defaultTag}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Date à droite */}
-                        {article.published_at && (
-                          <time
-                            dateTime={article.published_at}
-                            className="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide"
-                          >
-                            {new Date(article.published_at).toLocaleDateString(lang, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </time>
-                        )}
-                      </div>
-
-                      {/* Ligne 2: Titre en gras */}
-                      <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-3 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
                         {article.title}
                       </h2>
-
-                      {/* Ligne 3: Auteur du blog */}
-                      {article.author?.username && (
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {L.by} {article.author.username}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Ligne 4 (optionnelle): Extrait */}
-                      {excerpt && (
-                        <p className="text-base text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                          {excerpt}
-                        </p>
-                      )}
+                      <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3">
+                        {excerpt}
+                      </p>
                     </div>
-                  </div>
                   </Link>
                 </article>
-                {index === 1 && (
-                  <div className="my-10">
-                    <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          <div className="pb-10">
+            <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+          </div>
+        </>
       )}
     </main>
   );

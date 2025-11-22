@@ -2,12 +2,14 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePublicProfiles } from '../hooks/useCommunity';
+import { useUI } from '../context/UIContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { COUNTRIES } from '../constants/countries';
 
 export default function Artists() {
   const { t } = useI18n();
+  const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
   const genreFilter = searchParams.get('genre');
   const countryFilter = searchParams.get('country');
@@ -84,7 +86,13 @@ export default function Artists() {
         description={t.artists.noArtistsDesc}
       />
 
-      <div className="min-h-screen bg-bg-primary" style={{ paddingTop: '20px', paddingLeft: '30px', paddingRight: '30px' }}>
+      <div
+        className="min-h-screen bg-bg-primary px-8 pt-5"
+        style={{
+          marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+          transition: 'margin-left 300ms ease'
+        }}
+      >
         {/* En-tête avec filtre actif */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">

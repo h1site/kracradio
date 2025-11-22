@@ -113,7 +113,7 @@ export default function Article() {
   }
 
   const containerStyle = {
-    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
+    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
     transition: 'margin-left 300ms ease',
   };
 
@@ -128,7 +128,7 @@ export default function Article() {
   }) : '';
 
   return (
-    <div style={containerStyle} className="min-h-screen bg-white dark:bg-black px-8">
+    <div style={containerStyle} className="min-h-screen bg-white dark:bg-black">
       {/* Reading Progress Bar */}
       <div
         className="fixed top-0 left-0 h-1 bg-red-500 z-50 transition-all duration-150"
@@ -205,7 +205,7 @@ export default function Article() {
 
       {/* Hero Section avec Image en plein écran */}
       {imageUrl && (
-        <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden -mx-8">
+        <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
           <img
             src={imageUrl}
             alt={langContent.title}
@@ -296,7 +296,7 @@ export default function Article() {
 
       {/* Article sans image - Layout alternatif */}
       {!imageUrl && (
-        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-black py-16 px-8 -mx-8">
+        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-black py-16 px-8">
           <div className="max-w-5xl mx-auto">
             {/* Action buttons */}
             <div className="flex justify-end gap-3 mb-8">
@@ -398,9 +398,9 @@ export default function Article() {
 
       {/* Related Articles Section */}
       {relatedArticles.length > 0 && (
-        <section className="bg-gray-50 dark:bg-gray-900 py-16 px-6 md:px-8">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-black mb-10 text-black dark:text-white">
+        <section className="bg-gray-50 dark:bg-gray-900 py-16">
+          <div className="max-w-7xl mx-auto px-6 md:px-8">
+            <h2 className="text-3xl md:text-4xl font-black mb-10 text-black dark:text-white uppercase">
               {L.readMore}
             </h2>
 

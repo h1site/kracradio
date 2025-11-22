@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import { useResolveUsername, useProfile, useMusicLinks, useFollowStats } from '../hooks/useCommunity';
 import { listUserArticles } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
@@ -14,6 +15,7 @@ export default function PublicProfile() {
   const { t, lang } = useI18n();
   const { username } = useParams();
   const { user } = useAuth();
+  const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const [activeTab, setActiveTab] = useState('blogs');
   const [articles, setArticles] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
@@ -201,6 +203,11 @@ export default function PublicProfile() {
     { id: 'connections', label: t.publicProfile?.connections || 'Connexions', icon: '👥' }
   ];
 
+  const containerStyle = {
+    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+    transition: 'margin-left 300ms ease',
+  };
+
   return (
     <>
       <Seo
@@ -208,16 +215,16 @@ export default function PublicProfile() {
         description={profile.bio || 'Profil artiste sur KracRadio'}
       />
 
-      <div className="min-h-screen bg-bg-primary">
+      <div className="min-h-screen bg-bg-primary" style={containerStyle}>
         {/* Bannière de couverture */}
         <div
-          className="h-48 bg-gradient-to-r from-accent/20 to-accent/5 bg-cover bg-center relative"
+          className="h-48 bg-gradient-to-r from-accent/20 to-accent/5 bg-cover bg-center relative -mx-8"
           style={{
             backgroundImage: profile.banner_url ? `url(${profile.banner_url})` : undefined
           }}
         />
 
-        <div className="px-4 relative" style={{ paddingLeft: '20px' }}>
+        <div className="px-8 relative">
           {/* Header du profil */}
           <div className="flex items-start gap-6 mb-8">
             {/* Avatar - positioned to overlap banner */}

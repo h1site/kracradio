@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
+import { useUI } from '../context/UIContext';
 
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
@@ -45,6 +46,7 @@ const STRINGS = {
 
 export default function Footer() {
   const { lang } = useI18n();
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
   const L = STRINGS[lang] || STRINGS.fr;
 
   const [email, setEmail] = useState('');
@@ -88,9 +90,17 @@ export default function Footer() {
     }
   };
 
+  const footerStyle = {
+    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+    transition: 'margin-left 300ms ease',
+  };
+
   return (
-    <footer className="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-      <div className="container-max px-5 py-12">
+    <footer
+      className="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
+      style={footerStyle}
+    >
+      <div className="px-8 py-12">
         {/* Newsletter Section */}
         <div className="mx-auto max-w-2xl text-center">
           <h3 className="mb-2 text-2xl font-bold uppercase tracking-wide text-gray-900 dark:text-white">

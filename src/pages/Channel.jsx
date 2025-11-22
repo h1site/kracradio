@@ -24,7 +24,7 @@ export default function Channel() {
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
 
   const containerStyle = {
-    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
+    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
     transition: 'margin-left 300ms ease',
   };
 
@@ -60,7 +60,7 @@ export default function Channel() {
   const description = `Écoute ${channel.name} en direct sur KracRadio.`;
 
   return (
-    <main style={containerStyle} className="px-8">
+    <main>
       <Seo
         lang={lang}
         title={title}
@@ -73,21 +73,9 @@ export default function Channel() {
       />
 
       {/* Hero Section */}
-      <div className="relative w-full h-[60vh] bg-cover bg-center text-white -mx-8 mb-8" style={{ backgroundImage: `url(${channel.image})` }}>
+      <div className="relative w-full h-[60vh] bg-cover bg-center text-white mb-8" style={{ backgroundImage: `url(${channel.image})` }}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <div className="relative z-10 flex flex-col justify-between h-full">
-          <div className="pt-8 px-8">
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors self-start"
-              aria-label="Retour à l'accueil"
-              title="Retour à l'accueil"
-            >
-              <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
-                <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8l8 8l1.41-1.41L7.83 13H20v-2z"/>
-              </svg>
-            </Link>
-          </div>
+        <div className="relative z-10 flex flex-col justify-end h-full">
           <div className="max-w-4xl p-8">
             <h1 className="text-5xl md:text-7xl font-black leading-tight drop-shadow-lg mb-4 uppercase">
               {channel.name}
@@ -118,7 +106,7 @@ export default function Channel() {
         </div>
       </div>
 
-      <div className="py-8">
+      <div className="py-8 px-6">
         {/* Now Playing Section */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold uppercase mb-4 text-gray-900 dark:text-white">
