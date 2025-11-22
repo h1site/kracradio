@@ -417,10 +417,10 @@ export default function Home() {
 
       {/* Section Articles & Podcasts - 2 Colonnes */}
       <section className="w-full relative z-10 overflow-visible pb-12 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 px-5">
 
-          {/* Colonne 1: Derniers Articles (4 articles en grille 2x2) */}
-          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6">
+          {/* Colonne 1: Derniers Articles (60% - 3/5) */}
+          <div className="lg:col-span-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
@@ -431,9 +431,13 @@ export default function Home() {
             </div>
 
             {/* Grille 2x2 d'articles */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
               {latestBlogs.slice(0, 4).map((article) => {
                 const imageUrl = article.featured_image || article.cover_url;
+                const authorName = article.author_name || 'Anonyme';
+                const authorAvatar = article.author_avatar;
+                const cleanAuthorName = authorName.replace(/[@_]/g, '');
+
                 return (
                   <Link
                     key={article.id}
@@ -455,6 +459,28 @@ export default function Home() {
                       </div>
                     )}
                     <div className="p-4">
+                      {/* Auteur avec avatar */}
+                      <div className="flex items-center gap-2 mb-2">
+                        {authorAvatar ? (
+                          <img
+                            src={authorAvatar}
+                            alt={authorName}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                            {cleanAuthorName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <Link
+                          to={`/profile/${authorName}`}
+                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {authorName}
+                        </Link>
+                      </div>
+
                       <h3 className="text-base font-semibold text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2">
                         {article.title}
                       </h3>
@@ -472,7 +498,7 @@ export default function Home() {
             {/* Bouton Voir plus */}
             <Link
               to="/articles"
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-6"
             >
               {t.home?.viewAll || 'Voir plus'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,8 +507,8 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Colonne 2: Podcasts en vedette (cartes verticales) */}
-          <div className="bg-gray-100 dark:bg-gray-800/50 rounded-2xl p-6">
+          {/* Colonne 2: Podcasts en vedette (40% - 2/5) */}
+          <div className="lg:col-span-2 bg-gray-100 dark:bg-gray-800/50 rounded-2xl p-6 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
@@ -493,7 +519,7 @@ export default function Home() {
             </div>
 
             {/* Liste verticale de podcasts */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 flex-1">
               {latestPodcasts.slice(0, 3).map((podcast) => (
                 <div
                   key={podcast.id}
@@ -528,7 +554,7 @@ export default function Home() {
             {/* Bouton Voir plus */}
             <Link
               to="/podcasts"
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg mt-6"
             >
               {t.home?.viewAll || 'Voir plus'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
