@@ -207,6 +207,38 @@ export default function Article() {
         <div dangerouslySetInnerHTML={{ __html: langContent.content }} />
       </div>
 
+      {/* Author Section */}
+      {article.author_name && (
+        <div className="my-12 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-4">
+            {article.author_avatar ? (
+              <Link to={`/profile/${article.author_name}`}>
+                <img
+                  src={article.author_avatar}
+                  alt={article.author_name}
+                  className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700 hover:ring-red-500 dark:hover:ring-red-500 transition-all"
+                />
+              </Link>
+            ) : (
+              <Link to={`/profile/${article.author_name}`}>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl font-bold ring-2 ring-gray-200 dark:ring-gray-700 hover:ring-red-500 dark:hover:ring-red-500 transition-all">
+                  {article.author_name.charAt(0).toUpperCase()}
+                </div>
+              </Link>
+            )}
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Article écrit par</p>
+              <Link
+                to={`/profile/${article.author_name}`}
+                className="text-xl font-bold text-black dark:text-white hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              >
+                {article.author_name}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="my-12 flex justify-center">
         <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
       </div>

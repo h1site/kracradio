@@ -131,12 +131,14 @@ export async function fetchArticleBySlug(slug) {
   if (data && data.user_id) {
     const { data: author } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .eq('id', data.user_id)
       .single();
 
     if (author) {
       data.author = author;
+      data.author_name = author.username;
+      data.author_avatar = author.avatar_url;
       data.author_id = data.user_id; // alias for compatibility
     }
   }
