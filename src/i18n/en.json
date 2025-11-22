@@ -190,6 +190,9 @@
     "privateProfileTitle": "Private Profile",
     "privateProfileDesc": "Your profile is not yet public. Enable it in community settings to share it.",
     "makePublic": "Make my profile public",
+    "likedSongsTitle": "My Liked Songs",
+    "likedSongsDesc": "View and manage your favorite songs from all channels",
+    "viewLikedSongs": "View Liked Songs",
     "welcomeTutorial": {
       "title": "👋 Welcome to KracRadio!",
       "subtitle": "Discover how to use your creator space",
