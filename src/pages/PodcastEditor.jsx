@@ -22,6 +22,12 @@ const STRINGS = {
     save: 'Créer le podcast',
     update: 'Mettre à jour',
     saving: 'Enregistrement...',
+    validating: 'Validation du flux RSS...',
+    validateRss: 'Valider le flux RSS',
+    rssValid: 'Flux RSS valide ✓',
+    rssInvalid: 'Flux RSS invalide',
+    rssError: 'Erreur de validation',
+    rssRequired: 'L\'URL du flux RSS est requise',
   },
   en: {
     metaTitle: 'Podcast Editor',
@@ -39,6 +45,12 @@ const STRINGS = {
     save: 'Create Podcast',
     update: 'Update',
     saving: 'Saving...',
+    validating: 'Validating RSS feed...',
+    validateRss: 'Validate RSS Feed',
+    rssValid: 'RSS feed is valid ✓',
+    rssInvalid: 'Invalid RSS feed',
+    rssError: 'Validation error',
+    rssRequired: 'RSS feed URL is required',
   },
   es: {
     metaTitle: 'Editor de podcast',
@@ -56,6 +68,12 @@ const STRINGS = {
     save: 'Crear podcast',
     update: 'Actualizar',
     saving: 'Guardando...',
+    validating: 'Validando feed RSS...',
+    validateRss: 'Validar feed RSS',
+    rssValid: 'Feed RSS válido ✓',
+    rssInvalid: 'Feed RSS inválido',
+    rssError: 'Error de validación',
+    rssRequired: 'La URL del feed RSS es obligatoria',
   },
 };
 
@@ -75,6 +93,9 @@ export default function PodcastEditor() {
   const [author, setAuthor] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState(null); // null, 'valid', or 'invalid'
+  const [validationMessage, setValidationMessage] = useState('');
 
   // Charger le podcast à éditer
   useEffect(() => {
@@ -109,6 +130,58 @@ export default function PodcastEditor() {
     load();
     return () => { mounted = false; };
   }, [id, isEdit]);
+
+  async function validateRssUrl() {
+    if (!rssUrl.trim()) {
+      setValidationResult('invalid');
+      setValidationMessage(L.rssRequired);
+      return;
+    }
+
+    setValidating(true);
+    setValidationResult(null);
+    setValidationMessage('');
+
+    try {
+      // Try to fetch the RSS feed
+      const response = await fetch(rssUrl, {
+        method: 'HEAD',
+        mode: 'no-cors', // Avoid CORS issues for HEAD request
+      });
+
+      // Since mode is no-cors, we can't read the response, but if no error is thrown, URL is accessible
+      // Now let's try to actually parse it using a CORS proxy or direct fetch
+      const xmlResponse = await fetch(rssUrl);
+
+      if (!xmlResponse.ok) {
+        throw new Error(`HTTP ${xmlResponse.status}`);
+      }
+
+      const xmlText = await xmlResponse.text();
+
+      // Basic XML validation - check for RSS/feed structure
+      if (!xmlText.includes('<rss') && !xmlText.includes('<feed')) {
+        throw new Error('Not a valid RSS/Atom feed');
+      }
+
+      // Check for essential podcast elements
+      const hasChannel = xmlText.includes('<channel') || xmlText.includes('<feed');
+      const hasItems = xmlText.includes('<item') || xmlText.includes('<entry');
+
+      if (!hasChannel || !hasItems) {
+        throw new Error('Feed missing required elements');
+      }
+
+      setValidationResult('valid');
+      setValidationMessage(L.rssValid);
+    } catch (error) {
+      console.error('RSS validation error:', error);
+      setValidationResult('invalid');
+      setValidationMessage(`${L.rssInvalid}: ${error.message}`);
+    } finally {
+      setValidating(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -192,14 +265,37 @@ export default function PodcastEditor() {
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   {L.rssUrl} *
                 </label>
-                <input
-                  type="url"
-                  required
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={rssUrl}
-                  onChange={(e) => setRssUrl(e.target.value)}
-                  placeholder="https://example.com/feed.xml"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    required
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    value={rssUrl}
+                    onChange={(e) => {
+                      setRssUrl(e.target.value);
+                      setValidationResult(null);
+                      setValidationMessage('');
+                    }}
+                    placeholder="https://example.com/feed.xml"
+                  />
+                  <button
+                    type="button"
+                    onClick={validateRssUrl}
+                    disabled={validating || !rssUrl.trim()}
+                    className="px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap"
+                  >
+                    {validating ? L.validating : L.validateRss}
+                  </button>
+                </div>
+                {validationMessage && (
+                  <div className={`mt-2 rounded-lg px-3 py-2 text-sm ${
+                    validationResult === 'valid'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                  }`}>
+                    {validationMessage}
+                  </div>
+                )}
               </div>
 
               {/* Description */}
