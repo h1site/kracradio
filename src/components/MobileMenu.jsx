@@ -218,62 +218,58 @@ export default function MobileMenu({ open, onClose }) {
             <span className="text-sm font-medium">{t.nav.contact}</span>
           </NavLink>
 
-          {/* CTA compacts */}
-          <div className="mt-3 flex items-center gap-2 px-1">
+          {/* Divider */}
+          <div className={`my-3 border-t ${border}`} />
+
+          {/* Actions Section */}
+          {user && (
+            <NavLink
+              to="/submit-music"
+              onClick={onClose}
+              className="mx-1 mb-2 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-purple-500/40 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/10 text-sm font-medium"
+            >
+              🎵 <span>{t?.nav?.submitMusic ?? 'Submit Music'}</span>
+            </NavLink>
+          )}
+
+          <a
+            href="/kracradio.apk"
+            download
+            className="mx-1 mb-2 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-green-500/40 text-green-600 dark:text-green-400 bg-green-500/5 hover:bg-green-500/10 text-sm font-medium"
+          >
+            📱 <span>Android APK</span>
+          </a>
+
+          {/* External Links */}
+          <div className="flex items-center gap-2 px-1">
             <a
               href="https://store.kracradio.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md border border-current/20 hover:bg-black/5 dark:hover:bg-white/10 text-xs"
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border ${border} ${itemHover} text-xs`}
             >
               <IconImg name="store" className="w-4 h-4" />
-              <span className="truncate">{t?.site?.store ?? 'Boutique'}</span>
+              <span className="truncate">{t?.site?.store ?? 'Store'}</span>
             </a>
             <a
               href="https://www.paypal.com/donate/?hosted_button_id=GUPL4K5WR3ZG4"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md border border-current/20 hover:bg-black/5 dark:hover:bg-white/10 text-xs"
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border ${border} ${itemHover} text-xs`}
             >
               <IconImg name="donation" className="w-4 h-4" />
-              <span className="truncate">{t?.site?.donation ?? 'Donation'}</span>
+              <span className="truncate">{t?.site?.donation ?? 'Donate'}</span>
             </a>
           </div>
 
-          {/* Android APK Download */}
-          <div className="mt-2 px-1">
-            <a
-              href="/kracradio.apk"
-              download
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-green-500/40 text-green-600 dark:text-green-400 bg-green-500/5 hover:bg-green-500/10 text-sm font-medium"
-            >
-              📱 <span>Télécharger Android APK</span>
-            </a>
-            <p className="mt-1 px-2 text-xs text-center opacity-60">
-              Autorisez les sources inconnues • Bientôt sur Google Play
-            </p>
-          </div>
-
-          {/* Submit Music - Only for authenticated users */}
-          {user && (
-            <div className="mt-2 px-1">
-              <NavLink
-                to="/submit-music"
-                onClick={onClose}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-purple-500/40 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/10 text-sm font-medium"
-              >
-                🎵 <span>{t?.nav?.submitMusic ?? 'Submit Music'}</span>
-              </NavLink>
-            </div>
-          )}
-
-          {/* Réseaux sociaux */}
-          <div className="mt-4 pt-3 border-t border-current/10 flex items-center justify-center gap-5">
+          {/* Social Links */}
+          <div className={`mt-3 pt-3 border-t ${border} flex items-center justify-center gap-6`}>
             <a
               href="https://www.facebook.com/KracRadio"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"
+              className="opacity-70 hover:opacity-100 transition"
             >
               <IconImg name="facebook" className="w-6 h-6" />
             </a>
@@ -282,6 +278,7 @@ export default function MobileMenu({ open, onClose }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
+              className="opacity-70 hover:opacity-100 transition"
             >
               <IconImg name="instagram" className="w-6 h-6" />
             </a>
@@ -290,6 +287,7 @@ export default function MobileMenu({ open, onClose }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="X"
+              className="opacity-70 hover:opacity-100 transition"
             >
               <IconImg name="x" className="w-6 h-6" />
             </a>
