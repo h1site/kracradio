@@ -113,9 +113,8 @@ export default function Article() {
   }
 
   const containerStyle = {
-    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
-    paddingRight: isDesktop ? 32 : 32,
-    transition: 'padding-left 300ms ease',
+    marginLeft: isDesktop ? (sidebarOpen ? sidebarWidth : 30) : 0,
+    transition: 'margin-left 300ms ease',
   };
 
   const imageUrl = article.featured_image || article.cover_url;
@@ -129,7 +128,7 @@ export default function Article() {
   }) : '';
 
   return (
-    <div style={containerStyle} className="min-h-screen bg-white dark:bg-black">
+    <div style={containerStyle} className="min-h-screen bg-white dark:bg-black px-8">
       {/* Reading Progress Bar */}
       <div
         className="fixed top-0 left-0 h-1 bg-red-500 z-50 transition-all duration-150"
