@@ -152,7 +152,7 @@ export default function ArticleCarousel({ articles }) {
         >
           {articles.map((article) => {
             const imageUrl = article.featured_image || article.cover_url;
-            // Nettoyer le username pour l'URL (retirer @ si présent)
+            const authorSlug = article.author_slug || article.author_name;
             const cleanUsername = article.author_name?.replace(/^@/, '') || '';
             return (
             <div
@@ -176,7 +176,7 @@ export default function ArticleCarousel({ articles }) {
                 </Link>
                 {article.author_name && (
                   <Link
-                    to={`/profile/${cleanUsername}`}
+                    to={`/profile/${authorSlug}`}
                     className="flex items-center gap-2 mb-3 group/author"
                   >
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-bg-tertiary border border-border flex-shrink-0">
