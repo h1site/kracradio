@@ -202,11 +202,17 @@ export async function listPublishedArticles({ limit = 24, offset = 0 } = {}) {
     }
 
     // Merge author data into articles (add author_id alias for compatibility)
-    const articlesWithAuthors = articles.map(article => ({
-      ...article,
-      author_id: article.user_id, // Add alias for compatibility
-      author: authorMap[article.user_id] || null
-    }));
+    const articlesWithAuthors = articles.map(article => {
+      const author = authorMap[article.user_id] || null;
+      return {
+        ...article,
+        author_id: article.user_id, // Add alias for compatibility
+        author: author,
+        author_name: author?.username || null,
+        author_avatar: author?.avatar_url || null,
+        author_slug: author?.artist_slug || null
+      };
+    });
 
     console.log('Articles loaded:', articlesWithAuthors.length, 'items');
     if (articlesWithAuthors.length > 0) {
