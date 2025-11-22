@@ -204,8 +204,9 @@ export default function PublicProfile() {
   ];
 
   const containerStyle = {
-    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
-    transition: 'margin-left 300ms ease',
+    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
+    paddingRight: isDesktop ? 32 : 32,
+    transition: 'padding-left 300ms ease',
   };
 
   return (
@@ -216,20 +217,15 @@ export default function PublicProfile() {
       />
 
       <div className="min-h-screen bg-bg-primary" style={containerStyle}>
-        {/* Bannière de couverture */}
+        {/* Header */}
         <div
-          className="h-48 bg-gradient-to-r from-accent/20 to-accent/5 bg-cover bg-center relative -mx-8"
-          style={{
-            backgroundImage: profile.banner_url ? `url(${profile.banner_url})` : undefined
-          }}
-        />
-
-        <div className="px-8 relative">
-          {/* Header du profil */}
-          <div className="flex items-start gap-6 mb-8">
-            {/* Avatar - positioned to overlap banner */}
-            <div className="relative -mt-16">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-bg-secondary border-4 border-bg-primary shadow-xl">
+          className="h-80 bg-cover bg-center relative -mx-8 -mt-5"
+          style={{ backgroundImage: `url(${profile.banner_url || profile.avatar_url})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="relative z-10 flex flex-col justify-end h-full p-8 text-white">
+            <div className="flex items-end gap-6">
+              <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-900 shadow-lg -mb-10">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -237,132 +233,75 @@ export default function PublicProfile() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-text-secondary">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
                     <span className="text-6xl">👤</span>
                   </div>
                 )}
               </div>
-              {profile.is_verified && (
-                <div className="absolute -bottom-1 -right-1 bg-accent rounded-full p-2 shadow-lg">
-                  <span className="text-xl">✓</span>
-                </div>
-              )}
-
-              {/* Info sous l'avatar */}
-              <div className="mt-4">
-                {!loadingStats && (
-                  <div className="text-sm text-text-secondary space-y-1">
-                    <div><strong className="text-text-primary">{stats.followers || 0}</strong> {t.publicProfile?.followers || 'Abonnés'}</div>
-                    <div><strong className="text-text-primary">{stats.following || 0}</strong> {t.publicProfile?.following || 'Abonnements'}</div>
-                  </div>
-                )}
+              <div>
+                <h1 className="text-5xl font-black flex items-center gap-3">
+                  {profile.username || 'Utilisateur'}
+                  {profile.is_verified && (
+                    <span className="text-red-400 text-3xl" title={t.publicProfile?.verifiedArtist || 'Artiste vérifié'}>✓</span>
+                  )}
+                </h1>
+                <p className="text-gray-300">@{profile.artist_slug || 'artiste'}</p>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Infos principales */}
-            <div className="flex-1 pt-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-text-primary flex items-center gap-2">
-                    {profile.username || 'Utilisateur'}
-                    {profile.is_verified && (
-                      <span className="text-accent text-xl" title={t.publicProfile?.verifiedArtist || 'Artiste vérifié'}>✓</span>
-                    )}
-                  </h1>
-                  <p className="text-text-secondary text-sm">@{profile.artist_slug || 'artiste'}</p>
-                </div>
-
-                {/* Actions alignées à droite */}
-                {isOwnProfile ? (
+        <div className="px-8 pt-16">
+          <div className="flex justify-between items-start">
+              {/* Stats and Actions */}
+              <div className="flex items-center gap-6">
+                {!loadingStats && (
+                    <div className="flex gap-6 text-lg">
+                      <div><strong className="font-bold">{stats.followers || 0}</strong> {t.publicProfile?.followers || 'Abonnés'}</div>
+                      <div><strong className="font-bold">{stats.following || 0}</strong> {t.publicProfile?.following || 'Abonnements'}</div>
+                    </div>
+                  )}
+                  {isOwnProfile ? (
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      to="/dashboard/articles/edit"
-                      className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 rounded-lg text-blue-600 dark:text-blue-400 font-medium transition-colors flex items-center gap-2 text-sm"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z"/>
-                      </svg>
-                      {t?.profile?.addBlog || 'Ajouter blog'}
-                    </Link>
-                    <Link
-                      to="/dashboard?tab=podcasts&action=new"
-                      className="px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 rounded-lg text-purple-600 dark:text-purple-400 font-medium transition-colors flex items-center gap-2 text-sm"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                        <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
-                      </svg>
-                      {t?.profile?.addPodcast || 'Ajouter podcast'}
-                    </Link>
-                    <Link
                       to="/settings"
-                      className="px-3 py-2 bg-bg-secondary hover:bg-bg-tertiary border border-border rounded-lg text-text-primary font-medium transition-colors flex items-center gap-2 text-sm"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
                     >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                      </svg>
                       {t.publicProfile?.settings || 'Paramètres'}
                     </Link>
                   </div>
                 ) : (
                   <div className="flex gap-3">
                     <FollowButton userId={userId} />
-                    <button className="px-4 py-2 bg-bg-secondary border border-border rounded-lg hover:bg-bg-tertiary transition-colors">
+                    <button className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-gray-800 dark:text-gray-200">
                       💬 {t.publicProfile?.message || 'Message'}
                     </button>
                   </div>
                 )}
               </div>
-
-              {profile.bio && (
-                <p className="text-text-primary mt-2 mb-3">{profile.bio}</p>
-              )}
-
-              {/* Métadonnées */}
-              <div className="flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-                {/* Pays cliquable */}
-                {profile.location && (
-                  <Link
-                    to={`/artists?country=${encodeURIComponent(profile.location)}`}
-                    className="flex items-center gap-1 text-accent hover:text-accent-hover hover:underline transition-colors"
-                  >
-                    📍 {profile.location}
-                  </Link>
-                )}
-                {/* Genres musicaux cliquables */}
-                {profile.genres && profile.genres.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span>🎵</span>
-                    {profile.genres.map((genre, index) => (
-                      <React.Fragment key={genre}>
-                        <Link
-                          to={`/artists?genre=${encodeURIComponent(genre)}`}
-                          className="text-accent hover:text-accent-hover hover:underline transition-colors"
-                        >
-                          {genre}
-                        </Link>
-                        {index < profile.genres.length - 1 && <span className="text-text-secondary">•</span>}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                )}
-                <span className="flex items-center gap-1">
-                  🗓️ {t.publicProfile?.joined || 'Membre depuis'} {new Date(profile.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', { month: 'short', year: 'numeric' })}
-                </span>
+              {/* Social links */}
+              <div className="flex items-center gap-3">
+                  {profile.website_url && (
+                    <a
+                      href={profile.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-500 hover:text-red-500 transition-colors"
+                    >
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L8.99 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </a>
+                  )}
+                  {/* Assuming you have these fields in your profile data */}
+                  {profile.twitter_url && <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-red-500 transition-colors">[TW]</a>}
+                  {profile.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-red-500 transition-colors">[IG]</a>}
               </div>
-
-              {profile.website_url && (
-                <a
-                  href={profile.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent hover:text-accent-hover text-sm mt-2 inline-block"
-                >
-                  🔗 {profile.website_url}
-                </a>
-              )}
-            </div>
           </div>
+          {profile.bio && (
+            <p className="text-gray-600 dark:text-gray-400 mt-4 max-w-3xl">{profile.bio}</p>
+          )}
+        </div>
 
+        <div className="px-8 mt-8">
           {/* Layout 2 colonnes: Lecteur musical + Onglets */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Colonne 1 - Lecteur musical */}
@@ -370,7 +309,7 @@ export default function PublicProfile() {
               {musicLinks && musicLinks.length > 0 && (
                 <div className="space-y-4">
                   {musicLinks.map(link => (
-                    <div key={link.id} className="rounded-lg">
+                    <div key={link.id} className="rounded-lg overflow-hidden">
                       {link.embed_html ? (
                         <div dangerouslySetInnerHTML={{ __html: link.embed_html }} />
                       ) : (
@@ -398,19 +337,17 @@ export default function PublicProfile() {
 
             {/* Colonne 2 - Onglets Blog/Podcasts/Connexions */}
             <div>
-              <div className="mb-6">
-                <div className="flex gap-2 overflow-x-auto">
+              <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex gap-2 -mb-px">
                   {TABS.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`
-                        px-6 py-3 font-semibold whitespace-nowrap transition-colors
-                        ${activeTab === tab.id
-                          ? 'text-accent'
-                          : 'text-text-secondary hover:text-text-primary'
-                        }
-                      `}
+                      className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors border-b-2 ${
+                        activeTab === tab.id
+                          ? 'border-red-500 text-red-500'
+                          : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                      }`}
                     >
                       {tab.icon} {tab.label}
                     </button>
@@ -436,22 +373,13 @@ export default function PublicProfile() {
                         {articles.map(article => (
                           <div
                             key={article.id}
-                            className="bg-bg-secondary rounded-xl p-4 border border-border hover:border-accent transition-colors"
+                            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors"
                           >
                             <Link to={`/article/${article.slug}`}>
-                              <h3 className="text-lg font-semibold text-text-primary mb-1 hover:text-accent transition-colors">{article.title}</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{article.title}</h3>
                             </Link>
-                            {article.author && article.author.is_public && (
-                              <Link
-                                to={`/profile/${article.author.artist_slug || article.author.id}`}
-                                className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors mb-2"
-                              >
-                                <span>✍️</span>
-                                <span>{article.author.username || t.publicProfile?.author || 'Auteur'}</span>
-                              </Link>
-                            )}
-                            <p className="text-sm text-text-secondary line-clamp-2 mb-3">{article.content?.substring(0, 150)}...</p>
-                            <div className="text-xs text-text-secondary">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{article.content?.substring(0, 150)}...</p>
+                            <div className="text-xs text-gray-400">
                               {new Date(article.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -479,58 +407,46 @@ export default function PublicProfile() {
                     ) : (
                       <div className="space-y-4">
                         {podcasts.map(podcast => {
-                          // Utiliser l'URL RSS ou website_url si disponible, sinon fallback sur l'ID
                           const podcastLink = podcast.website_url || podcast.rss_url || `/podcast/${podcast.id}`;
                           const isExternalLink = podcastLink.startsWith('http');
 
                           return (
                             <div
                               key={podcast.id}
-                              className="bg-bg-secondary rounded-xl p-4 border border-border hover:border-accent transition-colors"
+                              className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors flex gap-4"
                             >
-                              <div className="flex gap-4">
-                                {podcast.image_url && (
-                                  isExternalLink ? (
-                                    <a href={podcastLink} target="_blank" rel="noopener noreferrer">
-                                      <img
-                                        src={podcast.image_url}
-                                        alt={podcast.title}
-                                        className="w-20 h-20 rounded-lg object-cover cursor-pointer"
-                                      />
-                                    </a>
-                                  ) : (
-                                    <Link to={podcastLink}>
-                                      <img
-                                        src={podcast.image_url}
-                                        alt={podcast.title}
-                                        className="w-20 h-20 rounded-lg object-cover cursor-pointer"
-                                      />
-                                    </Link>
-                                  )
+                              {podcast.image_url && (
+                                isExternalLink ? (
+                                  <a href={podcastLink} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={podcast.image_url}
+                                      alt={podcast.title}
+                                      className="w-20 h-20 rounded-lg object-cover"
+                                    />
+                                  </a>
+                                ) : (
+                                  <Link to={podcastLink}>
+                                    <img
+                                      src={podcast.image_url}
+                                      alt={podcast.title}
+                                      className="w-20 h-20 rounded-lg object-cover"
+                                    />
+                                  </Link>
+                                )
+                              )}
+                              <div className="flex-1">
+                                {isExternalLink ? (
+                                  <a href={podcastLink} target="_blank" rel="noopener noreferrer">
+                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{podcast.title}</h3>
+                                  </a>
+                                ) : (
+                                  <Link to={podcastLink}>
+                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{podcast.title}</h3>
+                                  </Link>
                                 )}
-                                <div className="flex-1">
-                                  {isExternalLink ? (
-                                    <a href={podcastLink} target="_blank" rel="noopener noreferrer">
-                                      <h3 className="text-lg font-semibold text-text-primary mb-1 hover:text-accent transition-colors">{podcast.title}</h3>
-                                    </a>
-                                  ) : (
-                                    <Link to={podcastLink}>
-                                      <h3 className="text-lg font-semibold text-text-primary mb-1 hover:text-accent transition-colors">{podcast.title}</h3>
-                                    </Link>
-                                  )}
-                                  {podcast.description && (
-                                    <p className="text-sm text-text-secondary line-clamp-2 mb-2">{podcast.description}</p>
-                                  )}
-                                  {podcast.author && podcast.author.is_public && (
-                                    <Link
-                                      to={`/profile/${podcast.author.artist_slug || podcast.author.id}`}
-                                      className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors"
-                                    >
-                                      <span>🎙️</span>
-                                      <span>{podcast.author.username || t.publicProfile?.author || 'Auteur'}</span>
-                                    </Link>
-                                  )}
-                                </div>
+                                {podcast.description && (
+                                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{podcast.description}</p>
+                                )}
                               </div>
                             </div>
                           );
@@ -557,9 +473,9 @@ export default function PublicProfile() {
                           <Link
                             key={follow.follower_id}
                             to={`/profile/${follow.profiles?.artist_slug || follow.follower_id}`}
-                            className="flex items-center gap-3 bg-bg-secondary rounded-xl p-4 border border-border hover:border-accent transition-colors"
+                            className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors"
                           >
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-bg-tertiary">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                               {follow.profiles?.avatar_url ? (
                                 <img
                                   src={follow.profiles.avatar_url}
@@ -567,14 +483,14 @@ export default function PublicProfile() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-text-secondary">
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
                                   <span className="text-2xl">👤</span>
                                 </div>
                               )}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-text-primary">{follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}</h3>
-                              <p className="text-sm text-text-secondary">@{follow.profiles?.artist_slug || 'artiste'}</p>
+                              <h3 className="font-semibold text-gray-800 dark:text-white">{follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}</h3>
+                              <p className="text-sm text-gray-500">@{follow.profiles?.artist_slug || 'artiste'}</p>
                             </div>
                           </Link>
                         ))}

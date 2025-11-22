@@ -77,6 +77,13 @@ export default function Article() {
     })();
   }, [slug]);
 
+  // Helper function to decode HTML entities
+  const decodeHTML = (html) => {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  };
+
   const langContent = useMemo(() => {
     if (!article) return null;
 
@@ -92,13 +99,13 @@ export default function Article() {
       return {
         title: parsed[lang].title || article.title,
         excerpt: parsed[lang].excerpt || article.excerpt,
-        content: parsed[lang].content
+        content: decodeHTML(parsed[lang].content)
       };
     }
     return {
       title: article.title,
       excerpt: article.excerpt,
-      content: article.content || ''
+      content: typeof article.content === 'string' ? decodeHTML(article.content) : (article.content || '')
     };
   }, [article, lang]);
 

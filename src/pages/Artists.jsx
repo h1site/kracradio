@@ -16,6 +16,12 @@ export default function Artists() {
   const { profiles, loading, error } = usePublicProfiles();
   const [searchQuery, setSearchQuery] = useState('');
 
+  const containerStyle = {
+    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
+    paddingRight: isDesktop ? 32 : 32,
+    transition: 'padding-left 300ms ease',
+  };
+
   // Extraire tous les genres uniques disponibles
   const availableGenres = useMemo(() => {
     if (!profiles) return [];
@@ -27,7 +33,7 @@ export default function Artists() {
     });
     return Array.from(genresSet).sort();
   }, [profiles]);
-
+  
   // Filtrer les profils par genre, pays et recherche
   const filteredProfiles = useMemo(() => {
     if (!profiles) return profiles;
@@ -78,7 +84,7 @@ export default function Artists() {
       </div>
     );
   }
-
+  
   return (
     <>
       <Seo
@@ -87,173 +93,163 @@ export default function Artists() {
       />
 
       <div
-        className="min-h-screen bg-bg-primary px-8 pt-5"
-        style={{
-          marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
-          transition: 'margin-left 300ms ease'
-        }}
+        className="min-h-screen bg-bg-primary pt-5"
+        style={containerStyle}
       >
-        {/* En-tête avec filtre actif */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-4xl font-bold text-text-primary">{t.artists.title}</h1>
-            <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 bg-bg-secondary border border-border text-text-primary rounded-lg hover:bg-bg-tertiary hover:border-accent transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              {t.artists.back}
-            </button>
-          </div>
-
-          {/* Barre de recherche et filtres */}
-          <div className="space-y-4 mb-6">
-            {/* Recherche par nom */}
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder={t.artists.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-11 bg-bg-secondary border border-border text-text-primary rounded-lg focus:outline-none focus:border-accent transition-colors"
-                />
-                <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-accent transition-colors"
-                    title={t.artists.clearSearch}
+        {/* En-tête avec filtres */}
+        <header className="bg-gray-900 text-white -mx-8 -mt-5 px-8 py-12 mb-8">
+          <div className="max-w-4xl">
+            <h1 className="text-4xl md:text-6xl font-black uppercase">{t.artists.title}</h1>
+            <p className="mt-4 max-w-3xl text-lg text-gray-300">
+              Découvrez les artistes de la communauté KracRadio.
+            </p>
+            {/* Barre de recherche et filtres */}
+            <div className="mt-8 space-y-4">
+              {/* Recherche par nom */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={t.artists.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-3 pl-11 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Filtres par genre et pays */}
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Filtre par genre */}
-              <div className="flex-1">
-                <select
-                  value={genreFilter || ''}
-                  onChange={(e) => {
-                    const newParams = {};
-                    if (e.target.value) newParams.genre = e.target.value;
-                    if (countryFilter) newParams.country = countryFilter;
-                    setSearchParams(newParams);
-                  }}
-                  className="w-full px-4 py-3 bg-bg-secondary border border-border text-text-primary rounded-lg focus:outline-none focus:border-accent transition-colors cursor-pointer"
-                >
-                  <option value="">🎵 {t.artists.allGenres}</option>
-                  {availableGenres.map(genre => (
-                    <option key={genre} value={genre}>
-                      {genre}
-                    </option>
-                  ))}
-                </select>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      title={t.artists.clearSearch}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Filtre par pays */}
-              <div className="flex-1">
-                <select
-                  value={countryFilter || ''}
-                  onChange={(e) => {
-                    const newParams = {};
-                    if (genreFilter) newParams.genre = genreFilter;
-                    if (e.target.value) newParams.country = e.target.value;
-                    setSearchParams(newParams);
-                  }}
-                  className="w-full px-4 py-3 bg-bg-secondary border border-border text-text-primary rounded-lg focus:outline-none focus:border-accent transition-colors cursor-pointer"
-                >
-                  <option value="">📍 {t.artists.allCountries}</option>
-                  {COUNTRIES.map(country => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Indicateur des filtres actifs */}
-          {(genreFilter || countryFilter || searchQuery) && (
-            <div className="flex items-center gap-3 flex-wrap mb-4">
-              <span className="text-text-secondary">{t.artists.activeFilters}:</span>
-
-              {genreFilter && (
-                <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
-                  🎵 {genreFilter}
-                  <button
-                    onClick={() => {
+              {/* Filtres par genre et pays */}
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Filtre par genre */}
+                <div className="flex-1">
+                  <select
+                    value={genreFilter || ''}
+                    onChange={(e) => {
                       const newParams = {};
+                      if (e.target.value) newParams.genre = e.target.value;
                       if (countryFilter) newParams.country = countryFilter;
                       setSearchParams(newParams);
                     }}
-                    className="hover:text-accent-hover transition-colors"
-                    title={t.artists.removeGenreFilter}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-red-500 transition-colors cursor-pointer"
                   >
-                    ✕
-                  </button>
-                </span>
-              )}
+                    <option value="">🎵 {t.artists.allGenres}</option>
+                    {availableGenres.map(genre => (
+                      <option key={genre} value={genre}>
+                        {genre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {countryFilter && (
-                <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
-                  📍 {countryFilter}
-                  <button
-                    onClick={() => {
+                {/* Filtre par pays */}
+                <div className="flex-1">
+                  <select
+                    value={countryFilter || ''}
+                    onChange={(e) => {
                       const newParams = {};
                       if (genreFilter) newParams.genre = genreFilter;
+                      if (e.target.value) newParams.country = e.target.value;
                       setSearchParams(newParams);
                     }}
-                    className="hover:text-accent-hover transition-colors"
-                    title={t.artists.removeCountryFilter}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:border-red-500 transition-colors cursor-pointer"
                   >
-                    ✕
-                  </button>
-                </span>
-              )}
-
-              {searchQuery && (
-                <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
-                  🔍 "{searchQuery}"
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="hover:text-accent-hover transition-colors"
-                    title={t.artists.removeSearch}
-                  >
-                    ✕
-                  </button>
-                </span>
-              )}
-
-              <span className="text-text-secondary text-sm">
-                {filteredProfiles.length} {filteredProfiles.length !== 1 ? t.artists.artistsFoundPlural : t.artists.artistsFound} {filteredProfiles.length !== 1 ? t.artists.foundPlural : t.artists.found}
-              </span>
-
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSearchParams({});
-                }}
-                className="text-sm text-accent hover:text-accent-hover underline transition-colors"
-              >
-                {t.artists.resetAllFilters}
-              </button>
+                    <option value="">📍 {t.artists.allCountries}</option>
+                    {COUNTRIES.map(country => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        </header>
+
+        {/* Indicateur des filtres actifs */}
+        {(genreFilter || countryFilter || searchQuery) && (
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            <span className="text-text-secondary">{t.artists.activeFilters}:</span>
+
+            {genreFilter && (
+              <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
+                🎵 {genreFilter}
+                <button
+                  onClick={() => {
+                    const newParams = {};
+                    if (countryFilter) newParams.country = countryFilter;
+                    setSearchParams(newParams);
+                  }}
+                  className="hover:text-accent-hover transition-colors"
+                  title={t.artists.removeGenreFilter}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+
+            {countryFilter && (
+              <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
+                📍 {countryFilter}
+                <button
+                  onClick={() => {
+                    const newParams = {};
+                    if (genreFilter) newParams.genre = genreFilter;
+                    setSearchParams(newParams);
+                  }}
+                  className="hover:text-accent-hover transition-colors"
+                  title={t.artists.removeCountryFilter}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+
+            {searchQuery && (
+              <span className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-semibold flex items-center gap-2">
+                🔍 "{searchQuery}"
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="hover:text-accent-hover transition-colors"
+                  title={t.artists.removeSearch}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+
+            <span className="text-text-secondary text-sm">
+              {filteredProfiles.length} {filteredProfiles.length !== 1 ? t.artists.artistsFoundPlural : t.artists.artistsFound} {filteredProfiles.length !== 1 ? t.artists.foundPlural : t.artists.found}
+            </span>
+
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSearchParams({});
+              }}
+              className="text-sm text-accent hover:text-accent-hover underline transition-colors"
+            >
+              {t.artists.resetAllFilters}
+            </button>
+          </div>
+        )}
 
         {filteredProfiles.length === 0 ? (
           <div className="text-center py-12">
@@ -281,77 +277,65 @@ export default function Artists() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProfiles.map((profile) => {
               const profileLink = profile.artist_slug || profile.user_id;
               return (
                 <Link
                   key={profile.user_id}
                   to={`/profile/${profileLink}`}
-                  className="relative flex items-center gap-4 p-4 border border-border rounded-lg hover:border-accent transition-all group overflow-hidden"
+                  className="group block relative rounded-2xl overflow-hidden shadow-lg bg-gray-900 text-white"
                 >
-                  {/* Background image (banner) avec overlay */}
-                  {profile.banner_url && (
-                    <>
-                      <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${profile.banner_url})` }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/60 dark:from-black/90 dark:via-black/80 dark:to-black/70" />
-                    </>
-                  )}
+                  <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${profile.banner_url || profile.avatar_url})` }}>
+                    {profile.banner_url && <div className="absolute inset-0 bg-black/30" />}
+                  </div>
+                  <div className="p-6 relative">
+                    <div className="absolute -top-12 left-6">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-4 border-gray-900 group-hover:border-red-500 transition-colors">
+                        {profile.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            <span className="text-4xl">👤</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-14">
+                      <h3 className="font-bold text-2xl group-hover:text-red-400 transition-colors flex items-center gap-2 truncate">
+                        {profile.username || 'Artiste'}
+                        {profile.is_verified && (
+                          <span className="text-red-400 flex-shrink-0" title="Artiste vérifié">✓</span>
+                        )}
+                      </h3>
 
-                  {/* Contenu (au-dessus du background) */}
-                  <div className="relative flex items-center gap-4 w-full">
-                    {/* Image d'artiste */}
-                    <div className="w-20 h-20 flex-shrink-0 rounded-full overflow-hidden bg-bg-tertiary border-2 border-border group-hover:border-accent transition-colors">
-                      {profile.avatar_url ? (
-                        <img
-                          src={profile.avatar_url}
-                          alt={profile.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-text-secondary">
-                          <span className="text-3xl">👤</span>
-                        </div>
+                      {profile.location && (
+                        <p className="text-sm mt-1 text-gray-400 truncate">
+                          📍 {profile.location}
+                        </p>
                       )}
                     </div>
-
-                    {/* Informations de l'artiste */}
-                    <div className="flex-1 min-w-0">
-                    <h3 className={`font-bold text-lg group-hover:text-accent transition-colors flex items-center gap-2 truncate ${profile.banner_url ? 'text-white' : 'text-text-primary'}`}>
-                      {profile.username || 'Artiste'}
-                      {profile.is_verified && (
-                        <span className="text-accent flex-shrink-0" title="Artiste vérifié">✓</span>
-                      )}
-                    </h3>
-
-                    {profile.location && (
-                      <p className={`text-sm mt-1 truncate ${profile.banner_url ? 'text-white/80' : 'text-text-secondary'}`}>
-                        📍 {profile.location}
-                      </p>
-                    )}
-
-                    {/* Genres musicaux */}
                     {profile.genres && profile.genres.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-800">
                         {profile.genres.slice(0, 3).map(genre => (
                           <span
                             key={genre}
-                            className={`px-2 py-1 text-xs rounded-full ${profile.banner_url ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'}`}
+                            className="px-3 py-1 text-xs rounded-full bg-red-500/20 text-red-300"
                           >
                             {genre}
                           </span>
                         ))}
                         {profile.genres.length > 3 && (
-                          <span className={`px-2 py-1 text-xs rounded-full ${profile.banner_url ? 'bg-white/20 text-white/70' : 'bg-bg-tertiary text-text-secondary'}`}>
+                          <span className="px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-400">
                             +{profile.genres.length - 3}
                           </span>
                         )}
                       </div>
                     )}
-                    </div>
                   </div>
                 </Link>
               );
