@@ -403,6 +403,22 @@ export default function Home() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-8">
+                      {/* Author info */}
+                      <div className="flex items-center gap-3 mb-4">
+                        {latestBlogs[0].author_avatar && (
+                          <img
+                            src={latestBlogs[0].author_avatar}
+                            alt={latestBlogs[0].author_name || 'Author'}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                          />
+                        )}
+                        <div className="text-sm">
+                          <div className="font-semibold text-white">
+                            {latestBlogs[0].author_name || 'Auteur'}
+                          </div>
+                        </div>
+                      </div>
+
                       <h3 className="text-3xl font-black text-white leading-tight drop-shadow-lg">
                         {latestBlogs[0].title}
                       </h3>
@@ -457,6 +473,21 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-4">
+                    {/* Author info */}
+                    {article.author_name && (
+                      <div className="flex items-center gap-2 mb-3">
+                        {article.author_avatar && (
+                          <img
+                            src={article.author_avatar}
+                            alt={article.author_name}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
+                          />
+                        )}
+                        <div className="text-xs font-semibold text-white">
+                          {article.author_name}
+                        </div>
+                      </div>
+                    )}
                     <h4 className="font-bold text-white leading-tight drop-shadow-md">
                       {article.title}
                     </h4>
