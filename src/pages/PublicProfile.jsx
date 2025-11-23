@@ -269,8 +269,13 @@ export default function PublicProfile() {
                   <div className="flex flex-wrap gap-2">
                     <Link
                       to="/settings"
-                      className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors hover:bg-gray-300 dark:hover:bg-gray-700 flex items-center gap-2 text-sm"
                     >
+                      <img
+                        src="/icons/dark/settings.svg"
+                        alt=""
+                        className="w-4 h-4 dark:invert"
+                      />
                       {t.publicProfile?.settings || 'Paramètres'}
                     </Link>
                   </div>
