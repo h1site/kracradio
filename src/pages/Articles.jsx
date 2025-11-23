@@ -51,11 +51,6 @@ export default function Articles() {
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
 
-  const containerStyle = {
-    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
-    transition: 'margin-left 300ms ease',
-  };
-
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,7 +125,7 @@ export default function Articles() {
           </div>
         </header>
 
-        <main className="px-[5px] py-12" style={containerStyle}>
+        <main className="px-[5px] py-12">
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -184,19 +179,19 @@ export default function Articles() {
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                         </div>
-                        <div className="absolute bottom-0 left-0 p-8 text-white">
+                        <div className="absolute bottom-0 left-0 p-5 text-white">
                           {/* Author info */}
                           <div className="flex items-center gap-3 mb-4">
-                            {article.profile?.avatar_url && (
+                            {article.author_avatar && (
                               <img
-                                src={article.profile.avatar_url}
-                                alt={article.profile.username || 'Author'}
+                                src={article.author_avatar}
+                                alt={article.author_name || 'Author'}
                                 className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
                               />
                             )}
                             <div className="text-sm">
                               <div className="font-semibold text-white">
-                                {article.profile?.username || 'Auteur'}
+                                {article.author_name || 'Auteur'}
                               </div>
                               {publishDate && (
                                 <div className="text-gray-300 text-xs">
@@ -229,7 +224,22 @@ export default function Articles() {
                         />
                       </div>
                     )}
-                    <div className="p-6">
+                    <div className="p-5">
+                      {/* Author info */}
+                      {article.author_name && (
+                        <div className="flex items-center gap-2 mb-2">
+                          {article.author_avatar && (
+                            <img
+                              src={article.author_avatar}
+                              alt={article.author_name}
+                              className="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                            />
+                          )}
+                          <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                            {article.author_name}
+                          </div>
+                        </div>
+                      )}
                       <h2 className="text-xl font-bold mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
                         {article.title}
                       </h2>

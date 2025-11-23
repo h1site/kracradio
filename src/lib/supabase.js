@@ -62,9 +62,16 @@ export async function fetchArticleById(id) {
 
 export async function createArticle(articleData) {
   const slug = articleData.custom_slug || slugify(articleData.title);
+  const payload = { ...articleData, slug, user_id: articleData.author_id };
+
+  // Si l'article est publié et n'a pas de published_at, on le définit maintenant
+  if (payload.status === 'published' && !payload.published_at) {
+    payload.published_at = new Date().toISOString();
+  }
+
   const { data, error } = await supabase
     .from('articles')
-    .insert([{ ...articleData, slug, user_id: articleData.author_id }])
+    .insert([payload])
     .select()
     .single();
 
@@ -77,6 +84,21 @@ export async function updateArticleById(id, articleData) {
   const patch = { ...articleData };
   if (slug) patch.slug = slug;
   delete patch.author_id; // Ne pas modifier author_id lors de l'update
+
+  // Si l'article passe à "published" et n'a pas de published_at, on le définit maintenant
+  if (patch.status === 'published' && !patch.published_at) {
+    // Récupérer l'article actuel pour vérifier s'il a déjà une date de publication
+    const { data: currentArticle } = await supabase
+      .from('articles')
+      .select('published_at')
+      .eq('id', id)
+      .single();
+
+    // Si l'article n'a pas encore de published_at, on la définit
+    if (!currentArticle?.published_at) {
+      patch.published_at = new Date().toISOString();
+    }
+  }
 
   const { data, error } = await supabase
     .from('articles')
