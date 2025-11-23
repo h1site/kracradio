@@ -65,23 +65,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Open Button - Desktop when closed */}
-      {!sidebarOpen && isDesktop && (
-        <div className="hidden lg:block fixed z-40" style={{ top: OPEN_BTN_TOP, left: 16 }}>
-          <button
-            type="button"
-            onClick={openSidebar}
-            className={`w-10 h-10 rounded-xl transition-all duration-200 shadow-md ${btnFrame} flex items-center justify-center`}
-            aria-label="Ouvrir le menu"
-            title="Ouvrir le menu"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-              <path d="M8.59 16.59L10 18l6-6l-6-6l-1.41 1.41L13.17 12z" />
-            </svg>
-          </button>
-        </div>
-      )}
-
       {/* Sidebar */}
       <aside
         className={[
@@ -98,7 +81,7 @@ export default function Sidebar() {
             <img
               src={isDark ? '/logo-white.png' : '/logo-black.png'}
               alt="KracRadio"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-40 object-contain"
             />
             <button
               type="button"
@@ -186,22 +169,46 @@ export default function Sidebar() {
             <Item to="/schedule" iconName="calendar" label={t.nav.schedule} />
             <Item to="/about" iconName="info" label={t.nav.about} />
             <Item to="/contact" iconName="chat" label={t.nav.contact} />
-          </nav>
 
-          {/* Socials */}
-          <div className="pt-4 mt-4 border-t border-gray-200 dark:border-white/5">
-            <div className="flex items-center justify-center gap-4">
-              <a href="https://www.facebook.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-blue-500 hover:text-white transition-all duration-200">
-                <IconImg name="facebook" className="w-5 h-5" />
-              </a>
-              <a href="https://www.instagram.com/kracradio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gradient-to-br hover:from-purple-500 hover:to-pink-500 hover:text-white transition-all duration-200">
-                <IconImg name="instagram" className="w-5 h-5" />
-              </a>
-              <a href="https://x.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="X" className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-900 hover:text-white transition-all duration-200">
-                <IconImg name="x" className="w-5 h-5" />
-              </a>
+            {/* Socials - Integrated into navigation */}
+            <div className="pt-3 mt-3 border-t border-gray-200 dark:border-white/5">
+              <div className="flex items-center justify-center gap-3">
+                <a
+                  href="https://www.facebook.com/KracRadio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-blue-600 transition-all duration-200 group"
+                >
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396v8.01Z"/>
+                  </svg>
+                </a>
+                <a
+                  href="https://www.instagram.com/kracradio/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-600 transition-all duration-200 group"
+                >
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3Z"/>
+                  </svg>
+                </a>
+                <a
+                  href="https://x.com/KracRadio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X"
+                  className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-black transition-all duration-200 group"
+                >
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+              </div>
             </div>
-          </div>
+          </nav>
         </div>
       </aside>
     </>

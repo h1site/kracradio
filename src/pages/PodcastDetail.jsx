@@ -23,7 +23,7 @@ const STRINGS = {
     publishedOn: 'Publié le',
     website: 'Site web',
     rss: 'Flux RSS',
-    subscribe: 'S’abonner',
+    subscribe: 'S\'abonner',
   },
   en: {
     metaTitle: 'Podcast — KracRadio',
@@ -84,10 +84,10 @@ export default function PodcastDetail() {
       try {
         setLoading(true);
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-        
+
         let podcastQuery = supabase.from('user_podcasts').select('*').eq('is_active', true);
         podcastQuery = isUUID ? podcastQuery.eq('id', id) : podcastQuery.eq('slug', id);
-        
+
         const { data: podcastData, error: podcastError } = await podcastQuery.single();
 
         if (podcastError) throw podcastError;
@@ -111,7 +111,7 @@ export default function PodcastDetail() {
     };
     loadPodcastAndEpisodes();
   }, [id]);
-  
+
   const handlePlayEpisode = (episode) => {
     playPodcast({
       episodeId: episode.id,

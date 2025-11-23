@@ -52,9 +52,8 @@ export default function Articles() {
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
 
   const containerStyle = {
-    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
-    paddingRight: isDesktop ? 32 : 32,
-    transition: 'padding-left 300ms ease',
+    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+    transition: 'margin-left 300ms ease',
   };
 
   const [rows, setRows] = useState(null);
@@ -93,7 +92,7 @@ export default function Articles() {
   }, []);
 
   return (
-    <main style={containerStyle}>
+    <>
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -102,19 +101,36 @@ export default function Articles() {
         type="website"
       />
 
-      <header className="bg-gray-900 text-white -mx-8 -mt-8 px-8 py-16 mb-8">
-        <div className="max-w-4xl">
-          <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-400">
-            {L.heroBadge}
-          </span>
-          <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase">
-            {L.heroTitle}
-          </h1>
-          <p className="mt-4 max-w-3xl text-lg text-gray-300">
-            {L.heroSubtitle}
-          </p>
-        </div>
-      </header>
+      <div className="min-h-screen bg-white dark:bg-black">
+        {/* Full-screen header */}
+        <header
+          className="relative w-full bg-gray-900 text-white py-16"
+          style={{
+            marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
+            width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
+            transition: 'margin-left 300ms ease, width 300ms ease'
+          }}
+        >
+          <div
+            className="max-w-4xl px-8"
+            style={{
+              marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+              transition: 'margin-left 300ms ease'
+            }}
+          >
+            <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-400">
+              {L.heroBadge}
+            </span>
+            <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase">
+              {L.heroTitle}
+            </h1>
+            <p className="mt-4 max-w-3xl text-lg text-gray-300">
+              {L.heroSubtitle}
+            </p>
+          </div>
+        </header>
+
+        <main className="px-[10px] py-12" style={containerStyle}>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -232,6 +248,8 @@ export default function Articles() {
           </div>
         </>
       )}
-    </main>
+        </main>
+      </div>
+    </>
   );
 }

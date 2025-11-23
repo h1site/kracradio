@@ -5,6 +5,7 @@ import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../hooks/useCommunity';
+import { useUI } from '../context/UIContext';
 import MobileMenu from './MobileMenu';
 
 export default function Header() {
@@ -12,6 +13,7 @@ export default function Header() {
   const { isDark, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
+  const { isDesktop, sidebarOpen, openSidebar } = useUI();
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -25,9 +27,26 @@ export default function Header() {
       <header className="fixed top-0 inset-x-0 z-50 bg-[#1e1e1e] text-white border-b border-[#2a2a2a]">
         {/* Desktop (≥1024px) */}
         <div className="hidden lg:flex w-full h-16 items-center justify-between px-5">
-          <Link to="/" className="flex items-center">
-            <img src="/logo-white.png" alt="Logo" className="h-10 w-auto object-contain" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center">
+              <img src="/logo-white.png" alt="Logo" className="h-10 w-auto object-contain" />
+            </Link>
+            {/* Menu button with chevron - only show when sidebar is closed */}
+            {isDesktop && !sidebarOpen && (
+              <button
+                type="button"
+                onClick={openSidebar}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
+                aria-label="Ouvrir le menu"
+                title="Ouvrir le menu"
+              >
+                <span className="text-sm font-medium">Menu</span>
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                  <path d="M8.59 16.59L10 18l6-6l-6-6l-1.41 1.41L13.17 12z" />
+                </svg>
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             {/* Notre Boutique */}
