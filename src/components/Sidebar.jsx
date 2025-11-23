@@ -78,11 +78,13 @@ export default function Sidebar() {
         <div className="flex-1 flex flex-col overflow-hidden p-6">
           {/* Header + Close Button */}
           <div className="flex items-center justify-between mb-8">
-            <img
-              src={isDark ? '/logo-white.png' : '/logo-black.png'}
-              alt="KracRadio"
-              className="h-10 w-40 object-contain"
-            />
+            <NavLink to="/" className="flex-shrink-0">
+              <img
+                src={isDark ? '/logo-white.png' : '/logo-black.png'}
+                alt="KracRadio"
+                className="h-10 w-40 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </NavLink>
             <button
               type="button"
               onClick={toggleSidebar}
