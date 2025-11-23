@@ -203,12 +203,6 @@ export default function PublicProfile() {
     { id: 'connections', label: t.publicProfile?.connections || 'Connexions', icon: '👥' }
   ];
 
-  const containerStyle = {
-    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
-    paddingRight: isDesktop ? 32 : 32,
-    transition: 'padding-left 300ms ease',
-  };
-
   return (
     <>
       <Seo
@@ -216,14 +210,25 @@ export default function PublicProfile() {
         description={profile.bio || 'Profil artiste sur KracRadio'}
       />
 
-      <div className="min-h-screen bg-bg-primary" style={containerStyle}>
-        {/* Header */}
+      <div className="min-h-screen bg-bg-primary">
+        {/* Full-screen header */}
         <div
-          className="h-80 bg-cover bg-center relative -mx-8 -mt-5"
-          style={{ backgroundImage: `url(${profile.banner_url || profile.avatar_url})` }}
+          className="h-80 bg-cover bg-center relative w-full"
+          style={{
+            backgroundImage: `url(${profile.banner_url || profile.avatar_url})`,
+            marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
+            width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
+            transition: 'margin-left 300ms ease, width 300ms ease'
+          }}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          <div className="relative z-10 flex flex-col justify-end h-full p-8 text-white">
+          <div
+            className="relative z-10 flex flex-col justify-end h-full p-8 text-white"
+            style={{
+              marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+              transition: 'margin-left 300ms ease'
+            }}
+          >
             <div className="flex items-end gap-6">
               <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-900 shadow-lg -mb-10">
                 {profile.avatar_url ? (
