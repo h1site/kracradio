@@ -108,9 +108,9 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* Navigation (tous les clics replient) */}
+          {/* Navigation */}
           <nav className="flex-1 space-y-1 overflow-auto pr-1">
-            <Item to="/" iconName="home" label={t.nav.home} onClick={closeSidebar} />
+            <Item to="/" iconName="home" label={t.nav.home} />
 
             {/* Accordéon : Chaînes */}
             <button
@@ -146,7 +146,6 @@ export default function Sidebar() {
                   <li key={c.key}>
                     <NavLink
                       to={`/channel/${c.key}`}
-                      onClick={closeSidebar}
                       className={({ isActive }) =>
                         [
                           'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition',
@@ -170,25 +169,25 @@ export default function Sidebar() {
             </div>
 
             {/* Autres liens */}
-            <Item to="/articles" iconName="paper" label={t.nav.articles} onClick={closeSidebar} />
-            <Item to="/artists" iconName="artist" label={t.nav.artists} onClick={closeSidebar} />
-            <Item to="/podcasts" iconName="mic" label={t.nav.podcasts} onClick={closeSidebar} />
-            <Item to="/spotify" iconName="spotify" label={t.nav.spotify} onClick={closeSidebar} />
-            <Item to="/schedule" iconName="calendar" label={t.nav.schedule} onClick={closeSidebar} />
-            <Item to="/about" iconName="info" label={t.nav.about} onClick={closeSidebar} />
-            <Item to="/contact" iconName="chat" label={t.nav.contact} onClick={closeSidebar} />
+            <Item to="/articles" iconName="paper" label={t.nav.articles} />
+            <Item to="/artists" iconName="artist" label={t.nav.artists} />
+            <Item to="/podcasts" iconName="mic" label={t.nav.podcasts} />
+            <Item to="/spotify" iconName="spotify" label={t.nav.spotify} />
+            <Item to="/schedule" iconName="calendar" label={t.nav.schedule} />
+            <Item to="/about" iconName="info" label={t.nav.about} />
+            <Item to="/contact" iconName="chat" label={t.nav.contact} />
           </nav>
 
           {/* Socials */}
           <div className="pt-3 mt-3 border-t border-current/10">
             <div className="flex items-center justify-center gap-5">
-              <a href="https://www.facebook.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="Facebook" onClick={closeSidebar}>
+              <a href="https://www.facebook.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <IconImg name="facebook" className="w-6 h-6" />
               </a>
-              <a href="https://www.instagram.com/kracradio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={closeSidebar}>
+              <a href="https://www.instagram.com/kracradio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <IconImg name="instagram" className="w-6 h-6" />
               </a>
-              <a href="https://x.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="X" onClick={closeSidebar}>
+              <a href="https://x.com/KracRadio" target="_blank" rel="noopener noreferrer" aria-label="X">
                 <IconImg name="x" className="w-6 h-6" />
               </a>
             </div>
