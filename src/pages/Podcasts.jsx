@@ -289,7 +289,7 @@ export default function Podcasts() {
   };
 
   return (
-    <main className="container-max pr-[30px]">
+    <main className="container-max pr-[30px] pl-[20px]">
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -298,16 +298,24 @@ export default function Podcasts() {
         type="website"
       />
 
-      <header className="pt-0 pb-12">
-        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
-          {L.heroBadge}
-        </span>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-          {L.heroTitle}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-          {L.heroSubtitle}
-        </p>
+      {/* Hero avec image de fond */}
+      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1200&h=400&fit=crop&auto=format&q=80"
+            alt="Podcasts"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+        </div>
+        <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-6xl max-w-2xl">
+            {L.heroTitle}
+          </h1>
+          <p className="mt-4 text-lg text-gray-200 max-w-xl">
+            {L.heroSubtitle}
+          </p>
+        </div>
       </header>
 
       <div className="py-8">

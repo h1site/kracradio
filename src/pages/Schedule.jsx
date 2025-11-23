@@ -90,14 +90,24 @@ export default function Schedule() {
   return (
     <div style={containerStyle} className="min-h-screen">
       {/* En-tête */}
-      <div className="bg-gray-900 text-white -mx-8 -mt-8 px-8 py-12 mb-8">
-        <h1 className="text-4xl md:text-6xl font-black uppercase">
-          {t?.nav?.schedule || 'Horaire'}
-        </h1>
-        <p className="text-lg text-red-400 font-semibold mt-2">
-          {todayLabel}
-        </p>
-      </div>
+      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=400&fit=crop&auto=format&q=80"
+            alt="Schedule"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+        </div>
+        <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
+          <h1 className="text-4xl md:text-6xl font-black uppercase text-white">
+            {t?.nav?.schedule || 'Horaire'}
+          </h1>
+          <p className="text-lg text-gray-200 font-semibold mt-4">
+            {todayLabel}
+          </p>
+        </div>
+      </header>
 
       {/* Grille d'horaire */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">

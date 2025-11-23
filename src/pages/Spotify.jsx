@@ -124,16 +124,26 @@ export default function SpotifyPage() {
         type="website"
       />
 
-      <header className="pb-12">
-        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
-          Playlists
-        </span>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-          {L.title}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-          {L.subtitle}
-        </p>
+      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1484755560615-a4c64e778a6c?w=1200&h=400&fit=crop&auto=format&q=80"
+            alt="Playlists"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+        </div>
+        <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
+          <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
+            Playlists
+          </span>
+          <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-white md:text-6xl">
+            {L.title}
+          </h1>
+          <p className="mt-4 max-w-3xl text-lg text-gray-200">
+            {L.subtitle}
+          </p>
+        </div>
       </header>
 
       {list.length === 0 ? (

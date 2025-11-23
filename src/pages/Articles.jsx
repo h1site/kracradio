@@ -99,29 +99,39 @@ export default function Articles() {
       <div className="min-h-screen bg-white dark:bg-black">
         {/* Full-screen header */}
         <header
-          className="relative w-full bg-gray-900 text-white py-16"
+          className="relative w-full overflow-hidden"
           style={{
             marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
             width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
             transition: 'margin-left 300ms ease, width 300ms ease'
           }}
         >
+          <div className="absolute inset-0">
+            <img
+              src="https://images.unsplash.com/photo-1471107340929-a87cd0f5b5f3?w=1200&h=400&fit=crop&auto=format&q=80"
+              alt="Articles"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+          </div>
           <div
-            className="max-w-4xl px-8"
+            className="relative py-16 md:py-24"
             style={{
               marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
               transition: 'margin-left 300ms ease'
             }}
           >
-            <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-400">
-              {L.heroBadge}
-            </span>
-            <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase">
-              {L.heroTitle}
-            </h1>
-            <p className="mt-4 max-w-3xl text-lg text-gray-300">
-              {L.heroSubtitle}
-            </p>
+            <div className="max-w-4xl pl-[60px] md:pl-[100px] pr-8">
+              <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
+                {L.heroBadge}
+              </span>
+              <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase text-white">
+                {L.heroTitle}
+              </h1>
+              <p className="mt-4 max-w-3xl text-lg text-gray-200">
+                {L.heroSubtitle}
+              </p>
+            </div>
           </div>
         </header>
 

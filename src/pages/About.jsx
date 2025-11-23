@@ -256,16 +256,26 @@ function Section({title, children}) {
   );
 }
 
-function ValueCard({title, body}) {
+function ValueCard({title, body, index}) {
+  const gradients = [
+    'from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border-purple-200 dark:border-purple-800',
+    'from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border-blue-200 dark:border-blue-800',
+    'from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border-green-200 dark:border-green-800',
+    'from-orange-50 to-red-50 dark:from-orange-950/50 dark:to-red-950/50 border-orange-200 dark:border-orange-800'
+  ];
+  const gradient = gradients[index % gradients.length];
+
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition">
-      <div className="flex items-start gap-3">
-        {/* Icône simple en SVG inline (étoile) */}
-        <svg viewBox="0 0 24 24" className="w-6 h-6 flex-none" aria-hidden="true" role="img">
-          <path d="M12 2l3 6 6 .9-4.5 4.2 1.1 6L12 16l-5.6 3.1 1.1-6L3 8.9 9 8l3-6z" fill="currentColor" />
-        </svg>
+    <div className={`rounded-2xl border bg-gradient-to-br ${gradient} p-5 shadow-sm hover:shadow-md transition relative overflow-hidden`}>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 dark:bg-white/5 rounded-full blur-2xl"></div>
+      <div className="relative flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-white/50 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+          <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true" role="img">
+            <path d="M12 2l3 6 6 .9-4.5 4.2 1.1 6L12 16l-5.6 3.1 1.1-6L3 8.9 9 8l3-6z" fill="currentColor" />
+          </svg>
+        </div>
         <div>
-          <h3 className="font-semibold text-black dark:text-white">{title}</h3>
+          <h3 className="font-semibold text-black dark:text-white text-lg">{title}</h3>
           <p className="text-gray-700 dark:text-gray-300 mt-1">{body}</p>
         </div>
       </div>
@@ -275,10 +285,14 @@ function ValueCard({title, body}) {
 
 function TimelineItem({year, text}) {
   return (
-    <li className="relative pl-6">
-      <span className="absolute left-0 top-1.5 inline-block w-3 h-3 rounded-full bg-gray-900 dark:bg-white" />
-      <p className="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">{year}</p>
-      <p className="text-gray-800 dark:text-gray-100">{text}</p>
+    <li className="relative pl-8 pb-4 last:pb-0">
+      <div className="absolute left-0 top-2 w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-400 border-2 border-white dark:border-gray-900" />
+      {/* Ligne verticale */}
+      <div className="absolute left-[7px] top-6 bottom-0 w-0.5 bg-blue-200 dark:bg-blue-800 last:hidden" />
+      <div className="bg-white/50 dark:bg-white/5 rounded-lg p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">{year}</p>
+        <p className="text-sm text-blue-900 dark:text-blue-100">{text}</p>
+      </div>
     </li>
   );
 }
@@ -316,7 +330,7 @@ export default function About() {
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
 
   return (
-    <main className="container-max pr-[30px] pl-[20px]">
+    <main className="">
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -326,51 +340,89 @@ export default function About() {
       />
       <FaviconLinks />
 
-      <header className="pb-12">
-        <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
-          À propos
-        </span>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-          {L.heroTitle}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-          {L.heroSubtitle}
-        </p>
+      {/* Hero avec image de fond */}
+      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&h=400&fit=crop&auto=format&q=80"
+            alt="About KracRadio"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+        </div>
+        <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-6xl max-w-2xl">
+            {L.heroTitle}
+          </h1>
+          <p className="mt-4 text-lg text-gray-200 max-w-xl">
+            {L.heroSubtitle}
+          </p>
 
-        {/* Bannière info */}
-        <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40">
-          <p className="text-sm text-gray-700 dark:text-gray-300">{L.bannerText}</p>
+          {/* Bannière info */}
+          <div className="mt-6 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 max-w-2xl">
+            <p className="text-sm text-white">{L.bannerText}</p>
+          </div>
         </div>
       </header>
 
+      <div className="container-max pr-[30px] pl-[20px]">
+
       {/* Mission */}
       <Section title={L.missionTitle}>
-        <p>{L.missionBody}</p>
+        <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 dark:border-purple-800 dark:from-purple-950/50 dark:to-pink-950/50 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-400/10 dark:bg-purple-400/5 rounded-full blur-3xl"></div>
+          <div className="relative flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-600 dark:bg-purple-500 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <p className="text-purple-900 dark:text-purple-100 leading-relaxed">{L.missionBody}</p>
+          </div>
+        </div>
       </Section>
 
       {/* Histoire */}
       <Section title={L.historyTitle}>
         <p className="mb-6">{L.historyIntro}</p>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="text-lg font-semibold text-black dark:text-white mb-3">{L.timelineTitle}</h3>
-          <ol className="space-y-4">
-            {L.timeline.map((it, idx) => (
-              <TimelineItem key={idx} year={it.year} text={it.text} />
-            ))}
-          </ol>
+        <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:border-blue-800 dark:from-blue-950/50 dark:to-cyan-950/50 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-blue-400/10 dark:bg-blue-400/5 rounded-full blur-3xl"></div>
+          <div className="relative">
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {L.timelineTitle}
+            </h3>
+            <ol className="space-y-4">
+              {L.timeline.map((it, idx) => (
+                <TimelineItem key={idx} year={it.year} text={it.text} />
+              ))}
+            </ol>
+          </div>
         </div>
       </Section>
 
       {/* Chaînes */}
       <Section title={L.channelsTitle}>
-        <p>{L.channelsBody}</p>
+        <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-800 dark:from-green-950/50 dark:to-emerald-950/50 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-green-400/10 dark:bg-green-400/5 rounded-full blur-3xl"></div>
+          <div className="relative flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-green-600 dark:bg-green-500 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+            <p className="text-green-900 dark:text-green-100 leading-relaxed">{L.channelsBody}</p>
+          </div>
+        </div>
       </Section>
 
       {/* Valeurs */}
       <Section title={L.valuesTitle}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {L.values.map((v, i) => (
-            <ValueCard key={i} title={v.title} body={v.body} />
+            <ValueCard key={i} title={v.title} body={v.body} index={i} />
           ))}
         </div>
       </Section>
@@ -378,23 +430,34 @@ export default function About() {
       {/* Équipe */}
       <Section title={L.teamTitle}>
         <p className="mb-4">{L.teamBody}</p>
-        <ul className="divide-y divide-gray-200 dark:divide-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {L.teamList.map((m, i) => (
-            <li key={i} className="p-4 flex items-center justify-between">
-              <span className="text-gray-800 dark:text-gray-100 font-medium">{m.name}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{m.role}</span>
-            </li>
+            <div key={i} className="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/50 p-5 shadow-sm hover:shadow-md transition">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold">
+                  {m.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{m.name}</h3>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{m.role}</p>
+            </div>
           ))}
-        </ul>
+        </div>
       </Section>
 
       {/* CTA */}
       <Section>
-        <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-950">
-          <h3 className="text-xl md:text-2xl font-bold mb-2 text-black dark:text-white">{L.ctaTitle}</h3>
-          <p className="text-gray-700 dark:text-gray-300">{L.ctaBody}</p>
+        <div className="rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-8 text-center shadow-sm dark:border-red-800 dark:from-red-950/50 dark:to-orange-950/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 dark:bg-red-400/5 rounded-full blur-3xl"></div>
+          <div className="relative">
+            <h3 className="text-xl md:text-2xl font-bold mb-2 text-red-900 dark:text-red-100">{L.ctaTitle}</h3>
+            <p className="text-red-800 dark:text-red-200">{L.ctaBody}</p>
+          </div>
         </div>
       </Section>
+      </div>
     </main>
   );
 }

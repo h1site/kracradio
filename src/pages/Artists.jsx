@@ -2,25 +2,17 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePublicProfiles } from '../hooks/useCommunity';
-import { useUI } from '../context/UIContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { COUNTRIES } from '../constants/countries';
 
 export default function Artists() {
   const { t } = useI18n();
-  const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
   const genreFilter = searchParams.get('genre');
   const countryFilter = searchParams.get('country');
   const { profiles, loading, error } = usePublicProfiles();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const containerStyle = {
-    paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
-    paddingRight: isDesktop ? 32 : 32,
-    transition: 'padding-left 300ms ease',
-  };
 
   // Extraire tous les genres uniques disponibles
   const availableGenres = useMemo(() => {
@@ -68,7 +60,7 @@ export default function Artists() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
       </div>
     );
@@ -76,7 +68,7 @@ export default function Artists() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-bg-primary pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-text-primary mb-4">❌ Erreur</h1>
           <p className="text-text-secondary">{error}</p>
@@ -84,7 +76,7 @@ export default function Artists() {
       </div>
     );
   }
-  
+
   return (
     <>
       <Seo
@@ -92,19 +84,24 @@ export default function Artists() {
         description={t.artists.noArtistsDesc}
       />
 
-      <div
-        className="min-h-screen bg-bg-primary pt-5"
-        style={containerStyle}
-      >
+      <div className="">
         {/* En-tête avec filtres */}
-        <header className="bg-gray-900 text-white -mx-8 -mt-5 px-8 py-12 mb-8">
-          <div className="max-w-4xl">
-            <h1 className="text-4xl md:text-6xl font-black uppercase">{t.artists.title}</h1>
-            <p className="mt-4 max-w-3xl text-lg text-gray-300">
+        <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&auto=format&q=80"
+              alt="Artists"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+          </div>
+          <div className="relative pl-[60px] md:pl-[100px] pr-8 py-12">
+            <h1 className="text-4xl md:text-6xl font-black uppercase text-white">{t.artists.title}</h1>
+            <p className="mt-4 max-w-3xl text-lg text-gray-200">
               Découvrez les artistes de la communauté KracRadio.
             </p>
             {/* Barre de recherche et filtres */}
-            <div className="mt-8 space-y-4">
+            <div className="mt-6 space-y-4">
               {/* Recherche par nom */}
               <div className="flex-1">
                 <div className="relative">
@@ -185,7 +182,7 @@ export default function Artists() {
 
         {/* Indicateur des filtres actifs */}
         {(genreFilter || countryFilter || searchQuery) && (
-          <div className="flex items-center gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-wrap mb-4 px-8">
             <span className="text-text-secondary">{t.artists.activeFilters}:</span>
 
             {genreFilter && (
@@ -252,7 +249,7 @@ export default function Artists() {
         )}
 
         {filteredProfiles.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 px-8">
             <div className="text-6xl mb-4">🎵</div>
             <h3 className="text-xl font-semibold text-text-primary mb-2">
               {(genreFilter || countryFilter || searchQuery)
@@ -277,7 +274,7 @@ export default function Artists() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8">
             {filteredProfiles.map((profile) => {
               const profileLink = profile.artist_slug || profile.user_id;
               return (
