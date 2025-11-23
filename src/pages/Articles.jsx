@@ -130,7 +130,7 @@ export default function Articles() {
           </div>
         </header>
 
-        <main className="px-[10px] py-12" style={containerStyle}>
+        <main className="px-[5px] py-12" style={containerStyle}>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">

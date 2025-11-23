@@ -29,7 +29,7 @@ export default function PlayerBar() {
   const site = t?.site ?? {};
   const selectPrompt = player.selectPrompt ?? 'Sélectionne une chaîne — Clique Écouter';
   const [selectMain, selectSecondary] = selectPrompt.split(' — ');
-  const likeLabel = player.likeComingSoon ?? site.like ?? 'J’aime (à venir)';
+  const likeLabel = player.likeComingSoon ?? site.like ?? 'J\'aime (à venir)';
   const settingsLabel = player.settings ?? site.settings ?? 'Paramètres';
   const shareLabel = player.share ?? site.share ?? 'Partager';
   const openExternalLabel = player.openExternal ?? 'Lecteur externe';
@@ -270,53 +270,56 @@ export default function PlayerBar() {
   // État neutre si aucune chaîne ni podcast
   if (!current && !isPodcast) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-[#1e1e1e] text-white">
+      <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-black via-[#0a0a0a] to-[#111111] backdrop-blur-xl border-t border-white/5 text-white shadow-2xl">
         {/* MOBILE */}
         <div className="md:hidden">
           <PlayerBarMobile art="/channels/default.webp" title="—" artist="—" />
         </div>
 
         {/* DESKTOP (inchangé, masqué sur mobile) */}
-        <div className="hidden md:flex w-full h-16 items-center">
-          <div className="h-full aspect-square bg-black/30" />
-          <div className="flex-1 font-semibold truncate px-3">
+        <div className="hidden md:flex w-full h-20 items-center px-4">
+          <div className="h-14 aspect-square bg-white/5 rounded-lg border border-white/10" />
+          <div className="flex-1 font-semibold truncate px-6">
             {selectSecondary ? (
               <>
-                {selectMain} — <span className="opacity-70">{selectSecondary}</span>
+                <span className="text-base">{selectMain}</span>
+                <span className="opacity-50 text-sm"> — {selectSecondary}</span>
               </>
             ) : (
-              selectPrompt
+              <span className="text-base">{selectPrompt}</span>
             )}
           </div>
-          <div className="flex items-center gap-3 min-w-[220px] justify-end pr-2">
+          <div className="flex items-center gap-4 min-w-[280px] justify-end">
             <button
-              className="icon-btn"
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200"
               title={likeLabel}
               aria-label={likeLabel}
               onClick={handleLikeClick}
-              style={{ opacity: isLiked ? 1 : 0.5, filter: isLiked ? 'brightness(1.5)' : 'none' }}
+              style={{ opacity: isLiked ? 1 : 0.6, filter: isLiked ? 'brightness(1.3)' : 'none' }}
             >
-              <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
+              <img src="/icons/dark/hearth.svg" alt="Like" className="w-6 h-6" />
             </button>
-            <Link to={profileLink} className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
+            <Link to={profileLink} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
               <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
             </Link>
-            <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={shareLabel} aria-label={shareLabel}>
               <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
             </button>
-            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
-              <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
-            </svg>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="range range-sm w-28"
-              aria-label={volumeLabel}
-            />
+            <div className="flex items-center gap-3 ml-2">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-70">
+                <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
+              </svg>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={volume}
+                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                className="w-24 h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:bg-red-500 transition-all"
+                aria-label={volumeLabel}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -324,21 +327,21 @@ export default function PlayerBar() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 bg-[#1e1e1e] text-white">
+    <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-black via-[#0a0a0a] to-[#111111] backdrop-blur-xl border-t border-white/5 text-white shadow-2xl">
       {/* MOBILE */}
       <div className="md:hidden">
         <PlayerBarMobile art={mobileArt} title={mobileTitle} artist={mobileArtist} />
       </div>
 
-      {/* DESKTOP (ton layout original) */}
-      <div className="hidden md:flex relative w-full h-16 items-stretch">
+      {/* DESKTOP (modernisé) */}
+      <div className="hidden md:flex relative w-full h-20 items-center px-4 gap-4">
         {/* Bloc 1 — Image de la chaîne OU image principale podcast */}
-        <div className="h-full aspect-square overflow-hidden">
+        <div className="h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0">
           {isPodcast ? (
             podcastMeta?.podcastImage ? (
               <img src={podcastMeta.podcastImage} alt={podcastMeta.podcastTitle} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-black/30" />
+              <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-purple-500/20" />
             )
           ) : (
             <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
@@ -347,45 +350,48 @@ export default function PlayerBar() {
 
         {/* Bloc 2 — Label + nom du channel OU nom du podcast */}
         <div className="flex flex-col justify-center min-w-[140px] px-2">
-          <div className="text-[10px] uppercase opacity-70 leading-none">
+          <div className="text-[10px] uppercase font-semibold tracking-wider opacity-50 leading-none mb-1">
             {isPodcast ? podcastLabel : channelLabel}
           </div>
-          <div className="font-bold text-base leading-tight truncate">
+          <div className="font-bold text-sm leading-tight truncate">
             {isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
           </div>
         </div>
 
+        {/* Séparateur vertical */}
+        <div className="h-10 w-px bg-white/10"></div>
+
         {/* Bloc 4 — Cover du morceau OU image épisode */}
-        <div className="h-full aspect-square overflow-hidden bg-black/30">
+        <div className="h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0">
           {isPodcast ? (
             podcastMeta?.image ? (
               <img src={podcastMeta.image} alt="episode" className="w-full h-full object-cover" />
-            ) : null
+            ) : <div className="w-full h-full bg-white/5" />
           ) : (
-            meta?.art ? <img src={meta.art} alt="art" className="w-full h-full object-cover" /> : null
+            meta?.art ? <img src={meta.art} alt="art" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-white/5" />
           )}
         </div>
 
         {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode + iPod Button */}
-        <div className="flex items-center gap-3 flex-1 min-w-0" style={{ paddingRight: '50px' }}>
+        <div className="flex items-center gap-4 flex-1 min-w-0">
           <button
             onClick={togglePlay}
-            className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-[#1e1e1e] hover:opacity-90 transition flex-shrink-0"
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105"
             aria-label={playing ? pauseLabel : playLabel}
             title={playing ? pauseLabel : playLabel}
           >
             {playing ? (
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M8 5h3v14H8V5zm5 0h3v14h-3V5z"/></svg>
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white"><path fill="currentColor" d="M8 5h3v14H8V5zm5 0h3v14h-3V5z"/></svg>
             ) : (
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white ml-0.5"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
             )}
           </button>
-          <div className="font-bold truncate">
+          <div className="font-semibold text-sm truncate">
             {isPodcast ? (
               podcastMeta?.title || '—'
             ) : (
               <>
-                {meta?.title || '—'} <span className="opacity-70">-</span> {meta?.artist || '—'}
+                {meta?.title || '—'} <span className="opacity-50 font-normal">•</span> <span className="opacity-70">{meta?.artist || '—'}</span>
               </>
             )}
           </div>
@@ -395,14 +401,14 @@ export default function PlayerBar() {
             ref={ipodButtonRef}
             onClick={openStandalonePlayer}
             disabled={!current && currentType !== 'podcast'}
-            className="inline-flex items-center justify-center w-10 h-10 hover:opacity-70 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition-all duration-200 flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label={player.openStandalone ?? 'Lecteur iPod'}
             title={player.openStandalone ?? 'Lecteur iPod'}
           >
             <img
               src="/icons/dark/ipod.svg"
               alt="iPod"
-              style={{ width: '1.75rem', height: '1.75rem' }}
+              className="w-6 h-6"
             />
           </button>
         </div>
@@ -415,52 +421,63 @@ export default function PlayerBar() {
           />
         )}
 
+        {/* Séparateur vertical */}
+        <div className="h-10 w-px bg-white/10"></div>
+
         {/* Bloc 6 — Progress + Temps + Like / Settings / Share / Volume */}
-        <div className="flex items-center gap-3 min-w-[360px]" style={{ paddingRight: '40px' }}>
-          <div className="text-xs tabular-nums opacity-80 w-12 text-right">{mmss(elapsed)}</div>
-          <div className="w-56">
+        <div className="flex items-center gap-4 min-w-[420px]">
+          <div className="text-xs tabular-nums opacity-60 w-10 text-right font-medium">{mmss(elapsed)}</div>
+          <div className="w-48">
             <div
-              className={`h-2 bg-black/30 rounded overflow-hidden ${isPodcast && duration ? 'cursor-pointer hover:h-3 transition-all' : ''}`}
+              className={`h-1.5 bg-white/10 rounded-full overflow-hidden ${isPodcast && duration ? 'cursor-pointer hover:h-2 transition-all' : ''}`}
               onClick={handleProgressClick}
               role={isPodcast && duration ? 'slider' : undefined}
               aria-label={isPodcast && duration ? progressLabel : undefined}
             >
               {progressPct !== null ? (
-                <div className="h-full bg-white" style={{ width: `${progressPct}%` }} />
+                <div className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full shadow-sm" style={{ width: `${progressPct}%` }} />
               ) : (
-                <div className="h-full bg-white/80 animate-pulse w-1/3" />
+                <div className="h-full bg-gradient-to-r from-red-500/60 to-red-600/60 animate-pulse w-1/3 rounded-full" />
               )}
             </div>
           </div>
-          <div className="text-xs tabular-nums opacity-80 w-12">{duration ? mmss(duration) : '--:--'}</div>
-          <button
-            className="icon-btn"
-            title={likeLabel}
-            aria-label={likeLabel}
-            onClick={handleLikeClick}
-            style={{ opacity: isLiked ? 1 : 0.5, filter: isLiked ? 'brightness(1.5)' : 'none' }}
-          >
-            <img src="/icons/dark/hearth.svg" alt="Like" style={{ width: '1.75rem', height: '1.75rem' }} />
-          </button>
-          <Link to={profileLink} className="icon-btn" title={settingsLabel} aria-label={settingsLabel}>
-            <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
-          </Link>
-          <button className="icon-btn" title={shareLabel} aria-label={shareLabel}>
-            <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
-          </button>
-          <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-90">
-            <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
-          </svg>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="range range-sm w-28"
-            aria-label={volumeLabel}
-          />
+          <div className="text-xs tabular-nums opacity-60 w-10 font-medium">{duration ? mmss(duration) : '--:--'}</div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 ml-2">
+            <button
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200"
+              title={likeLabel}
+              aria-label={likeLabel}
+              onClick={handleLikeClick}
+              style={{ opacity: isLiked ? 1 : 0.6, filter: isLiked ? 'brightness(1.3)' : 'none' }}
+            >
+              <img src="/icons/dark/hearth.svg" alt="Like" className="w-6 h-6" />
+            </button>
+            <Link to={profileLink} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
+              <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
+            </Link>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={shareLabel} aria-label={shareLabel}>
+              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
+            </button>
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-3 ml-2">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-70">
+              <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
+            </svg>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="w-24 h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:transition-all"
+              aria-label={volumeLabel}
+            />
+          </div>
         </div>
       </div>
     </div>
