@@ -375,7 +375,18 @@ export default function PublicProfile() {
                     ) : articles.length === 0 ? (
                       <div className="text-center py-12 text-text-secondary">
                         <div className="text-6xl mb-4">📄</div>
-                        <p>{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
+                        <p className="mb-4">{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
+                        {isOwnProfile && (
+                          <Link
+                            to="/dashboard/articles/edit"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            {lang === 'fr' ? 'Écrire un article' : lang === 'es' ? 'Escribir un artículo' : 'Write an article'}
+                          </Link>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-6">
@@ -435,7 +446,18 @@ export default function PublicProfile() {
                     ) : podcasts.length === 0 ? (
                       <div className="text-center py-12 text-text-secondary">
                         <div className="text-6xl mb-4">🎙️</div>
-                        <p>{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
+                        <p className="mb-4">{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
+                        {isOwnProfile && (
+                          <Link
+                            to="/dashboard?tab=podcasts"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            {lang === 'fr' ? 'Ajouter un podcast' : lang === 'es' ? 'Añadir un podcast' : 'Add a podcast'}
+                          </Link>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-6">
