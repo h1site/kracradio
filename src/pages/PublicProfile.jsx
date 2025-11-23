@@ -199,8 +199,7 @@ export default function PublicProfile() {
 
   const TABS = [
     { id: 'blogs', label: t.publicProfile?.blog || 'Blog', icon: '📄' },
-    { id: 'podcasts', label: t.publicProfile?.podcasts || 'Podcasts', icon: '🎙️' },
-    { id: 'connections', label: t.publicProfile?.connections || 'Connexions', icon: '👥' }
+    { id: 'podcasts', label: t.publicProfile?.podcasts || 'Podcasts', icon: '🎙️' }
   ];
 
   return (
@@ -374,24 +373,48 @@ export default function PublicProfile() {
                         <p>{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {articles.map(article => (
-                          <div
+                          <Link
                             key={article.id}
-                            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors"
+                            to={`/article/${article.slug}`}
+                            className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
                           >
-                            <Link to={`/article/${article.slug}`}>
-                              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{article.title}</h3>
-                            </Link>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{article.content?.substring(0, 150)}...</p>
-                            <div className="text-xs text-gray-400">
-                              {new Date(article.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}
+                            {article.featured_image && (
+                              <div className="aspect-video w-full overflow-hidden">
+                                <img
+                                  src={article.featured_image}
+                                  alt={article.title}
+                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                />
+                              </div>
+                            )}
+                            <div className="p-5">
+                              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-red-500 transition-colors leading-tight line-clamp-2">
+                                {article.title}
+                              </h3>
+                              {article.excerpt && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+                                  {article.excerpt}
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+                                <span>
+                                  {new Date(article.published_at || article.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </span>
+                                <span className="flex items-center gap-1 text-red-500 group-hover:gap-2 transition-all">
+                                  Lire
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                              </div>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -410,50 +433,56 @@ export default function PublicProfile() {
                         <p>{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {podcasts.map(podcast => {
                           const podcastLink = podcast.website_url || podcast.rss_url || `/podcast/${podcast.id}`;
                           const isExternalLink = podcastLink.startsWith('http');
+                          const LinkWrapper = isExternalLink ? 'a' : Link;
+                          const linkProps = isExternalLink
+                            ? { href: podcastLink, target: '_blank', rel: 'noopener noreferrer' }
+                            : { to: podcastLink };
 
                           return (
-                            <div
+                            <LinkWrapper
                               key={podcast.id}
-                              className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors flex gap-4"
+                              {...linkProps}
+                              className="group block bg-gradient-to-br from-gray-900 to-black dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-700 hover:border-red-500"
                             >
-                              {podcast.image_url && (
-                                isExternalLink ? (
-                                  <a href={podcastLink} target="_blank" rel="noopener noreferrer">
+                              <div className="flex gap-4 p-5">
+                                {podcast.image_url && (
+                                  <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md shrink-0">
                                     <img
                                       src={podcast.image_url}
                                       alt={podcast.title}
-                                      className="w-20 h-20 rounded-lg object-cover"
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     />
-                                  </a>
-                                ) : (
-                                  <Link to={podcastLink}>
-                                    <img
-                                      src={podcast.image_url}
-                                      alt={podcast.title}
-                                      className="w-20 h-20 rounded-lg object-cover"
-                                    />
-                                  </Link>
-                                )
-                              )}
-                              <div className="flex-1">
-                                {isExternalLink ? (
-                                  <a href={podcastLink} target="_blank" rel="noopener noreferrer">
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{podcast.title}</h3>
-                                  </a>
-                                ) : (
-                                  <Link to={podcastLink}>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 hover:text-red-500 transition-colors">{podcast.title}</h3>
-                                  </Link>
+                                  </div>
                                 )}
-                                {podcast.description && (
-                                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{podcast.description}</p>
-                                )}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors leading-tight line-clamp-2">
+                                    {podcast.title}
+                                  </h3>
+                                  {podcast.description && (
+                                    <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                                      {podcast.description}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/10 text-red-400 rounded-full">
+                                      🎙️ Podcast
+                                    </span>
+                                    {isExternalLink && (
+                                      <span className="inline-flex items-center gap-1 text-gray-400 group-hover:text-red-400 transition-colors">
+                                        Écouter
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            </LinkWrapper>
                           );
                         })}
                       </div>
@@ -461,54 +490,58 @@ export default function PublicProfile() {
                   </div>
                 )}
 
-                {activeTab === 'connections' && (
-                  <div>
-                    {loadingFollowers ? (
-                      <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-                      </div>
-                    ) : followers.length === 0 ? (
-                      <div className="text-center py-12 text-text-secondary">
-                        <div className="text-6xl mb-4">👥</div>
-                        <p>{t.publicProfile?.connectionsContent?.replace('{count}', 0) || `0 connexions`}</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {followers.map(follow => (
-                          <Link
-                            key={follow.follower_id}
-                            to={`/profile/${follow.profiles?.artist_slug || follow.follower_id}`}
-                            className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-colors"
-                          >
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                              {follow.profiles?.avatar_url ? (
-                                <img
-                                  src={follow.profiles.avatar_url}
-                                  alt={follow.profiles.username}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <span className="text-2xl">👤</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-800 dark:text-white">{follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}</h3>
-                              <p className="text-sm text-gray-500">@{follow.profiles?.artist_slug || 'artiste'}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
+          {/* Section Connexions (Followers) */}
+          {followers.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <span>👥</span>
+                {t.publicProfile?.connections || 'Connexions'}
+                <span className="text-base font-normal text-gray-500">({followers.length})</span>
+              </h2>
+              {loadingFollowers ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {followers.map(follow => (
+                    <Link
+                      key={follow.follower_id}
+                      to={`/profile/${follow.profiles?.artist_slug || follow.follower_id}`}
+                      className="group flex flex-col items-center gap-3 bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 hover:border-red-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent group-hover:ring-red-500 transition-all">
+                        {follow.profiles?.avatar_url ? (
+                          <img
+                            src={follow.profiles.avatar_url}
+                            alt={follow.profiles.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <span className="text-3xl">👤</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-center w-full">
+                        <h3 className="font-semibold text-sm text-gray-800 dark:text-white truncate group-hover:text-red-500 transition-colors">
+                          {follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}
+                        </h3>
+                        <p className="text-xs text-gray-500 truncate">@{follow.profiles?.artist_slug || 'artiste'}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Section posts - Feed communauté */}
-          <div className="pb-12">
+          <div className="mt-12 pb-12">
             <PostsFeed userId={null} showCreatePost={user?.id === userId} />
           </div>
         </div>
