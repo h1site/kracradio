@@ -37,6 +37,7 @@ export default function Header() {
                 type="button"
                 onClick={openSidebar}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
+                style={{ marginTop: '8px' }}
                 aria-label="Ouvrir le menu"
                 title="Ouvrir le menu"
               >
@@ -76,14 +77,14 @@ export default function Header() {
             >
               KEMP3
             </a>
-            {/* Android APK */}
+            {/* Android APP */}
             <a
               href="/kracradio.apk"
               download
               className="px-3 py-1.5 text-xs bg-green-600/90 hover:bg-green-600 text-white transition-colors rounded flex items-center gap-1.5"
-              title="Télécharger l'APK Android"
+              title={lang === 'fr' ? 'Télécharger l\'application Android' : lang === 'es' ? 'Descargar aplicación Android' : 'Download Android App'}
             >
-              📱 APK
+              📱 {lang === 'fr' ? 'Android APP' : lang === 'es' ? 'Android APP' : 'Android APP'}
             </a>
 
             {/* Submit Music - Only for authenticated users */}
@@ -92,7 +93,7 @@ export default function Header() {
                 to="/submit-music"
                 className="px-3 py-1.5 text-xs bg-purple-600/90 hover:bg-purple-600 text-white transition-colors rounded flex items-center gap-1.5"
               >
-                🎵 Submit
+                🎵 {lang === 'fr' ? 'Soumission Musique' : lang === 'es' ? 'Enviar Música' : 'Submit Music'}
               </Link>
             )}
 
