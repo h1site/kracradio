@@ -24,10 +24,10 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 bg-[#1e1e1e] text-white border-b border-[#2a2a2a]">
+      <header className="fixed top-0 inset-x-0 z-50 bg-[#0a0a0a] text-white border-b border-white/5 shadow-lg">
         {/* Desktop (≥1024px) */}
-        <div className="hidden lg:flex w-full h-16 items-center justify-between px-5">
-          <div className="flex items-center gap-3">
+        <div className="hidden lg:flex w-full h-16 items-center justify-between px-6">
+          <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center">
               <img src="/logo-white.png" alt="Logo" className="h-10 w-auto object-contain" />
             </Link>
@@ -36,34 +36,34 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openSidebar}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
                 aria-label="Ouvrir le menu"
                 title="Ouvrir le menu"
               >
-                <span className="text-sm font-medium">Menu</span>
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <span className="font-medium">Menu</span>
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor">
                   <path d="M8.59 16.59L10 18l6-6l-6-6l-1.41 1.41L13.17 12z" />
                 </svg>
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
             {/* Notre Boutique */}
             <a
               href="https://store.kracradio.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+              className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
             >
-              {t?.site?.store ?? 'Notre Boutique'}
+              {t?.site?.store ?? 'Boutique'}
             </a>
             {/* Donation */}
             <a
               href="https://www.paypal.com/donate/?hosted_button_id=GUPL4K5WR3ZG4"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+              className="px-3 py-1.5 text-xs bg-red-600/90 hover:bg-red-600 text-white transition-colors rounded"
             >
               {t?.site?.donation ?? 'Donation'}
             </a>
@@ -72,42 +72,45 @@ export default function Header() {
               href="https://kemp3.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+              className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
             >
-              KEMP3.app
+              KEMP3
             </a>
             {/* Android APK */}
             <a
               href="/kracradio.apk"
               download
-              className="px-3 py-1 rounded-md border border-green-500/40 text-green-400 hover:bg-green-500/20 text-sm flex items-center gap-1"
-              title="Télécharger l'APK Android - Autorisez les sources inconnues dans vos paramètres"
+              className="px-3 py-1.5 text-xs bg-green-600/90 hover:bg-green-600 text-white transition-colors rounded flex items-center gap-1.5"
+              title="Télécharger l'APK Android"
             >
-              📱 Android APK
+              📱 APK
             </a>
 
             {/* Submit Music - Only for authenticated users */}
             {user && (
               <Link
                 to="/submit-music"
-                className="px-3 py-1 rounded-md border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 text-sm flex items-center gap-1"
+                className="px-3 py-1.5 text-xs bg-purple-600/90 hover:bg-purple-600 text-white transition-colors rounded flex items-center gap-1.5"
               >
-                🎵 {t?.nav?.submitMusic ?? 'Submit Music'}
+                🎵 Submit
               </Link>
             )}
 
-            {/* Auth — même style que les autres boutons, sans changer le look */}
+            {/* Divider */}
+            <div className="h-4 w-px bg-white/10 mx-1"></div>
+
+            {/* Auth */}
             {!user ? (
               <>
                 <Link
                   to="/login"
-                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
                 >
                   {t?.auth?.login ?? 'Connexion'}
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                  className="px-3 py-1.5 text-xs bg-white text-black hover:bg-gray-200 transition-colors rounded font-medium"
                 >
                   {t?.auth?.register ?? 'Inscription'}
                 </Link>
@@ -116,7 +119,7 @@ export default function Header() {
               <>
                 <Link
                   to={profileLink}
-                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm"
+                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
                 >
                   {t?.nav?.profile ?? 'Profil'}
                 </Link>
@@ -124,7 +127,7 @@ export default function Header() {
                   type="button"
                   disabled={loggingOut}
                   onClick={async () => {
-                    if (loggingOut) return; // Prevent double-click
+                    if (loggingOut) return;
                     setLoggingOut(true);
                     console.log('[Header] Logout button clicked');
                     try {
@@ -132,13 +135,11 @@ export default function Header() {
                       console.log('[Header] signOut completed, redirecting...');
                     } catch (e) {
                       console.error('[Header] Logout error:', e);
-                      // signOut already cleaned up, even on error
                     } finally {
-                      // Always redirect to home page after logout attempt
                       window.location.href = '/';
                     }
                   }}
-                  className="px-3 py-1 rounded-md border border-white/20 text-white hover:bg-white/10 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-50"
                 >
                   {loggingOut ? '...' : (t?.auth?.logout ?? 'Déconnexion')}
                 </button>
@@ -149,12 +150,12 @@ export default function Header() {
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="bg-transparent text-white border border-white/20 rounded-md px-2 py-1 text-sm"
+              className="bg-transparent text-gray-300 hover:text-white text-xs cursor-pointer transition-colors border-none outline-none"
               aria-label="Sélecteur de langue"
             >
-              <option value="fr">FR</option>
-              <option value="en">EN</option>
-              <option value="es">ES</option>
+              <option value="fr" className="bg-black">FR</option>
+              <option value="en" className="bg-black">EN</option>
+              <option value="es" className="bg-black">ES</option>
             </select>
 
             {/* Switch thème */}
