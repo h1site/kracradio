@@ -187,18 +187,20 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ email, password }) => {
-    // Configuration pour l'envoi d'email de confirmation
-    const options = {
-      emailRedirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/verify-email`
-    };
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options
     });
 
     if (error) throw new Error(error.message || 'Sign-up failed');
+
+    // Auto-login après inscription
+    if (data.user) {
+      setUser(data.user);
+      // Set default role
+      setUserRole('user');
+    }
+
     return data;
   };
 

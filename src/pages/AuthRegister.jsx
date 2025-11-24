@@ -71,7 +71,7 @@ export default function AuthRegister() {
 
     try {
       await signUp({ email, password: pwd });
-      nav('/confirm-email'); // Rediriger vers la page de confirmation
+      nav('/'); // Rediriger vers la page d'accueil (connecté directement)
     } catch (error) {
       setErr(error.message);
     } finally {
@@ -105,16 +105,6 @@ export default function AuthRegister() {
         </div>
 
         <h1 className="text-xl font-bold mb-4">{t?.auth?.register ?? 'Créer un compte'}</h1>
-
-        {/* Info: Email viendra de Supabase */}
-        <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
-          <p className="text-blue-800 dark:text-blue-200 mb-1">
-            {t?.auth?.emailFromSupabase ?? '📧 Le courriel de confirmation viendra de Supabase (temporaire)'}
-          </p>
-          <p className="text-blue-700 dark:text-blue-300 text-xs">
-            {t?.auth?.checkSpamFolder ?? '💡 N\'oubliez pas de vérifier votre dossier spam'}
-          </p>
-        </div>
 
         {err && <div className="text-sm text-red-500 mb-2">{err}</div>}
 
