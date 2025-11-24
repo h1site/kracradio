@@ -28,9 +28,9 @@ export default function Artists() {
   
   // Filtrer les profils par genre, pays et recherche
   const filteredProfiles = useMemo(() => {
-    if (!profiles) return profiles;
+    if (!profiles || !Array.isArray(profiles)) return [];
 
-    let filtered = profiles;
+    let filtered = [...profiles];
 
     // Filtrer par genre si un filtre est actif
     if (genreFilter) {
