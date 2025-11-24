@@ -55,7 +55,7 @@ export default function Header() {
               href="https://store.kracradio.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-xs bg-red-600/90 hover:bg-red-600 text-white transition-colors rounded"
             >
               {t?.site?.store ?? 'Boutique'}
             </a>
@@ -73,7 +73,7 @@ export default function Header() {
               href="https://kemp3.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-xs bg-red-600/90 hover:bg-red-600 text-white transition-colors rounded"
             >
               KEMP3
             </a>
@@ -81,7 +81,7 @@ export default function Header() {
             <a
               href="/kracradio.apk"
               download
-              className="px-3 py-1.5 text-xs bg-green-600/90 hover:bg-green-600 text-white transition-colors rounded flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs bg-red-600/90 hover:bg-red-600 text-white transition-colors rounded flex items-center gap-1.5"
               title={lang === 'fr' ? 'Télécharger l\'application Android' : lang === 'es' ? 'Descargar aplicación Android' : 'Download Android App'}
             >
               📱 {lang === 'fr' ? 'Android APP' : lang === 'es' ? 'Android APP' : 'Android APP'}
@@ -91,7 +91,7 @@ export default function Header() {
             {user && (
               <Link
                 to="/submit-music"
-                className="px-3 py-1.5 text-xs bg-purple-600/90 hover:bg-purple-600 text-white transition-colors rounded flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs bg-red-600/90 hover:bg-red-600 text-white transition-colors rounded flex items-center gap-1.5"
               >
                 🎵 {lang === 'fr' ? 'Soumission Musique' : lang === 'es' ? 'Enviar Música' : 'Submit Music'}
               </Link>
