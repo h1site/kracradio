@@ -144,7 +144,7 @@ Veuillez vérifier les logs et corriger le problème.
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'KracRadio <noreply@kracradio.com>',
+            from: 'KracRadio <onboarding@resend.dev>',
             to: ['info@h1site.com'],
             subject: '🚨 Erreur - Soumission de musique KracRadio',
             text: emailBody,
