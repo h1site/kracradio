@@ -115,6 +115,46 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in submit-music function:', error);
+
+    // Send email notification to admin about the error
+    try {
+      const formData = await req.formData();
+      const artistName = formData.get('artistName') as string;
+      const userEmail = formData.get('userEmail') as string;
+
+      const emailBody = `
+Une erreur est survenue lors de la soumission de musique sur KracRadio.
+
+Détails:
+- Artiste: ${artistName || 'Non fourni'}
+- Email utilisateur: ${userEmail || 'Non fourni'}
+- Erreur: ${error.message}
+- Date: ${new Date().toISOString()}
+
+Veuillez vérifier les logs et corriger le problème.
+      `.trim();
+
+      // Send email using Resend API or another email service
+      const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+      if (RESEND_API_KEY) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'KracRadio <noreply@kracradio.com>',
+            to: ['info@h1site.com'],
+            subject: '🚨 Erreur - Soumission de musique KracRadio',
+            text: emailBody,
+          }),
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send error notification email:', emailError);
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
