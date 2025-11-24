@@ -234,8 +234,8 @@ export default function SubmitMusic() {
       const formData = new FormData();
       formData.append('artistName', artistName);
       formData.append('genre', genre);
-      formData.append('userEmail', user.email);
-      formData.append('userId', user.id);
+      formData.append('userEmail', user?.email || 'unknown');
+      formData.append('userId', user?.id || 'unknown');
 
       files.forEach((file, index) => {
         formData.append(`file${index}`, file);
