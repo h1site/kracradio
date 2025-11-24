@@ -200,6 +200,11 @@
       "next": "Next",
       "prev": "Previous",
       "finish": "Finish",
+      "step0": {
+        "title": "❤️ Like your favorite songs",
+        "description": "Click the heart to add a song to your favorites while listening.",
+        "action": "Use the ❤️ button in the audio player to like a song. Find your favorites in 'Liked Songs'."
+      },
       "step1": {
         "title": "📝 Write blog articles",
         "description": "Share your ideas, stories, and music news with the community.",

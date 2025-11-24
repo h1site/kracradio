@@ -120,8 +120,19 @@ export default function Header() {
               <>
                 <Link
                   to={profileLink}
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
                 >
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full object-cover border border-white/20"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs">
+                      👤
+                    </div>
+                  )}
                   {t?.nav?.profile ?? 'Profil'}
                 </Link>
                 <Link

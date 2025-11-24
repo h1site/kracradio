@@ -200,6 +200,11 @@
       "next": "Suivant",
       "prev": "Précédent",
       "finish": "Terminer",
+      "step0": {
+        "title": "❤️ Aimer vos chansons préférées",
+        "description": "Cliquez sur le cœur pour ajouter une chanson à vos favoris pendant l'écoute.",
+        "action": "Utilisez le bouton ❤️ dans le lecteur audio pour aimer une chanson. Retrouvez vos favoris dans 'Chansons Aimées'."
+      },
       "step1": {
         "title": "📝 Écrire des articles de blog",
         "description": "Partagez vos idées, histoires et actualités musicales avec la communauté.",

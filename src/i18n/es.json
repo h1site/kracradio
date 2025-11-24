@@ -200,6 +200,11 @@
       "next": "Siguiente",
       "prev": "Anterior",
       "finish": "Terminar",
+      "step0": {
+        "title": "❤️ Dale me gusta a tus canciones favoritas",
+        "description": "Haz clic en el corazón para agregar una canción a tus favoritos mientras escuchas.",
+        "action": "Usa el botón ❤️ en el reproductor de audio para dar me gusta a una canción. Encuentra tus favoritos en 'Canciones Favoritas'."
+      },
       "step1": {
         "title": "📝 Escribir artículos de blog",
         "description": "Comparte tus ideas, historias y noticias musicales con la comunidad.",

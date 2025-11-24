@@ -9,6 +9,18 @@ export default function WelcomeTutorial({ onClose }) {
 
   const steps = [
     {
+      title: tutorial.step0?.title || '❤️ Aimer vos chansons préférées',
+      description: tutorial.step0?.description || 'Cliquez sur le cœur pour ajouter une chanson à vos favoris pendant l\'écoute.',
+      action: tutorial.step0?.action || "Utilisez le bouton ❤️ dans le lecteur audio pour aimer une chanson. Retrouvez vos favoris dans 'Liked Songs'.",
+      icon: (
+        <svg viewBox="0 0 24 24" className="h-16 w-16" fill="currentColor">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      ),
+      color: 'from-red-500 to-pink-500',
+      bgColor: 'bg-red-50 dark:bg-red-900/20'
+    },
+    {
       title: tutorial.step1?.title || '📝 Écrire des articles de blog',
       description: tutorial.step1?.description || 'Partagez vos idées, histoires et actualités musicales avec la communauté.',
       action: tutorial.step1?.action || "Cliquez sur le bouton 'Tableau de bord' puis créez votre premier article.",
