@@ -2,7 +2,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Dropbox credentials - use refresh token for stable access
+const DROPBOX_REFRESH_TOKEN = Deno.env.get('DROPBOX_REFRESH_TOKEN');
+const DROPBOX_APP_KEY = Deno.env.get('DROPBOX_APP_KEY');
+const DROPBOX_APP_SECRET = Deno.env.get('DROPBOX_APP_SECRET');
+// Fallback to legacy access token if refresh token not configured
 const DROPBOX_ACCESS_TOKEN = Deno.env.get('DROPBOX_ACCESS_TOKEN');
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -10,6 +16,45 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Function to get a fresh access token using refresh token
+async function getDropboxAccessToken(): Promise<string> {
+  // If refresh token is configured, use it to get a fresh access token
+  if (DROPBOX_REFRESH_TOKEN && DROPBOX_APP_KEY && DROPBOX_APP_SECRET) {
+    console.log('Using refresh token to get fresh access token...');
+
+    const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: DROPBOX_REFRESH_TOKEN,
+        client_id: DROPBOX_APP_KEY,
+        client_secret: DROPBOX_APP_SECRET,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to refresh Dropbox token:', errorText);
+      throw new Error(`Failed to refresh Dropbox token: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Successfully obtained fresh access token');
+    return data.access_token;
+  }
+
+  // Fallback to legacy access token
+  if (DROPBOX_ACCESS_TOKEN) {
+    console.log('Using legacy access token (may expire)');
+    return DROPBOX_ACCESS_TOKEN;
+  }
+
+  throw new Error('No Dropbox credentials configured');
+}
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -32,13 +77,8 @@ serve(async (req) => {
       );
     }
 
-    if (!DROPBOX_ACCESS_TOKEN) {
-      console.error('DROPBOX_ACCESS_TOKEN not configured');
-      return new Response(
-        JSON.stringify({ error: 'Dropbox not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Get a fresh Dropbox access token
+    const accessToken = await getDropboxAccessToken();
 
     // Create folder name: reception/ArtistName - Genre
     const folderPath = `/reception/${artistName} - ${genre}`;
@@ -60,7 +100,7 @@ serve(async (req) => {
       const dropboxResponse = await fetch('https://content.dropboxapi.com/2/files/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/octet-stream',
           'Dropbox-API-Arg': JSON.stringify({
             path: `${folderPath}/${file.name}`,
