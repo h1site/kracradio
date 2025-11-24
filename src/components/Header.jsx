@@ -129,10 +129,7 @@ export default function Header() {
                   className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
                   title={t?.nav?.settings ?? 'Settings'}
                 >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                    <path d="M17 15l3-3-3-3v2h-4v2h4v2zM7 9l-3 3 3 3v-2h4v-2H7V9z"/>
-                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/>
-                  </svg>
+                  <img src="/icons/dark/settings.svg" alt="Settings" className="w-4 h-4" />
                 </Link>
                 <button
                   type="button"
