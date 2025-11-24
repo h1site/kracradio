@@ -5,6 +5,7 @@ import { useAudio } from '../context/AudioPlayerContext';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../hooks/useCommunity';
 import { useI18n } from '../i18n';
+import { useTheme } from '../context/ThemeContext';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
 import { addSongLike, removeSongLike, isSongLiked } from '../lib/supabase';
@@ -13,9 +14,10 @@ import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
 
 export default function PlayerBar() {
-  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek } = useAudio();
+  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek, playChannel } = useAudio();
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
@@ -24,6 +26,10 @@ export default function PlayerBar() {
   const tickRef = useRef(null);
   const ipodButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef(null);
+  const shareMenuTimerRef = useRef(null);
+  const [showChannelMenu, setShowChannelMenu] = useState(false);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -256,6 +262,86 @@ export default function PlayerBar() {
     }
   };
 
+  // Channel menu functions
+  const handleChannelSelect = (channelKey) => {
+    playChannel(channelKey);
+    setShowChannelMenu(false);
+  };
+
+  const toggleChannelMenu = () => {
+    setShowChannelMenu(!showChannelMenu);
+  };
+
+  // Close channel menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showChannelMenu && !event.target.closest('.channel-menu-container')) {
+        setShowChannelMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showChannelMenu]);
+
+  // Share functions
+  const shareUrl = window.location.href;
+  const shareTitle = isPodcast
+    ? `${podcastMeta?.title || ''} - ${podcastMeta?.podcastTitle || ''}`
+    : `${meta?.title || ''} - ${meta?.artist || ''} sur ${current?.name || 'KracRadio'}`;
+
+  const handleShareMenuEnter = () => {
+    if (shareMenuTimerRef.current) {
+      clearTimeout(shareMenuTimerRef.current);
+      shareMenuTimerRef.current = null;
+    }
+    setShowShareMenu(true);
+  };
+
+  const handleShareMenuLeave = () => {
+    shareMenuTimerRef.current = setTimeout(() => {
+      setShowShareMenu(false);
+    }, 200);
+  };
+
+  const handleShare = (platform) => {
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedTitle = encodeURIComponent(shareTitle);
+
+    let shareLink = '';
+
+    switch(platform) {
+      case 'facebook':
+        shareLink = `https://www.facebook.com/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'twitter':
+        shareLink = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+        break;
+      case 'linkedin':
+        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'whatsapp':
+        shareLink = `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`;
+        break;
+      case 'email':
+        shareLink = `mailto:?subject=${encodedTitle}&body=${encodedUrl}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(shareUrl);
+        setShowShareMenu(false);
+        return;
+      default:
+        return;
+    }
+
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'width=600,height=400');
+      setShowShareMenu(false);
+    }
+  };
+
   // Prépare les infos affichées
   const mobileArt = isPodcast
     ? (podcastMeta?.image || podcastMeta?.podcastImage || '/channels/default.webp')
@@ -299,12 +385,79 @@ export default function PlayerBar() {
             >
               <img src="/icons/dark/hearth.svg" alt="Like" className="w-6 h-6" />
             </button>
-            <Link to={profileLink} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
+            <Link to="/settings" className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
               <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
             </Link>
-            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={shareLabel} aria-label={shareLabel}>
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
-            </button>
+            <div className="relative" ref={shareMenuRef}>
+              <button
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200"
+                title={shareLabel}
+                aria-label={shareLabel}
+                onMouseEnter={handleShareMenuEnter}
+                onMouseLeave={handleShareMenuLeave}
+              >
+                <img src="/icons/dark/share.svg" alt="Share" className="w-5 h-5" />
+              </button>
+              {showShareMenu && (
+                <div
+                  className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[180px]"
+                  onMouseEnter={handleShareMenuEnter}
+                  onMouseLeave={handleShareMenuLeave}
+                >
+                  <button
+                    onClick={() => handleShare('facebook')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <img src="/icons/dark/facebook.svg" alt="Facebook" className="w-4 h-4" />
+                    <span>Facebook</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('twitter')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <img src="/icons/dark/x.svg" alt="X" className="w-4 h-4" />
+                    <span>Twitter / X</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('linkedin')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('whatsapp')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                    </svg>
+                    <span>WhatsApp</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('email')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Email</span>
+                  </button>
+                  <div className="h-px bg-white/10"></div>
+                  <button
+                    onClick={() => handleShare('copy')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>Copier le lien</span>
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-3 ml-2">
               <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-70">
                 <path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3z"/>
@@ -336,27 +489,72 @@ export default function PlayerBar() {
       {/* DESKTOP (modernisé) */}
       <div className="hidden md:flex relative w-full h-20 items-center px-4 gap-4">
         {/* Bloc 1 — Image de la chaîne OU image principale podcast */}
-        <div className="h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0">
-          {isPodcast ? (
-            podcastMeta?.podcastImage ? (
-              <img src={podcastMeta.podcastImage} alt={podcastMeta.podcastTitle} className="w-full h-full object-cover" />
+        <div className="relative channel-menu-container">
+          <button
+            onClick={isPodcast ? undefined : toggleChannelMenu}
+            disabled={isPodcast}
+            className={`h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0 ${!isPodcast ? 'hover:border-red-500/50 cursor-pointer transition-all' : 'cursor-default'}`}
+          >
+            {isPodcast ? (
+              podcastMeta?.podcastImage ? (
+                <img src={podcastMeta.podcastImage} alt={podcastMeta.podcastTitle} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-purple-500/20" />
+              )
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-purple-500/20" />
-            )
-          ) : (
-            <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
+              <img src={current?.image} alt={current?.name} className="w-full h-full object-cover" />
+            )}
+          </button>
+
+          {/* Menu de sélection de chaîne */}
+          {showChannelMenu && !isPodcast && (
+            <div className="absolute bottom-full left-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-h-[400px] overflow-y-auto">
+              {channels.map((channel) => (
+                <button
+                  key={channel.key}
+                  onClick={() => handleChannelSelect(channel.key)}
+                  className={`w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 ${
+                    current?.key === channel.key ? 'bg-red-500/10 border-l-2 border-red-500' : ''
+                  }`}
+                >
+                  <img
+                    src={channel.image}
+                    alt={channel.name}
+                    className="w-10 h-10 rounded-md object-cover border border-white/10"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm truncate">{channel.name}</div>
+                    <div className="text-xs opacity-50 truncate">{channel.tagline || 'Radio en direct'}</div>
+                  </div>
+                  {current?.key === channel.key && (
+                    <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
         {/* Bloc 2 — Label + nom du channel OU nom du podcast */}
-        <div className="flex flex-col justify-center min-w-[140px] px-2">
+        <button
+          onClick={isPodcast ? undefined : toggleChannelMenu}
+          disabled={isPodcast}
+          className={`channel-menu-container flex flex-col justify-center min-w-[140px] px-2 text-left ${!isPodcast ? 'hover:opacity-80 cursor-pointer transition-opacity' : 'cursor-default'}`}
+        >
           <div className="text-[10px] uppercase font-semibold tracking-wider opacity-50 leading-none mb-1">
             {isPodcast ? podcastLabel : channelLabel}
           </div>
-          <div className="font-bold text-sm leading-tight truncate">
+          <div className="font-bold text-sm leading-tight truncate flex items-center gap-1">
             {isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
+            {!isPodcast && (
+              <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
           </div>
-        </div>
+        </button>
 
         {/* Séparateur vertical */}
         <div className="h-10 w-px bg-white/10"></div>
@@ -454,12 +652,79 @@ export default function PlayerBar() {
             >
               <img src="/icons/dark/hearth.svg" alt="Like" className="w-6 h-6" />
             </button>
-            <Link to={profileLink} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
+            <Link to="/settings" className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={settingsLabel} aria-label={settingsLabel}>
               <img src="/icons/dark/settings.svg" alt="Settings" className="w-5 h-5" />
             </Link>
-            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200" title={shareLabel} aria-label={shareLabel}>
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M18 16.08a3 3 0 0 0-2.83 2H9.91A3 3 0 1 0 7 20a3 3 0 0 0 2.91-2h5.26A3 3 0 1 0 18 16.08ZM18 14a3 3 0 1 0-2.83-4H9.91A3 3 0 1 0 7 12a3 3 0 0 0 2.91-2h5.26A3 3 0 0 0 18 14Z"/></svg>
-            </button>
+            <div className="relative">
+              <button
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all duration-200"
+                title={shareLabel}
+                aria-label={shareLabel}
+                onMouseEnter={handleShareMenuEnter}
+                onMouseLeave={handleShareMenuLeave}
+              >
+                <img src="/icons/dark/share.svg" alt="Share" className="w-5 h-5" />
+              </button>
+              {showShareMenu && (
+                <div
+                  className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[180px]"
+                  onMouseEnter={handleShareMenuEnter}
+                  onMouseLeave={handleShareMenuLeave}
+                >
+                  <button
+                    onClick={() => handleShare('facebook')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <img src="/icons/dark/facebook.svg" alt="Facebook" className="w-4 h-4" />
+                    <span>Facebook</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('twitter')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <img src="/icons/dark/x.svg" alt="X" className="w-4 h-4" />
+                    <span>Twitter / X</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('linkedin')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('whatsapp')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                    </svg>
+                    <span>WhatsApp</span>
+                  </button>
+                  <button
+                    onClick={() => handleShare('email')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Email</span>
+                  </button>
+                  <div className="h-px bg-white/10"></div>
+                  <button
+                    onClick={() => handleShare('copy')}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>Copier le lien</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Volume */}

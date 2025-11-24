@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
+import { useTheme } from '../context/ThemeContext';
 import { useResolveUsername, useProfile, useMusicLinks, useFollowStats } from '../hooks/useCommunity';
 import { listUserArticles } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
@@ -11,18 +12,35 @@ import { useI18n } from '../i18n';
 import FollowButton from '../components/community/FollowButton';
 import PostsFeed from '../components/posts/PostsFeed';
 
+function IconImg({ name, alt = '', className = 'w-6 h-6' }) {
+  const { isDark } = useTheme();
+  const src = `/icons/${isDark ? 'dark' : 'light'}/${name}.svg`;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = '/icons/default.svg';
+      }}
+    />
+  );
+}
+
 export default function PublicProfile() {
   const { t, lang } = useI18n();
   const { username } = useParams();
   const { user } = useAuth();
   const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
-  const [activeTab, setActiveTab] = useState('blogs');
   const [articles, setArticles] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
   const [followers, setFollowers] = useState([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [loadingPodcasts, setLoadingPodcasts] = useState(false);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [spotifyLink, setSpotifyLink] = useState('');
+  const [savingSpotify, setSavingSpotify] = useState(false);
 
   // Résoudre le username (slug ou UUID) vers un user_id
   const { userId, loading: resolvingUser, error: resolveError } = useResolveUsername(username);
@@ -33,6 +51,34 @@ export default function PublicProfile() {
 
   // Vérifier si c'est le propre profil de l'utilisateur
   const isOwnProfile = user && user.id === userId;
+
+  // Fonction pour sauvegarder le lien Spotify
+  const handleSaveSpotifyLink = async () => {
+    if (!spotifyLink.trim() || !userId) return;
+
+    setSavingSpotify(true);
+    try {
+      const { data, error } = await supabase
+        .from('music_links')
+        .insert([{
+          user_id: userId,
+          platform: 'spotify',
+          url: spotifyLink.trim(),
+          embed_html: spotifyLink.includes('spotify.com') ? `<iframe style="border-radius:12px" src="${spotifyLink.replace('spotify.com/', 'spotify.com/embed/')}" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>` : null
+        }])
+        .select();
+
+      if (error) throw error;
+
+      // Recharger la page pour afficher le nouveau lecteur
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving Spotify link:', error);
+      alert('Erreur lors de la sauvegarde du lien Spotify');
+    } finally {
+      setSavingSpotify(false);
+    }
+  };
 
   // Charger les articles avec infos auteur
   useEffect(() => {
@@ -197,10 +243,6 @@ export default function PublicProfile() {
     );
   }
 
-  const TABS = [
-    { id: 'blogs', label: t.publicProfile?.blog || 'Blog', icon: '📄' },
-    { id: 'podcasts', label: t.publicProfile?.podcasts || 'Podcasts', icon: '🎙️' }
-  ];
 
   return (
     <>
@@ -311,213 +353,232 @@ export default function PublicProfile() {
         </div>
 
         <div className="px-8 mt-8">
-          {/* Layout 2 colonnes: Lecteur musical + Onglets */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Colonne 1 - Lecteur musical */}
-            <div>
-              {musicLinks && musicLinks.length > 0 && (
-                <div className="space-y-4">
-                  {musicLinks.map(link => (
-                    <div key={link.id} className="rounded-lg overflow-hidden">
-                      {link.embed_html ? (
-                        <div dangerouslySetInnerHTML={{ __html: link.embed_html }} />
-                      ) : (
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-accent hover:text-accent-hover flex items-center gap-2"
-                        >
-                          <span className="text-2xl">
-                            {link.platform === 'spotify' && '🎵'}
-                            {link.platform === 'bandcamp' && '🎸'}
-                            {link.platform === 'apple_music' && '🍎'}
-                            {link.platform === 'soundcloud' && '☁️'}
-                            {link.platform === 'youtube' && '▶️'}
-                          </span>
-                          <span>{t.publicProfile?.openOn || 'Ouvrir sur'} {link.platform}</span>
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Colonne 2 - Onglets Blog/Podcasts/Connexions */}
-            <div>
-              <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex gap-2 -mb-px">
-                  {TABS.map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                        activeTab === tab.id
-                          ? 'border-red-500 text-red-500'
-                          : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-                      }`}
-                    >
-                      {tab.icon} {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contenu des onglets */}
-              <div>
-                {activeTab === 'blogs' && (
-                  <div>
-                    {loadingArticles ? (
-                      <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-                      </div>
-                    ) : articles.length === 0 ? (
-                      <div className="text-center py-12 text-text-secondary">
-                        <div className="text-6xl mb-4">📄</div>
-                        <p className="mb-4">{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
-                        {isOwnProfile && (
-                          <Link
-                            to="/dashboard/articles/edit"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+          {/* Layout 2 colonnes */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Colonne 1 - Spotify Player + Podcasts */}
+            <div className="space-y-8">
+              {/* Lecteur musical Spotify */}
+              {musicLinks && musicLinks.length > 0 ? (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                    <IconImg name="spotify" className="w-6 h-6" />
+                    Spotify
+                  </h2>
+                  <div className="space-y-4">
+                    {musicLinks.map(link => (
+                      <div key={link.id} className="rounded-lg overflow-hidden">
+                        {link.embed_html ? (
+                          <div dangerouslySetInnerHTML={{ __html: link.embed_html }} />
+                        ) : (
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent hover:text-accent-hover flex items-center gap-2"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            {lang === 'fr' ? 'Écrire un article' : lang === 'es' ? 'Escribir un artículo' : 'Write an article'}
-                          </Link>
+                            <span className="text-2xl">
+                              {link.platform === 'spotify' && '🎵'}
+                              {link.platform === 'bandcamp' && '🎸'}
+                              {link.platform === 'apple_music' && '🍎'}
+                              {link.platform === 'soundcloud' && '☁️'}
+                              {link.platform === 'youtube' && '▶️'}
+                            </span>
+                            <span>{t.publicProfile?.openOn || 'Ouvrir sur'} {link.platform}</span>
+                          </a>
                         )}
                       </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {articles.map(article => (
-                          <Link
-                            key={article.id}
-                            to={`/article/${article.slug}`}
-                            className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
-                          >
-                            {article.featured_image && (
-                              <div className="aspect-video w-full overflow-hidden">
+                    ))}
+                  </div>
+                </div>
+              ) : isOwnProfile && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                    <IconImg name="spotify" className="w-6 h-6" />
+                    Spotify
+                  </h2>
+                  <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {lang === 'fr' ? 'Ajoutez votre lien Spotify pour afficher votre musique' : lang === 'es' ? 'Añade tu enlace de Spotify para mostrar tu música' : 'Add your Spotify link to display your music'}
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={spotifyLink}
+                        onChange={(e) => setSpotifyLink(e.target.value)}
+                        placeholder="https://open.spotify.com/artist/..."
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                        disabled={savingSpotify}
+                      />
+                      <button
+                        onClick={handleSaveSpotifyLink}
+                        disabled={!spotifyLink.trim() || savingSpotify}
+                        className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+                      >
+                        {savingSpotify ? (lang === 'fr' ? 'Enregistrement...' : lang === 'es' ? 'Guardando...' : 'Saving...') : (lang === 'fr' ? 'Ajouter' : lang === 'es' ? 'Añadir' : 'Add')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Section Podcasts */}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                  <IconImg name="mic" className="w-6 h-6" />
+                  {t.publicProfile?.podcasts || 'Podcasts'}
+                </h2>
+                {loadingPodcasts ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                  </div>
+                ) : podcasts.length === 0 ? (
+                  <div className="text-center py-12 text-text-secondary">
+                    <p className="mb-4">{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
+                    {isOwnProfile && (
+                      <Link
+                        to="/dashboard/podcasts/edit"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                      >
+                        <img
+                          src="/icons/dark/mic.svg"
+                          alt=""
+                          className="w-5 h-5 invert"
+                        />
+                        {lang === 'fr' ? 'Ajouter un podcast' : lang === 'es' ? 'Añadir un podcast' : 'Add a podcast'}
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {podcasts.map(podcast => {
+                      const podcastLink = podcast.website_url || podcast.rss_url || `/podcast/${podcast.id}`;
+                      const isExternalLink = podcastLink.startsWith('http');
+                      const LinkWrapper = isExternalLink ? 'a' : Link;
+                      const linkProps = isExternalLink
+                        ? { href: podcastLink, target: '_blank', rel: 'noopener noreferrer' }
+                        : { to: podcastLink };
+
+                      return (
+                        <LinkWrapper
+                          key={podcast.id}
+                          {...linkProps}
+                          className="group block bg-gradient-to-br from-gray-900 to-black dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-700 hover:border-red-500"
+                        >
+                          <div className="flex gap-4 p-5">
+                            {podcast.image_url && (
+                              <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md shrink-0">
                                 <img
-                                  src={article.featured_image}
-                                  alt={article.title}
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                  src={podcast.image_url}
+                                  alt={podcast.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               </div>
                             )}
-                            <div className="p-5">
-                              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-red-500 transition-colors leading-tight line-clamp-2">
-                                {article.title}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors leading-tight line-clamp-2">
+                                {podcast.title}
                               </h3>
-                              {article.excerpt && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-                                  {article.excerpt}
+                              {podcast.description && (
+                                <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                                  {podcast.description}
                                 </p>
                               )}
-                              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-                                <span>
-                                  {new Date(article.published_at || article.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/10 text-red-400 rounded-full">
+                                  🎙️ Podcast
                                 </span>
-                                <span className="flex items-center gap-1 text-red-500 group-hover:gap-2 transition-all">
-                                  Lire
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </span>
+                                {isExternalLink && (
+                                  <span className="inline-flex items-center gap-1 text-gray-400 group-hover:text-red-400 transition-colors">
+                                    Écouter
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </span>
+                                )}
                               </div>
                             </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                          </div>
+                        </LinkWrapper>
+                      );
+                    })}
                   </div>
                 )}
-
-                {activeTab === 'podcasts' && (
-                  <div>
-                    {loadingPodcasts ? (
-                      <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-                      </div>
-                    ) : podcasts.length === 0 ? (
-                      <div className="text-center py-12 text-text-secondary">
-                        <div className="text-6xl mb-4">🎙️</div>
-                        <p className="mb-4">{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
-                        {isOwnProfile && (
-                          <Link
-                            to="/dashboard?tab=podcasts"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            {lang === 'fr' ? 'Ajouter un podcast' : lang === 'es' ? 'Añadir un podcast' : 'Add a podcast'}
-                          </Link>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {podcasts.map(podcast => {
-                          const podcastLink = podcast.website_url || podcast.rss_url || `/podcast/${podcast.id}`;
-                          const isExternalLink = podcastLink.startsWith('http');
-                          const LinkWrapper = isExternalLink ? 'a' : Link;
-                          const linkProps = isExternalLink
-                            ? { href: podcastLink, target: '_blank', rel: 'noopener noreferrer' }
-                            : { to: podcastLink };
-
-                          return (
-                            <LinkWrapper
-                              key={podcast.id}
-                              {...linkProps}
-                              className="group block bg-gradient-to-br from-gray-900 to-black dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-700 hover:border-red-500"
-                            >
-                              <div className="flex gap-4 p-5">
-                                {podcast.image_url && (
-                                  <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md shrink-0">
-                                    <img
-                                      src={podcast.image_url}
-                                      alt={podcast.title}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors leading-tight line-clamp-2">
-                                    {podcast.title}
-                                  </h3>
-                                  {podcast.description && (
-                                    <p className="text-sm text-gray-400 line-clamp-2 mb-3">
-                                      {podcast.description}
-                                    </p>
-                                  )}
-                                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/10 text-red-400 rounded-full">
-                                      🎙️ Podcast
-                                    </span>
-                                    {isExternalLink && (
-                                      <span className="inline-flex items-center gap-1 text-gray-400 group-hover:text-red-400 transition-colors">
-                                        Écouter
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </LinkWrapper>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
               </div>
+            </div>
+
+            {/* Colonne 2 - Articles */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <IconImg name="paper" className="w-6 h-6" />
+                {t.publicProfile?.blog || 'Blog'}
+              </h2>
+              {loadingArticles ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                </div>
+              ) : articles.length === 0 ? (
+                <div className="text-center py-12 text-text-secondary">
+                  <p className="mb-4">{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
+                  {isOwnProfile && (
+                    <Link
+                      to="/dashboard/articles/edit"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                    >
+                      <img
+                        src="/icons/dark/paper.svg"
+                        alt=""
+                        className="w-5 h-5 invert"
+                      />
+                      {lang === 'fr' ? 'Écrire un article' : lang === 'es' ? 'Escribir un artículo' : 'Write an article'}
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {articles.map(article => (
+                    <Link
+                      key={article.id}
+                      to={`/article/${article.slug}`}
+                      className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
+                    >
+                      {article.featured_image && (
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img
+                            src={article.featured_image}
+                            alt={article.title}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-red-500 transition-colors leading-tight line-clamp-2">
+                          {article.title}
+                        </h3>
+                        {article.excerpt && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+                            {article.excerpt}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+                          <span>
+                            {new Date(article.published_at || article.created_at).toLocaleDateString(lang === 'fr' ? 'fr-CA' : 'en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                          <span className="flex items-center gap-1 text-red-500 group-hover:gap-2 transition-all">
+                            Lire
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
