@@ -103,7 +103,7 @@ export default function Artists() {
             {/* Barre de recherche et filtres */}
             <div className="mt-6 space-y-4">
               {/* Recherche par nom */}
-              <div className="flex-1">
+              <div className="max-w-[60%]">
                 <div className="relative">
                   <input
                     type="text"
@@ -133,7 +133,7 @@ export default function Artists() {
               </div>
 
               {/* Filtres par genre et pays */}
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-4 max-w-[60%]">
                 {/* Filtre par genre */}
                 <div className="flex-1">
                   <select
