@@ -243,13 +243,20 @@ export default function SubmitMusic() {
 
       // Call Supabase Edge Function
       const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || 'https://gpcedzaflhiucwyjgdai.supabase.co';
+      const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/submit-music`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Upload error:', errorData);
+        throw new Error(errorData.error || 'Upload failed');
       }
 
       // Success
