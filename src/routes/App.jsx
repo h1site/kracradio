@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import PlayerBar from '../components/PlayerBar';
 import Footer from '../components/Footer';
+import ScrollToTop from '../components/ScrollToTop';
 
 import Home from '../pages/Home';
 import Channel from '../pages/Channel';
@@ -67,6 +68,7 @@ export default function App() {
 
   return (
     <div className="bg-white text-black dark:bg-[#1e1e1e] dark:text-white">
+      <ScrollToTop />
       <Header />
       <Sidebar />
 
