@@ -32,16 +32,13 @@ export function AuthProvider({ children }) {
       try {
         console.log('[Auth] Getting session...');
 
-        // Add timeout to prevent hanging
-        const getSessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((resolve) =>
-          setTimeout(() => {
-            console.warn('[Auth] getSession timeout after 3s');
-            resolve({ data: { session: null }, error: null });
-          }, 3000)
-        );
+        // Get session - Supabase reads from localStorage first (instant), then validates with server
+        const { data, error: sessionError } = await supabase.auth.getSession();
 
-        const { data } = await Promise.race([getSessionPromise, timeoutPromise]);
+        if (sessionError) {
+          console.warn('[Auth] getSession error:', sessionError);
+        }
+
         console.log('[Auth] Session retrieved:', data?.session?.user?.email || 'no session');
 
         if (!mounted) {
@@ -101,10 +98,17 @@ export function AuthProvider({ children }) {
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[Auth] State change:', event, session?.user?.email || 'no user');
 
+      // Ignore INITIAL_SESSION - we handle this in init()
+      if (event === 'INITIAL_SESSION') {
+        console.log('[Auth] INITIAL_SESSION event, skipping (handled in init)');
+        return;
+      }
+
       if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         console.log('[Auth] User signed out, clearing state');
         setUser(null);
         setUserRole(null);
+        setLoading(false);
         return;
       }
 
@@ -121,22 +125,12 @@ export function AuthProvider({ children }) {
 
         console.log('[Auth] Fetching role from profiles table on auth change');
 
-        // Fetch role with timeout
-        const fetchRolePromise = supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentUser.id)
-          .maybeSingle();
-
-        const timeoutPromise = new Promise((resolve) =>
-          setTimeout(() => {
-            console.warn('[Auth] Profile fetch timeout, using default role');
-            resolve({ data: null, error: null });
-          }, 2000)
-        );
-
         try {
-          const { data: profileData, error: profileError } = await Promise.race([fetchRolePromise, timeoutPromise]);
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUser.id)
+            .maybeSingle();
 
           if (profileError) {
             console.warn('[Auth] Failed to fetch user role on auth change:', profileError);
