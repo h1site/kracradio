@@ -371,7 +371,7 @@ export default function PlayerBar() {
       <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-black via-[#0a0a0a] to-[#111111] backdrop-blur-xl border-t border-white/5 text-white shadow-2xl">
         {/* MOBILE */}
         <div className="md:hidden">
-          <PlayerBarMobile art="/channels/default.webp" title="—" artist="—" />
+          <PlayerBarMobile art="/channels/default.webp" title="—" artist="—" isLiked={isLiked} onLikeClick={handleLikeClick} likeLabel={likeLabel} />
         </div>
 
         {/* DESKTOP (inchangé, masqué sur mobile) */}
@@ -495,7 +495,7 @@ export default function PlayerBar() {
     <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-black via-[#0a0a0a] to-[#111111] backdrop-blur-xl border-t border-white/5 text-white shadow-2xl">
       {/* MOBILE */}
       <div className="md:hidden">
-        <PlayerBarMobile art={mobileArt} title={mobileTitle} artist={mobileArtist} />
+        <PlayerBarMobile art={mobileArt} title={mobileTitle} artist={mobileArtist} isLiked={isLiked} onLikeClick={handleLikeClick} likeLabel={likeLabel} />
       </div>
 
       {/* DESKTOP (modernisé) */}

@@ -1,5 +1,5 @@
 // src/components/MobileMenu.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../i18n';
@@ -25,10 +25,10 @@ function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
 export default function MobileMenu({ open, onClose }) {
   const { isDark } = useTheme();
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
-
   const [channelsOpen, setChannelsOpen] = React.useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Ferme la liste des chaînes quand on navigue vers une chaîne
   React.useEffect(() => {
@@ -221,6 +221,113 @@ export default function MobileMenu({ open, onClose }) {
           {/* Divider */}
           <div className={`my-3 border-t ${border}`} />
 
+          {/* Auth Section */}
+          {!user ? (
+            <>
+              <NavLink
+                to="/login"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                  <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
+                </svg>
+                <span className="text-sm font-medium">{t?.auth?.login ?? 'Connexion'}</span>
+              </NavLink>
+              <NavLink
+                to="/register"
+                onClick={onClose}
+                className="mx-1 mb-2 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white dark:bg-white text-black text-sm font-medium"
+              >
+                <span>{t?.auth?.register ?? 'Inscription'}</span>
+              </NavLink>
+            </>
+          ) : (
+            <>
+              {/* Profile */}
+              <NavLink
+                to="/profile"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+                <span className="text-sm font-medium">{t?.nav?.profile ?? 'Profil'}</span>
+              </NavLink>
+
+              {/* Dashboard */}
+              <NavLink
+                to="/dashboard"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                  <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+                </svg>
+                <span className="text-sm font-medium">{t?.nav?.dashboard ?? 'Dashboard'}</span>
+              </NavLink>
+
+              {/* Liked Songs */}
+              <NavLink
+                to="/liked-songs"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span className="text-sm font-medium">{t?.likedSongs?.title ?? 'Chansons aimées'}</span>
+              </NavLink>
+
+              {/* Settings */}
+              <NavLink
+                to="/settings"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <IconImg name="settings" />
+                <span className="text-sm font-medium">{t?.site?.settings ?? 'Paramètres'}</span>
+              </NavLink>
+
+              {/* Logout */}
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={async () => {
+                  if (loggingOut) return;
+                  setLoggingOut(true);
+                  try {
+                    await signOut();
+                  } catch (e) {
+                    console.error('[MobileMenu] Logout error:', e);
+                  } finally {
+                    window.location.href = '/';
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} disabled:opacity-50`}
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                  <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                </svg>
+                <span className="text-sm font-medium">{loggingOut ? '...' : (t?.auth?.logout ?? 'Déconnexion')}</span>
+              </button>
+            </>
+          )}
+
+          {/* Divider */}
+          <div className={`my-3 border-t ${border}`} />
+
           {/* Actions Section */}
           {user && (
             <NavLink
@@ -248,7 +355,9 @@ export default function MobileMenu({ open, onClose }) {
               rel="noopener noreferrer"
               className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border ${border} ${itemHover} text-xs`}
             >
-              <IconImg name="store" className="w-4 h-4" />
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12z" />
+              </svg>
               <span className="truncate">{t?.site?.store ?? 'Store'}</span>
             </a>
             <a
@@ -257,7 +366,9 @@ export default function MobileMenu({ open, onClose }) {
               rel="noopener noreferrer"
               className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border ${border} ${itemHover} text-xs`}
             >
-              <IconImg name="donation" className="w-4 h-4" />
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
               <span className="truncate">{t?.site?.donation ?? 'Donate'}</span>
             </a>
           </div>
