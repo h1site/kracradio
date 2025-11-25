@@ -1,14 +1,25 @@
 // src/components/ChannelCarousel.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ChannelCard from './ChannelCard';
 
 /**
- * Carrousel horizontal sans scroll natif (pas de barre),
- * translate3d + inertie. Préserve les clics sur les boutons/liens.
+ * Carrousel horizontal avec scroll natif sur mobile (meilleure UX)
+ * et drag personnalisé sur desktop.
  */
 export default function ChannelCarousel({ channels }) {
   const viewportRef = useRef(null);
   const rowRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Détecter mobile/touch device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const st = useRef({
     down: false,
@@ -26,9 +37,10 @@ export default function ChannelCarousel({ channels }) {
   });
 
   const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
-  const applyTx = (tx) => { if (rowRef.current) rowRef.current.style.transform = `translate3d(${tx}px,0,0)`; };
+  const applyTx = (tx) => { if (rowRef.current && !isMobile) rowRef.current.style.transform = `translate3d(${tx}px,0,0)`; };
 
   const measure = () => {
+    if (isMobile) return; // Skip pour mobile - utilise scroll natif
     const view = viewportRef.current;
     const row = rowRef.current;
     if (!view || !row) return;
@@ -53,13 +65,14 @@ export default function ChannelCarousel({ channels }) {
       window.removeEventListener('resize', measure);
       cancelAnimationFrame(st.current.raf);
     };
-  }, []);
+  }, [isMobile]);
 
   const isInteractive = (el) => el?.closest?.('button,a,input,select,textarea');
 
   const onPointerDown = (e) => {
-    if (isInteractive(e.target)) return; // <-- PRÉSERVE LES CLICS
-    const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    if (isMobile) return; // Utilise scroll natif sur mobile
+    if (isInteractive(e.target)) return;
+    const x = e.clientX ?? 0;
     st.current.down = true;
     st.current.startX = x;
     st.current.startTx = st.current.tx;
@@ -71,14 +84,14 @@ export default function ChannelCarousel({ channels }) {
   };
 
   const onPointerMove = (e) => {
-    if (!st.current.down) return;
+    if (isMobile || !st.current.down) return;
     e.preventDefault();
-    const x = e.clientX ?? e.touches?.[0]?.clientX ?? st.current.lastX;
+    const x = e.clientX ?? st.current.lastX;
     const dx = x - st.current.startX;
     const raw = st.current.startTx + dx;
     let next = raw;
-    if (raw > st.current.max)       next = st.current.max + (raw - st.current.max) * 0.25;
-    else if (raw < st.current.min)  next = st.current.min + (raw - st.current.min) * 0.25;
+    if (raw > st.current.max) next = st.current.max + (raw - st.current.max) * 0.25;
+    else if (raw < st.current.min) next = st.current.min + (raw - st.current.min) * 0.25;
     st.current.tx = next;
     applyTx(next);
 
@@ -90,21 +103,23 @@ export default function ChannelCarousel({ channels }) {
   };
 
   const animateMomentum = () => {
+    if (isMobile) return;
     cancelAnimationFrame(st.current.raf);
     const step = () => {
-      st.current.v *= 0.92; // Friction légèrement plus douce (était 0.95)
+      st.current.v *= 0.92;
       let next = st.current.tx + st.current.v * (1 / 60);
       if (next > st.current.max) { next = (next + st.current.max) / 2; st.current.v *= 0.5; }
       else if (next < st.current.min) { next = (next + st.current.min) / 2; st.current.v *= 0.5; }
       st.current.tx = next;
       applyTx(next);
-      if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step); // Seuil réduit (était 20)
+      if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step);
       else { st.current.tx = clamp(st.current.tx, st.current.min, st.current.max); applyTx(st.current.tx); }
     };
-    if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step); // Seuil réduit (était 20)
+    if (Math.abs(st.current.v) > 10) st.current.raf = requestAnimationFrame(step);
   };
 
   const onPointerUp = (e) => {
+    if (isMobile) return;
     st.current.down = false;
     viewportRef.current?.classList.remove('cursor-grabbing');
     viewportRef.current?.releasePointerCapture?.(e.pointerId);
@@ -112,27 +127,53 @@ export default function ChannelCarousel({ channels }) {
   };
 
   const onWheel = (e) => {
-    e.preventDefault(); // Empêche le scroll de page
+    if (isMobile) return;
+    e.preventDefault();
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    st.current.v = delta * 5; // Réduction de la vélocité (était 10)
-    st.current.tx = clamp(st.current.tx - delta * 1.5, st.current.min - 200, st.current.max + 200); // Mouvement plus doux
+    st.current.v = delta * 5;
+    st.current.tx = clamp(st.current.tx - delta * 1.5, st.current.min - 200, st.current.max + 200);
     applyTx(st.current.tx);
     animateMomentum();
   };
 
+  // Mobile: utilise scroll natif avec -webkit-overflow-scrolling
+  if (isMobile) {
+    return (
+      <div className="relative">
+        <div
+          className="overflow-x-auto scrollbar-hide px-5 pb-6 -mx-5"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            scrollSnapType: 'x mandatory',
+            scrollPaddingLeft: '20px'
+          }}
+        >
+          <div className="flex gap-4 px-5" style={{ width: 'max-content' }}>
+            {channels.map((ch) => (
+              <div
+                key={ch.key}
+                className="shrink-0 w-[280px]"
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <ChannelCard channel={ch} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: drag personnalisé
   return (
     <div className="relative">
       <div
         ref={viewportRef}
         className="overflow-hidden select-none cursor-grab px-5 pb-6"
-        style={{ touchAction: 'pan-x', willChange: 'transform' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onTouchStart={onPointerDown}
-        onTouchMove={onPointerMove}
-        onTouchEnd={onPointerUp}
         onWheel={onWheel}
       >
         <div
@@ -146,7 +187,7 @@ export default function ChannelCarousel({ channels }) {
           }}
         >
           {channels.map((ch) => (
-            <div key={ch.key} className="shrink-0 w-[260px] sm:w-[280px] md:w-[300px]">
+            <div key={ch.key} className="shrink-0 w-[280px] md:w-[300px]">
               <ChannelCard channel={ch} />
             </div>
           ))}
