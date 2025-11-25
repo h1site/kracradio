@@ -605,6 +605,21 @@
     "clearSearch": "Effacer la recherche",
     "resetAllFilters": "Réinitialiser tous les filtres"
   },
+  "likedSongs": {
+    "title": "Chansons aimées",
+    "song": "chanson aimée",
+    "songs": "chansons aimées",
+    "noLikes": "Vous n'avez pas encore aimé de chansons",
+    "playAll": "Tout lire",
+    "shuffle": "Aléatoire",
+    "notAvailable": "Non disponible",
+    "removeFromFavorites": "Retirer des favoris",
+    "error": "Erreur",
+    "warningTitle": "Première écoute",
+    "warningMessage": "La première fois que vous appuyez sur lecture, notre moteur de recherche peut prendre quelques secondes pour trouver la chanson dans notre base de données. Il est aussi possible que certaines chansons ne soient pas disponibles.",
+    "warningSupport": "Si vous aimez un artiste, pensez à acheter sa musique pour le soutenir !",
+    "warningDismiss": "Compris !"
+  },
   "posts": {
     "createPost": {
       "placeholder": "Quoi de neuf ?",

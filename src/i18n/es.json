@@ -605,6 +605,21 @@
     "clearSearch": "Borrar búsqueda",
     "resetAllFilters": "Restablecer todos los filtros"
   },
+  "likedSongs": {
+    "title": "Canciones favoritas",
+    "song": "canción favorita",
+    "songs": "canciones favoritas",
+    "noLikes": "Aún no has marcado ninguna canción como favorita",
+    "playAll": "Reproducir todo",
+    "shuffle": "Aleatorio",
+    "notAvailable": "No disponible",
+    "removeFromFavorites": "Quitar de favoritos",
+    "error": "Error",
+    "warningTitle": "Primera reproducción",
+    "warningMessage": "La primera vez que presiones reproducir, nuestro motor de búsqueda puede tardar unos segundos en encontrar la canción en nuestra base de datos. También es posible que algunas canciones no estén disponibles.",
+    "warningSupport": "Si te gusta un artista, ¡considera comprar su música para apoyarlo!",
+    "warningDismiss": "¡Entendido!"
+  },
   "posts": {
     "createPost": {
       "placeholder": "¿Qué está pasando?",

@@ -605,6 +605,21 @@
     "clearSearch": "Clear search",
     "resetAllFilters": "Reset all filters"
   },
+  "likedSongs": {
+    "title": "Liked Songs",
+    "song": "liked song",
+    "songs": "liked songs",
+    "noLikes": "You haven't liked any songs yet",
+    "playAll": "Play All",
+    "shuffle": "Shuffle",
+    "notAvailable": "Not available",
+    "removeFromFavorites": "Remove from favorites",
+    "error": "Error",
+    "warningTitle": "First time playing",
+    "warningMessage": "The first time you press play, our search engine may take a few seconds to find the song in our database. Some songs may also not be available.",
+    "warningSupport": "If you like an artist, consider buying their music to support them!",
+    "warningDismiss": "Got it!"
+  },
   "posts": {
     "createPost": {
       "placeholder": "What's happening?",

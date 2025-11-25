@@ -14,7 +14,10 @@ import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
 
 export default function PlayerBar() {
-  const { current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek, playChannel } = useAudio();
+  const {
+    current, currentType, podcastMeta, playing, togglePlay, setVolume, volume, audio, seek, playChannel,
+    playlist, playlistIndex, playNextTrack, playPreviousTrack, hasNextTrack, hasPreviousTrack
+  } = useAudio();
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
   const { isDark } = useTheme();
@@ -133,9 +136,9 @@ export default function PlayerBar() {
     }
   }, [currentType, podcastMeta]);
 
-  // Synchroniser elapsed avec audio.currentTime pour les podcasts
+  // Synchroniser elapsed avec audio.currentTime pour les podcasts et liked songs
   useEffect(() => {
-    if (currentType !== 'podcast' || !audio) return;
+    if ((currentType !== 'podcast' && currentType !== 'liked') || !audio) return;
 
     const updateTime = () => {
       setElapsed(audio.currentTime || 0);
@@ -158,7 +161,7 @@ export default function PlayerBar() {
   // Tick local pour animer la progression (radio seulement)
   useEffect(() => {
     clearInterval(tickRef.current);
-    if (!playing || currentType === 'podcast') return; // Ne pas utiliser tick pour podcast
+    if (!playing || currentType === 'podcast' || currentType === 'liked') return; // Ne pas utiliser tick pour podcast/liked
     tickRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(tickRef.current);
   }, [playing, currentType]);
@@ -171,8 +174,8 @@ export default function PlayerBar() {
 
   // Fonction pour gérer le clic sur la barre de progression
   const handleProgressClick = (e) => {
-    // Seulement pour les podcasts avec durée connue
-    if (currentType !== 'podcast' || !duration || !seek) return;
+    // Seulement pour les podcasts/liked avec durée connue
+    if ((currentType !== 'podcast' && currentType !== 'liked') || !duration || !seek) return;
 
     const bar = e.currentTarget;
     const rect = bar.getBoundingClientRect();
@@ -345,16 +348,25 @@ export default function PlayerBar() {
   // Prépare les infos affichées
   const mobileArt = isPodcast
     ? (podcastMeta?.image || podcastMeta?.podcastImage || '/channels/default.webp')
-    : (meta?.art || current?.image || '/channels/default.webp');
+    : currentType === 'liked'
+      ? (podcastMeta?.image || '/channels/default.webp')
+      : (meta?.art || current?.image || '/channels/default.webp');
   const mobileTitle = isPodcast
     ? (podcastMeta?.title || '—')
-    : (meta?.title || '—');
+    : currentType === 'liked'
+      ? (podcastMeta?.title || '—')
+      : (meta?.title || '—');
   const mobileArtist = isPodcast
     ? (podcastMeta?.podcastTitle || '—')
-    : (meta?.artist || current?.name || '—');
+    : currentType === 'liked'
+      ? (podcastMeta?.podcastTitle || '—')
+      : (meta?.artist || current?.name || '—');
 
-  // État neutre si aucune chaîne ni podcast
-  if (!current && !isPodcast) {
+  // Check if we're in liked songs mode
+  const isLikedSongs = currentType === 'liked';
+
+  // État neutre si aucune chaîne ni podcast ni liked songs
+  if (!current && !isPodcast && !isLikedSongs) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-black via-[#0a0a0a] to-[#111111] backdrop-blur-xl border-t border-white/5 text-white shadow-2xl">
         {/* MOBILE */}
@@ -488,14 +500,20 @@ export default function PlayerBar() {
 
       {/* DESKTOP (modernisé) */}
       <div className="hidden md:flex relative w-full h-20 items-center px-4 gap-4">
-        {/* Bloc 1 — Image de la chaîne OU image principale podcast */}
+        {/* Bloc 1 — Image de la chaîne OU image principale podcast OU liked songs icon */}
         <div className="relative channel-menu-container">
           <button
-            onClick={isPodcast ? undefined : toggleChannelMenu}
-            disabled={isPodcast}
-            className={`h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0 ${!isPodcast ? 'hover:border-red-500/50 cursor-pointer transition-all' : 'cursor-default'}`}
+            onClick={(isPodcast || isLikedSongs) ? undefined : toggleChannelMenu}
+            disabled={isPodcast || isLikedSongs}
+            className={`h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0 ${(!isPodcast && !isLikedSongs) ? 'hover:border-red-500/50 cursor-pointer transition-all' : 'cursor-default'}`}
           >
-            {isPodcast ? (
+            {isLikedSongs ? (
+              <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 text-white" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+            ) : isPodcast ? (
               podcastMeta?.podcastImage ? (
                 <img src={podcastMeta.podcastImage} alt={podcastMeta.podcastTitle} className="w-full h-full object-cover" />
               ) : (
@@ -537,18 +555,20 @@ export default function PlayerBar() {
           )}
         </div>
 
-        {/* Bloc 2 — Label + nom du channel OU nom du podcast */}
+        {/* Bloc 2 — Label + nom du channel OU nom du podcast OU Liked Songs */}
         <button
-          onClick={isPodcast ? undefined : toggleChannelMenu}
-          disabled={isPodcast}
-          className={`channel-menu-container flex flex-col justify-center min-w-[140px] px-2 text-left ${!isPodcast ? 'hover:opacity-80 cursor-pointer transition-opacity' : 'cursor-default'}`}
+          onClick={(isPodcast || isLikedSongs) ? undefined : toggleChannelMenu}
+          disabled={isPodcast || isLikedSongs}
+          className={`channel-menu-container flex flex-col justify-center min-w-[140px] px-2 text-left ${(!isPodcast && !isLikedSongs) ? 'hover:opacity-80 cursor-pointer transition-opacity' : 'cursor-default'}`}
         >
           <div className="text-[10px] uppercase font-semibold tracking-wider opacity-50 leading-none mb-1">
-            {isPodcast ? podcastLabel : channelLabel}
+            {isLikedSongs ? 'Chansons aimées' : isPodcast ? podcastLabel : channelLabel}
           </div>
           <div className="font-bold text-sm leading-tight truncate flex items-center gap-1">
-            {isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
-            {!isPodcast && (
+            {isLikedSongs ? (
+              playlist.length > 0 ? `${playlistIndex + 1} / ${playlist.length}` : 'En lecture'
+            ) : isPodcast ? (podcastMeta?.podcastTitle || '—') : (current?.name || '—')}
+            {(!isPodcast && !isLikedSongs) && (
               <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -559,9 +579,13 @@ export default function PlayerBar() {
         {/* Séparateur vertical */}
         <div className="h-10 w-px bg-white/10"></div>
 
-        {/* Bloc 4 — Cover du morceau OU image épisode */}
+        {/* Bloc 4 — Cover du morceau OU image épisode OU album art */}
         <div className="h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0">
-          {isPodcast ? (
+          {isLikedSongs ? (
+            podcastMeta?.image ? (
+              <img src={podcastMeta.image} alt="album art" className="w-full h-full object-cover" />
+            ) : <div className="w-full h-full bg-white/5 flex items-center justify-center text-2xl">🎵</div>
+          ) : isPodcast ? (
             podcastMeta?.image ? (
               <img src={podcastMeta.image} alt="episode" className="w-full h-full object-cover" />
             ) : <div className="w-full h-full bg-white/5" />
@@ -572,6 +596,21 @@ export default function PlayerBar() {
 
         {/* Bloc 5 — Play/Pause + Titre - Artiste OU Titre épisode + iPod Button */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
+          {/* Previous Track Button (only for liked songs playlist) */}
+          {currentType === 'liked' && playlist.length > 0 && (
+            <button
+              onClick={playPreviousTrack}
+              disabled={!hasPreviousTrack()}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all duration-200 flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Précédent"
+              title="Précédent"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white">
+                <path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+              </svg>
+            </button>
+          )}
+
           <button
             onClick={togglePlay}
             className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105"
@@ -584,8 +623,33 @@ export default function PlayerBar() {
               <svg viewBox="0 0 24 24" className="w-5 h-5 text-white ml-0.5"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
             )}
           </button>
+
+          {/* Next Track Button (only for liked songs playlist) */}
+          {currentType === 'liked' && playlist.length > 0 && (
+            <button
+              onClick={playNextTrack}
+              disabled={!hasNextTrack()}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all duration-200 flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Suivant"
+              title="Suivant"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white">
+                <path fill="currentColor" d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/>
+              </svg>
+            </button>
+          )}
+
           <div className="font-semibold text-sm truncate">
-            {isPodcast ? (
+            {currentType === 'liked' ? (
+              <>
+                {podcastMeta?.title || '—'} <span className="opacity-50 font-normal">•</span> <span className="opacity-70">{podcastMeta?.podcastTitle || '—'}</span>
+                {playlist.length > 0 && (
+                  <span className="ml-2 text-xs opacity-50 font-normal">
+                    ({playlistIndex + 1}/{playlist.length})
+                  </span>
+                )}
+              </>
+            ) : isPodcast ? (
               podcastMeta?.title || '—'
             ) : (
               <>
@@ -627,10 +691,10 @@ export default function PlayerBar() {
           <div className="text-xs tabular-nums opacity-60 w-10 text-right font-medium">{mmss(elapsed)}</div>
           <div className="w-48">
             <div
-              className={`h-1.5 bg-white/10 rounded-full overflow-hidden ${isPodcast && duration ? 'cursor-pointer hover:h-2 transition-all' : ''}`}
+              className={`h-1.5 bg-white/10 rounded-full overflow-hidden ${(isPodcast || currentType === 'liked') && duration ? 'cursor-pointer hover:h-2 transition-all' : ''}`}
               onClick={handleProgressClick}
-              role={isPodcast && duration ? 'slider' : undefined}
-              aria-label={isPodcast && duration ? progressLabel : undefined}
+              role={(isPodcast || currentType === 'liked') && duration ? 'slider' : undefined}
+              aria-label={(isPodcast || currentType === 'liked') && duration ? progressLabel : undefined}
             >
               {progressPct !== null ? (
                 <div className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full shadow-sm" style={{ width: `${progressPct}%` }} />
