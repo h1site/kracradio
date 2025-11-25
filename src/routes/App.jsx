@@ -37,6 +37,7 @@ import About from '../pages/About';
 import Contact from '../pages/Contact';
 
 import Profile from '../pages/Profile';
+import ProfileRedirect from '../pages/ProfileRedirect';
 import MyArticles from '../pages/MyArticles';
 import AdminPanel from '../pages/AdminPanel';
 import PodcastEditor from '../pages/PodcastEditor';
@@ -92,21 +93,21 @@ export default function App() {
           <Route path="/update-password" element={<AuthUpdatePassword />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
 
-          {/* Profil personnel (protégé, route exacte) */}
+          {/* /profile → redirige vers profil artiste ou /community */}
           <Route
             path="/profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <ProfileRedirect />
               </ProtectedRoute>
             }
           />
-          {/* Alias /settings vers /profile */}
+          {/* /settings → va vers /community (édition profil) */}
           <Route
             path="/settings"
             element={
               <ProtectedRoute>
-                <Profile />
+                <CommunityDashboard />
               </ProtectedRoute>
             }
           />
