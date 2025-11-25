@@ -7,151 +7,87 @@ const AuthCtx = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);   // gate rendering until we know
-  const [signingOut, setSigningOut] = useState(false); // prevent multiple signOut calls
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  // Fetch user role from profiles table
+  const fetchUserRole = async (userId) => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.warn('[Auth] Failed to fetch user role:', profileError);
+        return 'user';
+      }
+      return profileData?.role || 'user';
+    } catch (err) {
+      console.warn('[Auth] Error fetching user role:', err);
+      return 'user';
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
-    let initialLoadComplete = false;
 
-    // Check if we're in an OAuth callback flow
-    const isOAuthCallback = window.location.pathname === '/auth/callback' &&
-                            window.location.search.includes('code=');
-
-    console.log('[Auth] useEffect starting, isOAuthCallback:', isOAuthCallback);
-
-    async function init() {
-      console.log('[Auth] init() starting...');
-
-      // If we're in OAuth callback, skip init entirely - let onAuthStateChange handle it
-      if (isOAuthCallback) {
-        console.log('[Auth] OAuth callback detected, skipping init - onAuthStateChange will handle it');
-        return;
-      }
-
-      try {
-        console.log('[Auth] Getting session...');
-
-        // Get session - Supabase reads from localStorage first (instant), then validates with server
-        const { data, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.warn('[Auth] getSession error:', sessionError);
-        }
-
-        console.log('[Auth] Session retrieved:', data?.session?.user?.email || 'no session');
-
-        if (!mounted) {
-          console.log('[Auth] Component unmounted, exiting init');
-          return;
-        }
-
-        const currentUser = data?.session?.user ?? null;
-        console.log('[Auth] Setting user:', currentUser?.email || 'null');
-        setUser(currentUser);
-
-        if (currentUser) {
-          console.log('[Auth] User exists, fetching role from profiles table');
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', currentUser.id)
-              .maybeSingle();
-
-            if (profileError) {
-              console.warn('[Auth] Failed to fetch user role:', profileError);
-              setUserRole('user');
-            } else {
-              const role = profileData?.role || 'user';
-              setUserRole(role);
-              console.log('[Auth] Role set to:', role);
-            }
-          } catch (err) {
-            console.warn('[Auth] Error fetching user role:', err);
-            setUserRole('user');
-          }
-        } else {
-          console.log('[Auth] No user, setting role to null');
-          setUserRole(null);
-        }
-
-        console.log('[Auth] init() try block completed successfully');
-      } catch (e) {
-        console.error('[Auth] init error:', e);
-        if (mounted) {
-          setUser(null);
-          setUserRole(null);
-        }
-      } finally {
-        if (mounted) {
-          console.log('[Auth] Setting loading to false');
-          setLoading(false);
-          console.log('[Auth] Loading set to false');
-        }
-      }
-      console.log('[Auth] init() function completed');
-    }
-
-    init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Setup auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[Auth] State change:', event, session?.user?.email || 'no user');
 
-      // Ignore INITIAL_SESSION - we handle this in init()
-      if (event === 'INITIAL_SESSION') {
-        console.log('[Auth] INITIAL_SESSION event, skipping (handled in init)');
-        return;
-      }
-
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        console.log('[Auth] User signed out, clearing state');
-        setUser(null);
-        setUserRole(null);
-        setLoading(false);
-        return;
-      }
+      if (!mounted) return;
 
       const currentUser = session?.user ?? null;
-      console.log('[Auth] onAuthStateChange setting user:', currentUser?.email || 'null');
+
+      // Update user state
       setUser(currentUser);
 
+      // Fetch role if user exists
       if (currentUser) {
-        // If this is a SIGNED_IN event during OAuth callback, set loading to false IMMEDIATELY
-        if (event === 'SIGNED_IN' && isOAuthCallback) {
-          console.log('[Auth] SIGNED_IN during OAuth callback, setting loading to false immediately');
-          setLoading(false);
-        }
-
-        console.log('[Auth] Fetching role from profiles table on auth change');
-
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .maybeSingle();
-
-          if (profileError) {
-            console.warn('[Auth] Failed to fetch user role on auth change:', profileError);
-            setUserRole('user');
-          } else {
-            const role = profileData?.role || 'user';
-            setUserRole(role);
-            console.log('[Auth] Role set to:', role);
-          }
-        } catch (err) {
-          console.warn('[Auth] Error fetching user role on auth change:', err);
-          setUserRole('user');
+        const role = await fetchUserRole(currentUser.id);
+        if (mounted) {
+          setUserRole(role);
         }
       } else {
         setUserRole(null);
+      }
+
+      // Always set loading to false after handling auth state
+      if (mounted) {
+        setLoading(false);
+      }
+    });
+
+    // Then get current session
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        console.warn('[Auth] getSession error:', error);
+      }
+
+      console.log('[Auth] Initial session:', session?.user?.email || 'no session');
+
+      if (!mounted) return;
+
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const role = await fetchUserRole(currentUser.id);
+        if (mounted) {
+          setUserRole(role);
+        }
+      }
+
+      if (mounted) {
+        setLoading(false);
       }
     });
 
     return () => {
       mounted = false;
-      sub?.subscription?.unsubscribe?.();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -191,7 +127,6 @@ export function AuthProvider({ children }) {
     // Auto-login après inscription
     if (data.user) {
       setUser(data.user);
-      // Set default role
       setUserRole('user');
     }
 
@@ -199,7 +134,6 @@ export function AuthProvider({ children }) {
   };
 
   const signInWithGoogle = async () => {
-    // Determine the correct redirect URL based on environment
     const isProduction = window.location.hostname === 'kracradio.com' ||
                         window.location.hostname === 'www.kracradio.com';
     const redirectUrl = isProduction
@@ -208,7 +142,6 @@ export function AuthProvider({ children }) {
 
     console.log('[Auth] signInWithGoogle redirectUrl:', redirectUrl);
 
-    // Use PKCE flow which works better with localhost
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -221,13 +154,10 @@ export function AuthProvider({ children }) {
     });
 
     if (error) throw new Error(error.message || 'Google sign-in failed');
-
-    // The browser will redirect automatically, don't need to return anything
     return data;
   };
 
   const signOut = async () => {
-    // Prevent multiple simultaneous signOut calls
     if (signingOut) {
       console.log('[Auth] signOut already in progress, ignoring');
       return;
@@ -237,14 +167,7 @@ export function AuthProvider({ children }) {
     setSigningOut(true);
 
     try {
-      // Create a promise with timeout to prevent hanging
-      const signOutPromise = supabase.auth.signOut();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('SignOut timeout')), 5000)
-      );
-
-      // Race between signOut and timeout
-      const { error } = await Promise.race([signOutPromise, timeoutPromise]);
+      const { error } = await supabase.auth.signOut();
 
       if (error) {
         console.error('[Auth] signOut error:', error);
@@ -252,12 +175,10 @@ export function AuthProvider({ children }) {
       }
       console.log('[Auth] signOut successful');
 
-      // Clear local state after Supabase confirms sign out
       setUser(null);
       setUserRole(null);
 
-      // Clear only Supabase auth keys instead of wiping everything
-      // This preserves user preferences like theme, language, etc.
+      // Clear only Supabase auth keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -267,14 +188,11 @@ export function AuthProvider({ children }) {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       sessionStorage.clear();
-      console.log('[Auth] Auth storage cleared');
     } catch (e) {
       console.error('[Auth] signOut exception:', e);
-      // Even on error, force cleanup
       setUser(null);
       setUserRole(null);
 
-      // Clear only Supabase auth keys on error too
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -284,13 +202,12 @@ export function AuthProvider({ children }) {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       sessionStorage.clear();
-      throw e; // Re-throw to let caller handle
+      throw e;
     } finally {
       setSigningOut(false);
     }
   };
 
-  // Helper functions to check user roles
   const isAdmin = () => userRole === 'admin';
   const isCreator = () => userRole === 'creator' || userRole === 'admin';
   const isUser = () => userRole === 'user';
@@ -308,7 +225,7 @@ export function AuthProvider({ children }) {
     isCreator,
     isUser,
     hasRole
-  }), [user, userRole, loading]);
+  }), [user, userRole, loading, signingOut]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

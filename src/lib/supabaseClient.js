@@ -16,10 +16,10 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Évite les conflits avec les hash params
-    flowType: 'pkce', // Plus sécurisé
-    // Don't use Site URL for OAuth redirects - we'll specify explicitly
-    redirectTo: undefined
+    detectSessionInUrl: true, // Important pour récupérer la session après OAuth
+    flowType: 'pkce',
+    storage: window.localStorage, // Explicitement utiliser localStorage
+    storageKey: 'sb-kracradio-auth-token', // Clé fixe pour la session
   },
   global: {
     headers: {
