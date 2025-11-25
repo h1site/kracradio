@@ -1,30 +1,9 @@
 // src/pages/SubmitMusic.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { Link } from 'react-router-dom';
-
-const GENRES = [
-  'Rock',
-  'Metal',
-  'Jazz',
-  'Electro',
-  'EBM Industrial',
-  'Hip-Hop',
-  'Pop',
-  'Folk',
-  'Blues',
-  'Country',
-  'Reggae',
-  'Classical',
-  'Ambient',
-  'Punk',
-  'Alternative',
-  'Indie',
-  'Electronic',
-  'Autre / Other'
-];
 
 const STRINGS = {
   fr: {
@@ -36,8 +15,6 @@ const STRINGS = {
     registerButton: 'Créer un compte',
     artistName: 'Nom d\'artiste',
     artistNamePlaceholder: 'Votre nom d\'artiste ou groupe',
-    genre: 'Genre musical',
-    genreSelect: 'Sélectionnez un genre',
     uploadFiles: 'Fichiers MP3',
     uploadInstruction: 'Glissez-déposez vos fichiers MP3 ici ou cliquez pour parcourir',
     uploadNote: 'Format accepté: MP3 uniquement • Maximum: 10 fichiers',
@@ -46,17 +23,16 @@ const STRINGS = {
     submit: 'Soumettre la musique',
     submitting: 'Envoi en cours...',
     success: '✅ Musique soumise avec succès!',
-    successMessage: 'Vos fichiers ont été envoyés. Notre équipe les examinera sous peu.',
+    successMessage: 'Vos fichiers ont été envoyés. Notre équipe les examinera sous 2-3 jours.',
     error: 'Erreur lors de l\'envoi',
     errorArtistName: 'Veuillez entrer votre nom d\'artiste',
-    errorGenre: 'Veuillez sélectionner un genre',
     errorFiles: 'Veuillez sélectionner au moins un fichier MP3',
     errorUpload: 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.',
     howItWorks: 'Comment ça marche?',
     step1: '1. Connectez-vous',
     step1Desc: 'Créez un compte gratuit ou connectez-vous à votre compte KracRadio',
     step2: '2. Remplissez le formulaire',
-    step2Desc: 'Entrez votre nom d\'artiste et sélectionnez le genre de votre musique',
+    step2Desc: 'Entrez votre nom d\'artiste',
     step3: '3. Téléversez vos MP3',
     step3Desc: 'Glissez-déposez vos fichiers MP3 (maximum 10 fichiers)',
     step4: '4. Soumettez',
@@ -66,7 +42,21 @@ const STRINGS = {
     guideline2: 'Maximum 10 fichiers par soumission',
     guideline3: 'Assurez-vous d\'avoir les droits sur la musique soumise',
     guideline4: 'La musique sera examinée avant d\'être diffusée',
-    guideline5: 'Délai de révision: 5-7 jours ouvrables'
+    guideline5: 'Délai de révision: 5-7 jours ouvrables',
+    // MP3 Tag Important Section
+    importantTitle: 'IMPORTANT - Tags MP3 ID3',
+    importantDesc: 'Pour maximiser vos chances d\'approbation, vos fichiers MP3 doivent avoir des métadonnées (tags ID3) correctement remplies. Des tags incomplets ou manquants peuvent entraîner un refus.',
+    mp3TagsTitle: 'Tags ID3 requis:',
+    mp3Tag1: 'Titre de la chanson (Title)',
+    mp3Tag2: 'Nom de l\'artiste (Artist)',
+    mp3Tag3: 'Nom de l\'album (Album)',
+    mp3Tag4: 'Année de sortie (Year)',
+    mp3Tag5: 'Genre musical (Genre)',
+    mp3Tag6: 'Image de couverture (Album Art) - fortement recommandé',
+    verifyTitle: 'Vérifiez vos tags MP3',
+    verifyDesc: 'Utilisez notre application web gratuite pour vérifier et éditer les tags ID3 de vos fichiers MP3 avant de soumettre:',
+    verifyLink: 'kemp3.app',
+    verifyNote: 'Cette étape est cruciale pour éviter les refus!'
   },
   en: {
     title: 'Submit Your Music',
@@ -77,8 +67,6 @@ const STRINGS = {
     registerButton: 'Create Account',
     artistName: 'Artist Name',
     artistNamePlaceholder: 'Your artist or band name',
-    genre: 'Music Genre',
-    genreSelect: 'Select a genre',
     uploadFiles: 'MP3 Files',
     uploadInstruction: 'Drag and drop your MP3 files here or click to browse',
     uploadNote: 'Accepted format: MP3 only • Maximum: 10 files',
@@ -87,17 +75,16 @@ const STRINGS = {
     submit: 'Submit Music',
     submitting: 'Submitting...',
     success: '✅ Music submitted successfully!',
-    successMessage: 'Your files have been sent. Our team will review them shortly.',
+    successMessage: 'Your files have been sent. Our team will review them within 2-3 days.',
     error: 'Upload Error',
     errorArtistName: 'Please enter your artist name',
-    errorGenre: 'Please select a genre',
     errorFiles: 'Please select at least one MP3 file',
     errorUpload: 'An error occurred during upload. Please try again.',
     howItWorks: 'How It Works?',
     step1: '1. Log In',
     step1Desc: 'Create a free account or log in to your KracRadio account',
     step2: '2. Fill the Form',
-    step2Desc: 'Enter your artist name and select your music genre',
+    step2Desc: 'Enter your artist name',
     step3: '3. Upload MP3s',
     step3Desc: 'Drag and drop your MP3 files (maximum 10 files)',
     step4: '4. Submit',
@@ -107,7 +94,21 @@ const STRINGS = {
     guideline2: 'Maximum 10 files per submission',
     guideline3: 'Ensure you own the rights to the music submitted',
     guideline4: 'Music will be reviewed before being broadcast',
-    guideline5: 'Review time: 5-7 business days'
+    guideline5: 'Review time: 5-7 business days',
+    // MP3 Tag Important Section
+    importantTitle: 'IMPORTANT - MP3 ID3 Tags',
+    importantDesc: 'To maximize your chances of approval, your MP3 files must have properly filled metadata (ID3 tags). Incomplete or missing tags may result in rejection.',
+    mp3TagsTitle: 'Required ID3 Tags:',
+    mp3Tag1: 'Song Title (Title)',
+    mp3Tag2: 'Artist Name (Artist)',
+    mp3Tag3: 'Album Name (Album)',
+    mp3Tag4: 'Release Year (Year)',
+    mp3Tag5: 'Music Genre (Genre)',
+    mp3Tag6: 'Cover Image (Album Art) - highly recommended',
+    verifyTitle: 'Verify Your MP3 Tags',
+    verifyDesc: 'Use our free web application to verify and edit the ID3 tags of your MP3 files before submitting:',
+    verifyLink: 'kemp3.app',
+    verifyNote: 'This step is crucial to avoid rejection!'
   },
   es: {
     title: 'Enviar tu música',
@@ -118,8 +119,6 @@ const STRINGS = {
     registerButton: 'Crear cuenta',
     artistName: 'Nombre del artista',
     artistNamePlaceholder: 'Tu nombre de artista o banda',
-    genre: 'Género musical',
-    genreSelect: 'Selecciona un género',
     uploadFiles: 'Archivos MP3',
     uploadInstruction: 'Arrastra y suelta tus archivos MP3 aquí o haz clic para explorar',
     uploadNote: 'Formato aceptado: solo MP3 • Máximo: 10 archivos',
@@ -128,17 +127,16 @@ const STRINGS = {
     submit: 'Enviar música',
     submitting: 'Enviando...',
     success: '✅ ¡Música enviada con éxito!',
-    successMessage: 'Tus archivos han sido enviados. Nuestro equipo los revisará pronto.',
+    successMessage: 'Tus archivos han sido enviados. Nuestro equipo los revisará en 2-3 días.',
     error: 'Error de carga',
     errorArtistName: 'Por favor ingresa tu nombre de artista',
-    errorGenre: 'Por favor selecciona un género',
     errorFiles: 'Por favor selecciona al menos un archivo MP3',
     errorUpload: 'Ocurrió un error durante la carga. Por favor intenta de nuevo.',
     howItWorks: '¿Cómo funciona?',
     step1: '1. Inicia sesión',
     step1Desc: 'Crea una cuenta gratuita o inicia sesión en tu cuenta KracRadio',
     step2: '2. Completa el formulario',
-    step2Desc: 'Ingresa tu nombre de artista y selecciona el género de tu música',
+    step2Desc: 'Ingresa tu nombre de artista',
     step3: '3. Sube MP3s',
     step3Desc: 'Arrastra y suelta tus archivos MP3 (máximo 10 archivos)',
     step4: '4. Enviar',
@@ -148,7 +146,21 @@ const STRINGS = {
     guideline2: 'Máximo 10 archivos por envío',
     guideline3: 'Asegúrate de tener los derechos de la música enviada',
     guideline4: 'La música será revisada antes de ser transmitida',
-    guideline5: 'Tiempo de revisión: 5-7 días hábiles'
+    guideline5: 'Tiempo de revisión: 5-7 días hábiles',
+    // MP3 Tag Important Section
+    importantTitle: 'IMPORTANTE - Etiquetas ID3 MP3',
+    importantDesc: 'Para maximizar tus posibilidades de aprobación, tus archivos MP3 deben tener metadatos (etiquetas ID3) correctamente completados. Etiquetas incompletas o faltantes pueden resultar en rechazo.',
+    mp3TagsTitle: 'Etiquetas ID3 requeridas:',
+    mp3Tag1: 'Título de la canción (Title)',
+    mp3Tag2: 'Nombre del artista (Artist)',
+    mp3Tag3: 'Nombre del álbum (Album)',
+    mp3Tag4: 'Año de lanzamiento (Year)',
+    mp3Tag5: 'Género musical (Genre)',
+    mp3Tag6: 'Imagen de portada (Album Art) - altamente recomendado',
+    verifyTitle: 'Verifica tus etiquetas MP3',
+    verifyDesc: 'Usa nuestra aplicación web gratuita para verificar y editar las etiquetas ID3 de tus archivos MP3 antes de enviar:',
+    verifyLink: 'kemp3.app',
+    verifyNote: '¡Este paso es crucial para evitar el rechazo!'
   }
 };
 
@@ -158,7 +170,6 @@ export default function SubmitMusic() {
   const L = STRINGS[lang] || STRINGS.fr;
 
   const [artistName, setArtistName] = useState('');
-  const [genre, setGenre] = useState('');
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -218,10 +229,6 @@ export default function SubmitMusic() {
       setMessage({ type: 'error', text: L.errorArtistName });
       return;
     }
-    if (!genre) {
-      setMessage({ type: 'error', text: L.errorGenre });
-      return;
-    }
     if (files.length === 0) {
       setMessage({ type: 'error', text: L.errorFiles });
       return;
@@ -233,7 +240,6 @@ export default function SubmitMusic() {
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('artistName', artistName);
-      formData.append('genre', genre);
       formData.append('userEmail', user?.email || 'unknown');
       formData.append('userId', user?.id || 'unknown');
 
@@ -262,7 +268,6 @@ export default function SubmitMusic() {
       // Success
       setMessage({ type: 'success', text: L.success });
       setArtistName('');
-      setGenre('');
       setFiles([]);
 
       // Show success message for longer
@@ -377,24 +382,6 @@ export default function SubmitMusic() {
             />
           </div>
 
-          {/* Genre */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-              {L.genre} *
-            </label>
-            <select
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-              required
-            >
-              <option value="">{L.genreSelect}</option>
-              {GENRES.map(g => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </div>
-
           {/* File Upload */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
@@ -474,6 +461,62 @@ export default function SubmitMusic() {
           </button>
         </form>
       )}
+
+      {/* Important MP3 Tags Section */}
+      <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800 rounded-xl p-6 mb-8">
+        <h2 className="text-xl font-bold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
+          <span>⚠️</span> {L.importantTitle}
+        </h2>
+        <p className="text-red-800 dark:text-red-300 mb-4">
+          {L.importantDesc}
+        </p>
+
+        <div className="mb-4">
+          <h3 className="font-semibold text-red-700 dark:text-red-400 mb-2">
+            {L.mp3TagsTitle}
+          </h3>
+          <ul className="space-y-1 text-sm text-red-800 dark:text-red-300">
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag1}
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag2}
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag3}
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag4}
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag5}
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-600">✓</span> {L.mp3Tag6}
+            </li>
+          </ul>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+            {L.verifyTitle}
+          </h3>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+            {L.verifyDesc}
+          </p>
+          <a
+            href="https://kemp3.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block hover:opacity-80 transition-opacity"
+          >
+            <img src="https://kemp3.app/logo.png" alt="kemp3.app" className="h-12" />
+          </a>
+          <p className="mt-3 text-sm font-medium text-red-700 dark:text-red-400">
+            {L.verifyNote}
+          </p>
+        </div>
+      </div>
 
       {/* Guidelines */}
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">

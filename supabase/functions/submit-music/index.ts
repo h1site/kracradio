@@ -66,13 +66,12 @@ serve(async (req) => {
     // Parse form data
     const formData = await req.formData();
     const artistName = formData.get('artistName') as string;
-    const genre = formData.get('genre') as string;
     const userEmail = formData.get('userEmail') as string;
     const userId = formData.get('userId') as string;
 
-    if (!artistName || !genre) {
+    if (!artistName) {
       return new Response(
-        JSON.stringify({ error: 'Artist name and genre are required' }),
+        JSON.stringify({ error: 'Artist name is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -80,8 +79,8 @@ serve(async (req) => {
     // Get a fresh Dropbox access token
     const accessToken = await getDropboxAccessToken();
 
-    // Create folder name: reception/ArtistName - Genre
-    const folderPath = `/reception/${artistName} - ${genre}`;
+    // Create folder name: reception/ArtistName
+    const folderPath = `/reception/${artistName}`;
 
     // Upload each file to Dropbox
     const uploadedFiles = [];
@@ -135,7 +134,6 @@ serve(async (req) => {
       await supabase.from('music_submissions').insert({
         user_id: userId,
         artist_name: artistName,
-        genre: genre,
         files: uploadedFiles,
         dropbox_folder: folderPath,
         status: 'pending',
