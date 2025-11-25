@@ -172,6 +172,9 @@ export default function Dashboard() {
     if (user) {
       loadPodcasts();
       loadArticles();
+    } else {
+      // Reset loading si pas de user
+      setLoading(false);
     }
   }, [user]);
 

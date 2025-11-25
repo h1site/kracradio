@@ -1,5 +1,5 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthCtx = createContext(null);
@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   const [signingOut, setSigningOut] = useState(false);
 
   // Fetch user role from profiles table
-  const fetchUserRole = async (userId) => {
+  const fetchUserRole = useCallback(async (userId) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -28,68 +28,43 @@ export function AuthProvider({ children }) {
       console.warn('[Auth] Error fetching user role:', err);
       return 'user';
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    // Setup auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Setup listener - il gère TOUT, y compris la session initiale
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[Auth] State change:', event, session?.user?.email || 'no user');
 
       if (!mounted) return;
 
       const currentUser = session?.user ?? null;
 
-      // Update user state
+      // Mettre à jour user et loading de manière synchrone
       setUser(currentUser);
 
-      // Fetch role if user exists
       if (currentUser) {
-        const role = await fetchUserRole(currentUser.id);
-        if (mounted) {
-          setUserRole(role);
-        }
+        // Fetch role en arrière-plan, ne pas bloquer le loading
+        fetchUserRole(currentUser.id).then((role) => {
+          if (mounted) {
+            setUserRole(role);
+          }
+        });
       } else {
         setUserRole(null);
       }
 
-      // Always set loading to false after handling auth state
-      if (mounted) {
-        setLoading(false);
-      }
-    });
-
-    // Then get current session
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error) {
-        console.warn('[Auth] getSession error:', error);
-      }
-
-      console.log('[Auth] Initial session:', session?.user?.email || 'no session');
-
-      if (!mounted) return;
-
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const role = await fetchUserRole(currentUser.id);
-        if (mounted) {
-          setUserRole(role);
-        }
-      }
-
-      if (mounted) {
-        setLoading(false);
-      }
+      // Mettre loading à false IMMÉDIATEMENT après avoir set le user
+      setLoading(false);
+      console.log('[Auth] Loading set to false, user:', currentUser?.email || 'no user');
     });
 
     return () => {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [fetchUserRole]);
 
   const signIn = async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -166,43 +141,33 @@ export function AuthProvider({ children }) {
     console.log('[Auth] signOut called');
     setSigningOut(true);
 
+    // Nettoyer l'état local immédiatement
+    setUser(null);
+    setUserRole(null);
+
     try {
-      const { error } = await supabase.auth.signOut();
+      // Nettoyer localStorage AVANT l'appel API
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      sessionStorage.clear();
+
+      // Appeler signOut avec scope local pour être sûr
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
 
       if (error) {
         console.error('[Auth] signOut error:', error);
-        throw error;
+        // Ne pas throw - la session locale est déjà nettoyée
       }
       console.log('[Auth] signOut successful');
-
-      setUser(null);
-      setUserRole(null);
-
-      // Clear only Supabase auth keys
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('sb-')) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      sessionStorage.clear();
     } catch (e) {
       console.error('[Auth] signOut exception:', e);
-      setUser(null);
-      setUserRole(null);
-
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('sb-')) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      sessionStorage.clear();
-      throw e;
+      // Session locale déjà nettoyée, ignorer l'erreur
     } finally {
       setSigningOut(false);
     }

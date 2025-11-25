@@ -16,10 +16,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // Important pour récupérer la session après OAuth
+    detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: window.localStorage, // Explicitement utiliser localStorage
-    storageKey: 'sb-kracradio-auth-token', // Clé fixe pour la session
   },
   global: {
     headers: {
