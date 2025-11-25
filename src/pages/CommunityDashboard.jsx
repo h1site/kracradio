@@ -13,12 +13,19 @@ import { useProfile } from '../hooks/useCommunity';
 
 export default function CommunityDashboard() {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('settings');
   const [showTutorial, setShowTutorial] = useState(false);
   const { profile } = useProfile(user?.id);
+
+  // Rediriger si non authentifié (après que l'auth soit prêt)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
 
   // Vérifier si c'est la première visite de la page Communauté
   useEffect(() => {
@@ -33,18 +40,21 @@ export default function CommunityDashboard() {
   }, [user]);
 
   const TABS = [
-    { id: 'settings', label: t.community.tabs.settings },
-    { id: 'profile', label: t.community.tabs.customization },
-    { id: 'music', label: t.community.tabs.musicLinks }
+    { id: 'settings', label: t?.community?.tabs?.settings || 'Settings' },
+    { id: 'profile', label: t?.community?.tabs?.customization || 'Profile' },
+    { id: 'music', label: t?.community?.tabs?.musicLinks || 'Music' }
   ];
 
   // Lien vers le profil public
   const profileLink = profile?.artist_slug ? `/profile/${profile.artist_slug}` : '/profile';
 
-  // Rediriger si non authentifié
-  if (!user) {
-    navigate('/login');
-    return null;
+  // Afficher un loader pendant le chargement de l'auth
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-red-500 rounded-full"></div>
+      </div>
+    );
   }
 
   return (

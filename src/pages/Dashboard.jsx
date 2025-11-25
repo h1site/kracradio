@@ -198,8 +198,15 @@ export default function Dashboard() {
   };
 
   const loadPodcasts = async () => {
+    if (!user?.id) {
+      console.log('[Dashboard] No user id, skipping loadPodcasts');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('[Dashboard] Loading podcasts for user:', user.id);
       const { data, error } = await supabase
         .from('user_podcasts')
         .select('*')
@@ -208,6 +215,7 @@ export default function Dashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('[Dashboard] Podcasts loaded:', data?.length || 0);
       setPodcasts(data || []);
     } catch (error) {
       console.error('Error loading podcasts:', error);

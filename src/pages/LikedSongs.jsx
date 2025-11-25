@@ -8,7 +8,7 @@ import { getUserLikedSongs, removeSongLike } from '../lib/supabase';
 export default function LikedSongs() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [likedSongs, setLikedSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +18,9 @@ export default function LikedSongs() {
   const noLikesMessage = 'Vous n\'avez pas encore aimé de chansons';
 
   useEffect(() => {
+    // Attendre que l'auth soit prêt
+    if (authLoading) return;
+
     if (!user) {
       navigate('/login');
       return;
@@ -43,7 +46,7 @@ export default function LikedSongs() {
     };
 
     loadLikedSongs();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const handleUnlike = async (song) => {
     try {

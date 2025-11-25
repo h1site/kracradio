@@ -15,52 +15,43 @@ export function I18nProvider({ children, defaultLang = 'en' }) {
   const [lang, setLangState] = useState(defaultLang);
   const [userId, setUserId] = useState(null);
 
-  // Load user and their language preference on mount
+  // Load user language preference via onAuthStateChange only
   useEffect(() => {
-    async function loadUserLanguage() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserId(user.id);
-          // Get user's preferred language from profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('preferred_language')
-            .eq('id', user.id)
-            .maybeSingle();
+    let isMounted = true;
 
-          if (profile?.preferred_language && dictionaries[profile.preferred_language]) {
-            setLangState(profile.preferred_language);
-          }
+    const loadLanguageForUser = async (user) => {
+      if (!user || !isMounted) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_language')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (isMounted && profile?.preferred_language && dictionaries[profile.preferred_language]) {
+          setLangState(profile.preferred_language);
         }
       } catch (err) {
         console.error('Error loading user language:', err);
       }
-    }
+    };
 
-    loadUserLanguage();
-
-    // Listen for auth changes
+    // Listen for auth changes - this will fire INITIAL_SESSION on page load
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUserId(session.user.id);
-        // Load language preference
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferred_language')
-          .eq('id', session.user.id)
-          .maybeSingle();
+      if (!isMounted) return;
 
-        if (profile?.preferred_language && dictionaries[profile.preferred_language]) {
-          setLangState(profile.preferred_language);
-        }
-      } else if (event === 'SIGNED_OUT') {
+      if (session?.user) {
+        setUserId(session.user.id);
+        loadLanguageForUser(session.user);
+      } else {
         setUserId(null);
         setLangState(defaultLang);
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [defaultLang]);

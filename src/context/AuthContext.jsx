@@ -31,37 +31,33 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
 
-    // Setup listener - il gère TOUT, y compris la session initiale
+    console.log('[Auth] Setting up auth listener...');
+
+    // Utiliser uniquement onAuthStateChange - ne pas appeler getSession() qui peut bloquer
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Auth] State change:', event, session?.user?.email || 'no user');
+      if (!isMounted) return;
 
-      if (!mounted) return;
+      console.log('[Auth] Event:', event, session?.user?.email || 'no user');
 
       const currentUser = session?.user ?? null;
-
-      // Mettre à jour user et loading de manière synchrone
       setUser(currentUser);
+      setLoading(false);
 
+      // Fetch role in background (non-blocking)
       if (currentUser) {
-        // Fetch role en arrière-plan, ne pas bloquer le loading
-        fetchUserRole(currentUser.id).then((role) => {
-          if (mounted) {
-            setUserRole(role);
-          }
+        fetchUserRole(currentUser.id).then(role => {
+          if (isMounted) setUserRole(role);
         });
       } else {
         setUserRole(null);
       }
-
-      // Mettre loading à false IMMÉDIATEMENT après avoir set le user
-      setLoading(false);
-      console.log('[Auth] Loading set to false, user:', currentUser?.email || 'no user');
     });
 
     return () => {
-      mounted = false;
+      console.log('[Auth] Cleanup');
+      isMounted = false;
       subscription?.unsubscribe();
     };
   }, [fetchUserRole]);

@@ -6,11 +6,21 @@ import { useProfile } from '../hooks/useCommunity';
 
 export default function ProfileRedirect() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile, loading } = useProfile(user?.id);
+  const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile(user?.id);
 
   useEffect(() => {
-    if (loading) return;
+    // Attendre que l'auth soit prêt
+    if (authLoading) return;
+
+    // Si pas d'utilisateur, rediriger vers login
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    // Attendre que le profile soit chargé
+    if (profileLoading) return;
 
     // Si l'utilisateur a un profil artiste avec slug → aller au profil public
     if (profile?.artist_slug) {
@@ -19,12 +29,12 @@ export default function ProfileRedirect() {
       // Sinon → aller à /community pour créer le profil
       navigate('/community', { replace: true });
     }
-  }, [profile, loading, navigate]);
+  }, [profile, profileLoading, authLoading, user, navigate]);
 
   // Afficher un loader pendant le chargement
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-black dark:border-t-white rounded-full"></div>
+      <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-red-500 rounded-full"></div>
     </div>
   );
 }
