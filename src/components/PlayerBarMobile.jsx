@@ -10,7 +10,7 @@ import { mmss } from '../utils/time';
 const RED = '#E50914';
 
 export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
-  const { current, playing, togglePlay } = useAudio();
+  const { current, playing, togglePlay, podcastMeta, currentType } = useAudio();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -93,15 +93,21 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
   }, [showMenu]);
 
   // 4) Données à afficher (avec fallback)
-  const art =
-    meta?.art ||
-    current?.now?.art ||
-    current?.art ||
-    current?.image ||
-    '/channels/default.webp';
+  // Pour les liked songs (currentType === 'liked'), utiliser podcastMeta
+  // Pour les radios live, utiliser meta (AzuraCast) ou current
+  const isLikedSong = currentType === 'liked' || currentType === 'podcast';
 
-  const title = meta?.title || current?.now?.title || current?.title || '—';
-  const artist = meta?.artist || current?.now?.artist || current?.artist || current?.name || '—';
+  const art = isLikedSong
+    ? (podcastMeta?.image || '/channels/default.webp')
+    : (meta?.art || current?.now?.art || current?.art || current?.image || '/channels/default.webp');
+
+  const title = isLikedSong
+    ? (podcastMeta?.title || '—')
+    : (meta?.title || current?.now?.title || current?.title || '—');
+
+  const artist = isLikedSong
+    ? (podcastMeta?.podcastTitle || '—')
+    : (meta?.artist || current?.now?.artist || current?.artist || current?.name || '—');
 
   return (
     // ⚠️ Ce composant est pensé pour être inclus dans un conteneur fixe (PlayerBar) — pas de position fixed ici.
