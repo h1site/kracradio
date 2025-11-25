@@ -359,7 +359,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{L.title}</h1>
             <div className="flex items-center gap-2">
               <Link
-                to="/community"
+                to="/settings"
                 className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Settings

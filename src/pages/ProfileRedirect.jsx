@@ -26,8 +26,8 @@ export default function ProfileRedirect() {
     if (profile?.artist_slug) {
       navigate(`/profile/${profile.artist_slug}`, { replace: true });
     } else {
-      // Sinon → aller à /community pour créer le profil
-      navigate('/community', { replace: true });
+      // Sinon → aller à /settings pour créer le profil
+      navigate('/settings', { replace: true });
     }
   }, [profile, profileLoading, authLoading, user, navigate]);
 

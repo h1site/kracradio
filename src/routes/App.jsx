@@ -1,6 +1,6 @@
 // src/routes/App.jsx
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -186,13 +186,10 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* Redirect /community to /settings */}
           <Route
             path="/community"
-            element={
-              <ProtectedRoute>
-                <CommunityDashboard />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/settings" replace />}
           />
           <Route
             path="/admin"

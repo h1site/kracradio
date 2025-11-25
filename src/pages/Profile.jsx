@@ -170,9 +170,9 @@ export default function Profile() {
               </svg>
             </Link>
 
-            {/* Community */}
+            {/* Settings */}
             <Link
-              to="/community"
+              to="/settings"
               className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-100 dark:border-gray-800"
             >
               <div className="flex items-center gap-4">
