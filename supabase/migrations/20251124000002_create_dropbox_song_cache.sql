@@ -28,6 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_dropbox_cache_matched
 ALTER TABLE public.dropbox_song_cache ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Anyone can read cache, only service role can write
+DROP POLICY IF EXISTS "Anyone can read dropbox cache" ON public.dropbox_song_cache;
 CREATE POLICY "Anyone can read dropbox cache"
   ON public.dropbox_song_cache
   FOR SELECT

@@ -23,17 +23,25 @@ export function I18nProvider({ children, defaultLang = 'en' }) {
       if (!user || !isMounted) return;
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('preferred_language')
           .eq('id', user.id)
           .maybeSingle();
 
+        // Silently ignore if column doesn't exist (42703) - migration may not be applied yet
+        if (error?.code === '42703') {
+          return;
+        }
+
         if (isMounted && profile?.preferred_language && dictionaries[profile.preferred_language]) {
           setLangState(profile.preferred_language);
         }
       } catch (err) {
-        console.error('Error loading user language:', err);
+        // Silently ignore column-not-found errors
+        if (err?.code !== '42703') {
+          console.error('Error loading user language:', err);
+        }
       }
     };
 
@@ -65,12 +73,20 @@ export function I18nProvider({ children, defaultLang = 'en' }) {
     // Save to profile if user is logged in
     if (userId) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ preferred_language: newLang })
           .eq('id', userId);
+
+        // Silently ignore if column doesn't exist yet
+        if (error && error.code !== '42703') {
+          console.error('Error saving language preference:', error);
+        }
       } catch (err) {
-        console.error('Error saving language preference:', err);
+        // Silently ignore column-not-found errors
+        if (err?.code !== '42703') {
+          console.error('Error saving language preference:', err);
+        }
       }
     }
   }, [userId]);

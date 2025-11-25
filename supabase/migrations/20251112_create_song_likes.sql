@@ -21,26 +21,26 @@ CREATE INDEX IF NOT EXISTS idx_song_likes_created_at ON public.song_likes(create
 -- Enable Row Level Security
 ALTER TABLE public.song_likes ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
--- Users can view their own likes
+-- RLS Policies (drop if exists, then create)
+DROP POLICY IF EXISTS "Users can view their own likes" ON public.song_likes;
 CREATE POLICY "Users can view their own likes"
   ON public.song_likes
   FOR SELECT
   USING (auth.uid() = user_id);
 
--- Users can insert their own likes
+DROP POLICY IF EXISTS "Users can insert their own likes" ON public.song_likes;
 CREATE POLICY "Users can insert their own likes"
   ON public.song_likes
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Users can delete their own likes
+DROP POLICY IF EXISTS "Users can delete their own likes" ON public.song_likes;
 CREATE POLICY "Users can delete their own likes"
   ON public.song_likes
   FOR DELETE
   USING (auth.uid() = user_id);
 
--- Public can view like counts (for charts)
+DROP POLICY IF EXISTS "Anyone can view like counts" ON public.song_likes;
 CREATE POLICY "Anyone can view like counts"
   ON public.song_likes
   FOR SELECT

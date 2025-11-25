@@ -222,36 +222,36 @@ export default function LikedSongs() {
   }
 
   return (
-    <div className="container-max px-5 pb-16">
-      <header className="pt-16 pb-8">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="container-max px-4 md:px-5 pb-16 overflow-hidden">
+      <header className="pt-12 md:pt-16 pb-6 md:pb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black mb-2">{t.likedSongs?.title || 'Liked Songs'}</h1>
-            <p className="text-lg opacity-80">
+            <h1 className="text-2xl md:text-5xl font-black mb-1 md:mb-2">{t.likedSongs?.title || 'Liked Songs'}</h1>
+            <p className="text-sm md:text-lg opacity-80">
               {likedSongs.length} {likedSongs.length === 1 ? (t.likedSongs?.song || 'song') : (t.likedSongs?.songs || 'songs')}
             </p>
           </div>
 
           {likedSongs.length > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <button
                 onClick={() => handlePlayAll(false)}
-                className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full transition-colors"
+                className="flex items-center gap-1.5 md:gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-red-500 hover:bg-red-600 text-white text-sm md:text-base font-semibold rounded-full transition-colors"
               >
-                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
                 {t.likedSongs?.playAll || 'Play All'}
               </button>
               <button
                 onClick={() => handlePlayAll(true)}
-                className="flex items-center gap-2 px-5 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold rounded-full transition-colors"
+                className="flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm md:text-base font-semibold rounded-full transition-colors"
                 title={t.likedSongs?.shuffle || 'Shuffle'}
               >
-                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="currentColor">
                   <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
                 </svg>
-                {t.likedSongs?.shuffle || 'Shuffle'}
+                <span className="hidden md:inline">{t.likedSongs?.shuffle || 'Shuffle'}</span>
               </button>
             </div>
           )}
@@ -260,27 +260,29 @@ export default function LikedSongs() {
 
       {/* First-time warning banner */}
       {showWarning && (
-        <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 text-amber-500 text-2xl">
-              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                {t.likedSongs?.warningTitle || 'First time playing'}
-              </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
-                {t.likedSongs?.warningMessage || 'The first time you press play, our search engine may take a few seconds to find the song in our database. Some songs may also not be available.'}
-              </p>
-              <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
-                {t.likedSongs?.warningSupport || 'If you like an artist, consider buying their music to support them!'}
-              </p>
+        <div className="mb-4 md:mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3 md:p-4">
+          <div className="flex flex-col md:flex-row md:items-start gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="flex-shrink-0 text-amber-500">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-sm md:text-base mb-1">
+                  {t.likedSongs?.warningTitle || 'First time playing'}
+                </h3>
+                <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 mb-1 md:mb-2">
+                  {t.likedSongs?.warningMessage || 'The first time you press play, our search engine may take a few seconds to find the song in our database. Some songs may also not be available.'}
+                </p>
+                <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 font-medium">
+                  {t.likedSongs?.warningSupport || 'If you like an artist, consider buying their music to support them!'}
+                </p>
+              </div>
             </div>
             <button
               onClick={dismissWarning}
-              className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors"
+              className="flex-shrink-0 w-full md:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors"
             >
               {t.likedSongs?.warningDismiss || 'Got it!'}
             </button>
@@ -305,13 +307,13 @@ export default function LikedSongs() {
             return (
               <div
                 key={song.id}
-                className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-all ${isCurrent ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/20' : ''}`}
+                className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 flex items-center gap-2 md:gap-4 hover:shadow-md transition-all overflow-hidden ${isCurrent ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/20' : ''}`}
               >
                 {/* Play/Pause Button */}
                 <button
                   onClick={() => handlePlay(song)}
                   disabled={urlState.loading || urlState.notFound}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                  className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                     urlState.notFound
                       ? 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed opacity-50'
                       : isCurrent
@@ -321,24 +323,24 @@ export default function LikedSongs() {
                   title={urlState.notFound ? (t.likedSongs?.notAvailable || 'Not available') : isPlaying ? (t.player?.pause || 'Pause') : (t.player?.play || 'Play')}
                 >
                   {urlState.loading ? (
-                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                   ) : isPlaying ? (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="currentColor">
                       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                     </svg>
                   ) : urlState.notFound ? (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
                   ) : (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="currentColor">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
                 </button>
 
                 {/* Album Art */}
-                <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                <div className="w-11 h-11 md:w-14 md:h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                   {song.album_art ? (
                     <img
                       src={song.album_art}
@@ -346,26 +348,26 @@ export default function LikedSongs() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">
+                    <div className="w-full h-full flex items-center justify-center text-xl md:text-2xl">
                       🎵
                     </div>
                   )}
                 </div>
 
                 {/* Song Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-lg truncate ${isCurrent ? 'text-red-500' : ''}`} title={song.song_title}>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <h3 className={`font-semibold text-sm md:text-lg truncate ${isCurrent ? 'text-red-500' : ''}`} title={song.song_title}>
                     {song.song_title}
                   </h3>
-                  <p className="text-sm opacity-70 truncate" title={song.song_artist}>
+                  <p className="text-xs md:text-sm opacity-70 truncate" title={song.song_artist}>
                     {song.song_artist}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs opacity-50">
+                  <div className="flex items-center gap-2 mt-0.5 md:mt-1">
+                    <span className="text-[10px] md:text-xs opacity-50 truncate">
                       {song.channel_name}
                     </span>
                     {urlState.notFound && (
-                      <span className="text-xs text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">
+                      <span className="text-[10px] md:text-xs text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-1.5 md:px-2 py-0.5 rounded flex-shrink-0">
                         {t.likedSongs?.notAvailable || 'Not available'}
                       </span>
                     )}
@@ -373,16 +375,16 @@ export default function LikedSongs() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-shrink-0">
                   <button
                     onClick={() => handleUnlike(song)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    className="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     title={t.likedSongs?.removeFromFavorites || 'Remove from favorites'}
                     aria-label={t.likedSongs?.removeFromFavorites || 'Remove from favorites'}
                   >
                     <svg
                       viewBox="0 0 24 24"
-                      className="w-6 h-6 text-red-500"
+                      className="w-5 h-5 md:w-6 md:h-6 text-red-500"
                       fill="currentColor"
                     >
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />

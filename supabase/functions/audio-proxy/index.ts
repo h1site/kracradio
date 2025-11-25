@@ -42,6 +42,10 @@ serve(async (req) => {
       console.error('[Audio Proxy] Fetch failed:', response.status, response.statusText);
       return new Response(`Failed to fetch audio: ${response.statusText}`, {
         status: response.status,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        },
       });
     }
 

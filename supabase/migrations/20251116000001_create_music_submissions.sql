@@ -2,7 +2,7 @@
 -- Created: 2025-11-16
 -- Purpose: Track music submissions from artists via Submit Music page
 
-CREATE TABLE music_submissions (
+CREATE TABLE IF NOT EXISTS music_submissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   artist_name TEXT NOT NULL,
@@ -16,20 +16,22 @@ CREATE TABLE music_submissions (
 );
 
 -- Indexes for fast queries
-CREATE INDEX idx_music_submissions_user_id ON music_submissions(user_id);
-CREATE INDEX idx_music_submissions_status ON music_submissions(status);
-CREATE INDEX idx_music_submissions_submitted_at ON music_submissions(submitted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_music_submissions_user_id ON music_submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_music_submissions_status ON music_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_music_submissions_submitted_at ON music_submissions(submitted_at DESC);
 
 -- Enable RLS
 ALTER TABLE music_submissions ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own submissions
+DROP POLICY IF EXISTS "Users can view their own submissions" ON music_submissions;
 CREATE POLICY "Users can view their own submissions"
 ON music_submissions FOR SELECT
 TO authenticated
 USING (user_id = auth.uid());
 
 -- Admins can view all submissions
+DROP POLICY IF EXISTS "Admins can view all submissions" ON music_submissions;
 CREATE POLICY "Admins can view all submissions"
 ON music_submissions FOR SELECT
 TO authenticated
@@ -42,6 +44,7 @@ USING (
 );
 
 -- Admins can update submissions (approve/reject, add notes)
+DROP POLICY IF EXISTS "Admins can update submissions" ON music_submissions;
 CREATE POLICY "Admins can update submissions"
 ON music_submissions FOR UPDATE
 TO authenticated

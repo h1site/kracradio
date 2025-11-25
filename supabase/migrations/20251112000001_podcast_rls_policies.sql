@@ -16,6 +16,9 @@ DROP POLICY IF EXISTS "Users can update their own podcasts" ON user_podcasts;
 DROP POLICY IF EXISTS "Users can delete their own podcasts" ON user_podcasts;
 DROP POLICY IF EXISTS "Admins can view all podcasts" ON user_podcasts;
 DROP POLICY IF EXISTS "Admins can manage all podcasts" ON user_podcasts;
+DROP POLICY IF EXISTS "Admins can insert any podcast" ON user_podcasts;
+DROP POLICY IF EXISTS "Admins can update any podcast" ON user_podcasts;
+DROP POLICY IF EXISTS "Admins can delete any podcast" ON user_podcasts;
 
 -- Policy: Users can view their own podcasts
 CREATE POLICY "Users can view their own podcasts"
@@ -120,6 +123,9 @@ DROP POLICY IF EXISTS "Users can update episodes of their podcasts" ON podcast_e
 DROP POLICY IF EXISTS "Users can delete episodes of their podcasts" ON podcast_episodes;
 DROP POLICY IF EXISTS "Admins can view all episodes" ON podcast_episodes;
 DROP POLICY IF EXISTS "Admins can manage all episodes" ON podcast_episodes;
+DROP POLICY IF EXISTS "Admins can insert episodes to any podcast" ON podcast_episodes;
+DROP POLICY IF EXISTS "Admins can update any episode" ON podcast_episodes;
+DROP POLICY IF EXISTS "Admins can delete any episode" ON podcast_episodes;
 
 -- Policy: Anyone can view published episodes (public read)
 CREATE POLICY "Anyone can view published episodes"

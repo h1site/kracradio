@@ -162,11 +162,36 @@ async function searchDropbox(accessToken: string, query: string): Promise<any | 
   return null;
 }
 
+// Check if a URL is a temporary link (expires in 4h)
+function isTemporaryLink(url: string): boolean {
+  // Temporary links from get_temporary_link API look like:
+  // https://uc0e69456aafe77d16250bafa24b.dl.dropboxusercontent.com/cd/0/get/...
+  // They have a unique subdomain (uc...) and /cd/0/get/ in the path
+  //
+  // Permanent shared links look like:
+  // https://dl.dropboxusercontent.com/s/abc123/file.mp3
+  // They have no subdomain prefix and /s/ in the path
+
+  // Check for temporary link patterns
+  if (url.includes('/cd/0/get/')) return true;  // Temporary link path pattern
+  if (url.includes('content.dropboxusercontent.com')) return true;
+  if (url.includes('/files/get_temporary_link')) return true;
+
+  // Check if it's NOT a permanent shared link (which has /s/ path)
+  // If it's a dropboxusercontent URL but doesn't have /s/, it's likely temporary
+  if (url.includes('.dl.dropboxusercontent.com') && !url.includes('/s/')) {
+    return true;
+  }
+
+  return false;
+}
+
 // Get or create a shareable link for a file
-async function getShareableLink(accessToken: string, path: string): Promise<string | null> {
+// Returns { url, isTemporary } to indicate if the link will expire
+async function getShareableLink(accessToken: string, path: string): Promise<{ url: string; isTemporary: boolean } | null> {
   console.log('Getting shareable link for:', path);
 
-  // First, try to get existing shared links
+  // First, try to get existing shared links (permanent)
   const listResponse = await fetch('https://api.dropboxapi.com/2/sharing/list_shared_links', {
     method: 'POST',
     headers: {
@@ -183,13 +208,14 @@ async function getShareableLink(accessToken: string, path: string): Promise<stri
     const listData = await listResponse.json();
     console.log('Existing links:', listData.links?.length || 0);
     if (listData.links?.length > 0) {
-      return convertToDirectUrl(listData.links[0].url);
+      const url = convertToDirectUrl(listData.links[0].url);
+      return { url, isTemporary: false };
     }
   } else {
     console.error('List shared links failed:', await listResponse.text());
   }
 
-  // Try to create a new shared link
+  // Try to create a new shared link (permanent)
   const createResponse = await fetch('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings', {
     method: 'POST',
     headers: {
@@ -215,12 +241,14 @@ async function getShareableLink(accessToken: string, path: string): Promise<stri
       try {
         const errorData = JSON.parse(errorText);
         if (errorData.error?.shared_link_already_exists?.metadata?.url) {
-          return convertToDirectUrl(errorData.error.shared_link_already_exists.metadata.url);
+          const url = convertToDirectUrl(errorData.error.shared_link_already_exists.metadata.url);
+          return { url, isTemporary: false };
         }
       } catch {}
     }
 
     // Fallback: try to get a temporary link (works without sharing permissions)
+    // WARNING: This link expires in 4 hours - don't cache it!
     console.log('Trying temporary link fallback...');
     const tempResponse = await fetch('https://api.dropboxapi.com/2/files/get_temporary_link', {
       method: 'POST',
@@ -233,8 +261,8 @@ async function getShareableLink(accessToken: string, path: string): Promise<stri
 
     if (tempResponse.ok) {
       const tempData = await tempResponse.json();
-      console.log('Got temporary link');
-      return tempData.link;
+      console.log('Got temporary link (expires in 4h - will NOT be cached)');
+      return { url: tempData.link, isTemporary: true };
     } else {
       console.error('Temporary link also failed:', await tempResponse.text());
     }
@@ -243,8 +271,8 @@ async function getShareableLink(accessToken: string, path: string): Promise<stri
   }
 
   const createData = await createResponse.json();
-  console.log('Created shared link successfully');
-  return convertToDirectUrl(createData.url);
+  console.log('Created shared link successfully (permanent)');
+  return { url: convertToDirectUrl(createData.url), isTemporary: false };
 }
 
 // Convert Dropbox sharing URL to direct download URL
@@ -341,8 +369,16 @@ serve(async (req) => {
         .eq('song_artist', artist)
         .single();
 
-      // Only use cache if we have a valid URL or if it was definitively not found
-      if (cached && (cached.dropbox_url || !cached.matched)) {
+      // Check if cached URL is a temporary link (which would have expired)
+      const cachedUrlIsTemporary = cached?.dropbox_url && isTemporaryLink(cached.dropbox_url);
+
+      if (cachedUrlIsTemporary) {
+        // Cached URL is a temporary link that has likely expired - delete and re-search
+        console.log('Cache has expired temporary link, re-searching...');
+        await supabase.from('dropbox_song_cache').delete().eq('id', cached.id);
+      }
+      // Only use cache if we have a valid permanent URL or if it was definitively not found
+      else if (cached && (cached.dropbox_url || !cached.matched)) {
         console.log('Cache hit for:', title, artist);
         return new Response(
           JSON.stringify({
@@ -382,32 +418,44 @@ serve(async (req) => {
       }
     }
 
-    let dropboxUrl = null;
-    let dropboxPath = null;
+    let dropboxUrl: string | null = null;
+    let dropboxPath: string | null = null;
+    let linkIsTemporary = false;
 
     if (foundFile) {
       dropboxPath = foundFile.path_display;
-      dropboxUrl = await getShareableLink(accessToken, dropboxPath);
-      console.log('Shareable URL:', dropboxUrl);
+      const linkResult = await getShareableLink(accessToken, dropboxPath);
+      if (linkResult) {
+        dropboxUrl = linkResult.url;
+        linkIsTemporary = linkResult.isTemporary;
+        console.log('Shareable URL:', dropboxUrl, linkIsTemporary ? '(TEMPORARY - will NOT cache)' : '(permanent)');
+      }
     }
 
-    // Cache the result (even if not found)
-    const { error: cacheError } = await supabase
-      .from('dropbox_song_cache')
-      .upsert({
-        song_title: title,
-        song_artist: artist,
-        dropbox_path: dropboxPath,
-        dropbox_url: dropboxUrl,
-        matched: !!foundFile,
-        search_query: successfulQuery || queries[0],
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'song_title,song_artist',
-      });
+    // Cache the result ONLY if:
+    // - File was not found (cache the "not found" result)
+    // - File was found AND the link is permanent (not temporary)
+    // DO NOT cache temporary links - they expire in 4 hours!
+    if (!linkIsTemporary) {
+      const { error: cacheError } = await supabase
+        .from('dropbox_song_cache')
+        .upsert({
+          song_title: title,
+          song_artist: artist,
+          dropbox_path: dropboxPath,
+          dropbox_url: dropboxUrl,
+          matched: !!foundFile,
+          search_query: successfulQuery || queries[0],
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'song_title,song_artist',
+        });
 
-    if (cacheError) {
-      console.error('Failed to cache result:', cacheError);
+      if (cacheError) {
+        console.error('Failed to cache result:', cacheError);
+      }
+    } else {
+      console.log('Skipping cache - temporary link would expire');
     }
 
     return new Response(
@@ -416,6 +464,7 @@ serve(async (req) => {
         dropbox_url: dropboxUrl,
         dropbox_path: dropboxPath,
         cached: false,
+        temporary: linkIsTemporary,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
