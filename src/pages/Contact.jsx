@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
+import { contactPageSchema, organizationSchema, breadcrumbSchema } from '../seo/schemas';
 
 const LOGO_ZIP_URL =
   'https://www.dropbox.com/scl/fi/n0hat7f6m2k9p1rbo5j5l/package.zip?rlkey=yscogkwugmuyvma79n6pt71pv&st=7ztg6xkg&dl=0';
@@ -18,6 +19,14 @@ export default function Contact() {
         description={t.meta.contactDesc}
         path="/contact"
         type="website"
+        jsonLd={[
+          contactPageSchema,
+          organizationSchema,
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: t.contact.title }
+          ])
+        ]}
       />
 
       {/* Hero avec image de fond */}

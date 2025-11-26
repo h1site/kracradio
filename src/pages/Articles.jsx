@@ -6,6 +6,7 @@ import { listPublishedArticles } from '../lib/articles';
 import { useI18n } from '../i18n';
 import GoogleAd from '../components/ads/GoogleAd';
 import { useUI } from '../context/UIContext';
+import { collectionPageSchema, breadcrumbSchema } from '../seo/schemas';
 
 const STRINGS = {
   fr: {
@@ -94,6 +95,13 @@ export default function Articles() {
         description={L.metaDesc}
         path="/articles"
         type="website"
+        jsonLd={[
+          collectionPageSchema(L.heroTitle, L.metaDesc, '/articles', rows?.length || 0),
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: L.heroTitle }
+          ])
+        ]}
       />
 
       <div className="min-h-screen bg-white dark:bg-black">

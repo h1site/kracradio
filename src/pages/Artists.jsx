@@ -5,6 +5,7 @@ import { usePublicProfiles } from '../hooks/useCommunity';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { COUNTRIES } from '../constants/countries';
+import { collectionPageSchema, breadcrumbSchema } from '../seo/schemas';
 
 const ARTISTS_PER_PAGE = 90;
 
@@ -101,6 +102,14 @@ export default function Artists() {
       <Seo
         title={`${t.artists.title} - KracRadio`}
         description={t.artists.noArtistsDesc}
+        path="/artists"
+        jsonLd={[
+          collectionPageSchema(t.artists.title, t.artists.noArtistsDesc, '/artists', filteredProfiles?.length || 0),
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: t.artists.title }
+          ])
+        ]}
       />
 
       <div className="">

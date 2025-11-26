@@ -7,6 +7,7 @@ import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
 import { FaPlay, FaGlobe, FaRss, FaSpinner } from 'react-icons/fa';
 import { useUI } from '../context/UIContext';
+import { podcastSeriesSchema, breadcrumbSchema } from '../seo/schemas';
 
 const STRINGS = {
   fr: {
@@ -153,7 +154,18 @@ export default function PodcastDetail() {
     );
   }
 
-  const podcastSchema = { /* ... as before ... */ };
+  const podcastJsonLd = useMemo(() => {
+    if (!podcast) return null;
+    return podcastSeriesSchema(podcast);
+  }, [podcast]);
+
+  const breadcrumbJsonLd = useMemo(() => {
+    return breadcrumbSchema([
+      { name: 'Accueil', url: '/' },
+      { name: 'Podcasts', url: '/podcasts' },
+      { name: podcast?.title || 'Podcast' }
+    ]);
+  }, [podcast]);
 
   return (
     <>
@@ -163,8 +175,9 @@ export default function PodcastDetail() {
         description={podcast.description || L.metaDesc}
         path={`/podcast/${id}`}
         type="website"
+        image={podcast.image_url}
+        jsonLd={[podcastJsonLd, breadcrumbJsonLd].filter(Boolean)}
       />
-      <script type="application/ld+json">{JSON.stringify(podcastSchema)}</script>
 
       <div className="min-h-screen bg-white dark:bg-black">
         {/* --- PODCAST HEADER --- Full Screen Hero */}

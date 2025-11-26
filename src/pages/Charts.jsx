@@ -4,6 +4,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { getChannelCharts } from '../lib/supabase';
 import { channels } from '../data/channels';
+import Seo from '../seo/Seo';
+import { musicPlaylistSchema, breadcrumbSchema } from '../seo/schemas';
 
 export default function Charts() {
   const { t } = useI18n();
@@ -55,11 +57,23 @@ export default function Charts() {
   // If no channel is selected, show channel selector
   if (!channelKey) {
     return (
-      <div className="container-max px-5 pb-16">
-        <header className="pt-16 pb-12">
-          <h1 className="text-4xl md:text-5xl font-black mb-4">{pageTitle}</h1>
-          <p className="text-lg opacity-80">{selectChannelMessage}</p>
-        </header>
+      <>
+        <Seo
+          title={`${pageTitle} - KracRadio`}
+          description="Découvrez les chansons les plus aimées sur KracRadio"
+          path="/charts"
+          jsonLd={[
+            breadcrumbSchema([
+              { name: 'Accueil', url: '/' },
+              { name: pageTitle }
+            ])
+          ]}
+        />
+        <div className="container-max px-5 pb-16">
+          <header className="pt-16 pb-12">
+            <h1 className="text-4xl md:text-5xl font-black mb-4">{pageTitle}</h1>
+            <p className="text-lg opacity-80">{selectChannelMessage}</p>
+          </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {channels.map((channel) => (
@@ -83,6 +97,7 @@ export default function Charts() {
           ))}
         </div>
       </div>
+      </>
     );
   }
 
@@ -107,12 +122,31 @@ export default function Charts() {
   }
 
   return (
-    <div className="container-max px-5 pb-16">
-      <header className="pt-16 pb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Link to="/charts" className="text-sm opacity-70 hover:opacity-100">
-            {pageTitle}
-          </Link>
+    <>
+      <Seo
+        title={`${pageTitle} - ${currentChannel?.name} - KracRadio`}
+        description={`Les chansons les plus aimées sur ${currentChannel?.name}`}
+        path={`/charts/${channelKey}`}
+        jsonLd={[
+          musicPlaylistSchema(
+            `${pageTitle} - ${currentChannel?.name}`,
+            `Les chansons les plus aimées sur ${currentChannel?.name}`,
+            chartData,
+            channelKey
+          ),
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: pageTitle, url: '/charts' },
+            { name: currentChannel?.name }
+          ])
+        ]}
+      />
+      <div className="container-max px-5 pb-16">
+        <header className="pt-16 pb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Link to="/charts" className="text-sm opacity-70 hover:opacity-100">
+              {pageTitle}
+            </Link>
           <span className="opacity-50">/</span>
           <span className="text-sm font-semibold">{currentChannel?.name}</span>
         </div>
@@ -214,6 +248,7 @@ export default function Charts() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

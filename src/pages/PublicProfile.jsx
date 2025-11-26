@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useResolveUsername, useProfile, useMusicLinks, useFollowStats } from '../hooks/useCommunity';
 import { supabase } from '../lib/supabase';
 import Seo from '../seo/Seo';
+import { personSchema, musicGroupSchema, breadcrumbSchema } from '../seo/schemas';
 import { useI18n } from '../i18n';
 import FollowButton from '../components/community/FollowButton';
 import FollowersModal from '../components/community/FollowersModal';
@@ -225,8 +226,20 @@ export default function PublicProfile() {
   return (
     <>
       <Seo
-        title={`${profile.username || 'Profil'} - KracRadio`}
-        description={profile.bio || 'Profil artiste sur KracRadio'}
+        lang={lang}
+        title={profile.username || 'Profil'}
+        description={profile.bio || `Profil de ${profile.username} sur KracRadio`}
+        path={`/profile/${profile.artist_slug || userId}`}
+        image={profile.avatar_url}
+        type="profile"
+        jsonLd={[
+          profile.is_verified ? musicGroupSchema(profile) : personSchema(profile),
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: 'Artistes', url: '/artists' },
+            { name: profile.username || 'Artiste' },
+          ]),
+        ]}
       />
 
       <div className="min-h-screen bg-bg-primary">

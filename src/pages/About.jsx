@@ -2,6 +2,7 @@
 import React, {useMemo, useEffect} from 'react';
 import Seo from '../seo/Seo';
 import {useI18n} from '../i18n';
+import { aboutPageSchema, organizationSchema, breadcrumbSchema } from '../seo/schemas';
 
 // ————————————————————————————————————————
 // Contenu i18n local
@@ -337,6 +338,14 @@ export default function About() {
         description={L.metaDesc}
         path="/about"
         type="website"
+        jsonLd={[
+          aboutPageSchema,
+          organizationSchema,
+          breadcrumbSchema([
+            { name: 'Accueil', url: '/' },
+            { name: L.heroTitle }
+          ])
+        ]}
       />
       <FaviconLinks />
 

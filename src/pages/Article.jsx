@@ -7,6 +7,8 @@ import { useI18n } from '../i18n';
 import { useUI } from '../context/UIContext';
 import { useAuth } from '../context/AuthContext';
 import GoogleAd from '../components/ads/GoogleAd';
+import Seo from '../seo/Seo';
+import { articleSchema, breadcrumbSchema } from '../seo/schemas';
 
 const STRINGS = {
   fr: {
@@ -134,8 +136,39 @@ export default function Article() {
     day: 'numeric'
   }) : '';
 
+  // Build schemas for SEO
+  const articleJsonLd = useMemo(() => {
+    if (!article) return null;
+    const author = article.author_name ? {
+      username: article.author_name,
+      artist_slug: article.author_slug,
+    } : null;
+    return articleSchema(article, author);
+  }, [article]);
+
+  const breadcrumbJsonLd = useMemo(() => {
+    if (!article) return null;
+    return breadcrumbSchema([
+      { name: 'Accueil', url: '/' },
+      { name: 'Articles', url: '/articles' },
+      { name: langContent?.title || article.title },
+    ]);
+  }, [article, langContent]);
+
   return (
     <div style={containerStyle} className="min-h-screen bg-white dark:bg-black">
+      {article && langContent && (
+        <Seo
+          lang={lang}
+          title={langContent.title}
+          description={langContent.excerpt || langContent.title}
+          path={`/article/${article.slug}`}
+          image={article.featured_image}
+          type="article"
+          jsonLd={[articleJsonLd, breadcrumbJsonLd].filter(Boolean)}
+        />
+      )}
+
       {/* Reading Progress Bar */}
       <div
         className="fixed top-0 left-0 h-1 bg-red-500 z-50 transition-all duration-150"

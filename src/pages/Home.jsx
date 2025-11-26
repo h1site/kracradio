@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Seo from '../seo/Seo';
+import { organizationSchema, websiteSchema, radioStationSchema } from '../seo/schemas';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import { channels } from '../data/channels';
@@ -223,6 +224,7 @@ export default function Home() {
         path="/"
         type="website"
         alternates
+        jsonLd={[organizationSchema, websiteSchema, radioStationSchema]}
       />
 
       {/* MOBILE APK BANNER - Visible uniquement sur mobile */}
