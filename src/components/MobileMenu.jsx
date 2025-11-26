@@ -177,6 +177,17 @@ export default function MobileMenu({ open, onClose }) {
           </NavLink>
 
           <NavLink
+            to="/charts"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+            }
+          >
+            <IconImg name="chart" />
+            <span className="text-sm font-medium">{t.nav.charts}</span>
+          </NavLink>
+
+          <NavLink
             to="/spotify"
             onClick={onClose}
             className={({ isActive }) =>
