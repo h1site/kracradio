@@ -315,9 +315,9 @@ export default function Charts() {
                 >
                   {/* Rank */}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0 ${
-                    index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-500/30' :
-                    index === 1 ? 'bg-gradient-to-br from-gray-200 to-gray-400 text-gray-800 shadow-lg shadow-gray-400/30' :
-                    index === 2 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg shadow-amber-500/30' :
+                    index === 0 ? 'bg-gradient-to-br from-yellow-500 to-yellow-700 text-black shadow-lg shadow-yellow-600/40' :
+                    index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg shadow-gray-500/40' :
+                    index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-lg shadow-amber-600/40' :
                     'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}>
                     {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
