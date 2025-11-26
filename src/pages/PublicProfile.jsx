@@ -229,7 +229,7 @@ export default function PublicProfile() {
         lang={lang}
         title={profile.username || 'Profil'}
         description={profile.bio || `Profil de ${profile.username} sur KracRadio`}
-        path={`/profile/${profile.artist_slug || userId}`}
+        path={`/profile/${profile.artist_slug || username}`}
         image={profile.avatar_url}
         type="profile"
         jsonLd={[
