@@ -314,12 +314,7 @@ export default function Charts() {
                   className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-4 hover:shadow-lg hover:border-red-500/30 transition-all"
                 >
                   {/* Rank */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0 ${
-                    index === 0 ? 'bg-yellow-500 text-black' :
-                    index === 1 ? 'bg-gray-400 text-white' :
-                    index === 2 ? 'bg-amber-600 text-white' :
-                    'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}>
+                  <div className="w-8 flex-shrink-0 text-center font-bold text-xl text-gray-900 dark:text-white">
                     {index + 1}
                   </div>
 
