@@ -191,7 +191,6 @@ export default function App() {
 
           {/* Charts - Public access */}
           <Route path="/charts" element={<Charts />} />
-          <Route path="/charts/:channelKey" element={<Charts />} />
           <Route
             path="/dashboard"
             element={

@@ -233,34 +233,87 @@ export async function getUserLikedSongs() {
 }
 
 /**
+ * Calculate period start date
+ * - week: Sunday to Saturday (current week starting from last Sunday)
+ * - month: Current calendar month (1st to today)
+ * - year: Current calendar year (Jan 1st to today)
+ */
+function getChartPeriodStart(period) {
+  const now = new Date();
+
+  switch (period) {
+    case 'week': {
+      // Get last Sunday (start of current week)
+      const day = now.getDay(); // 0 = Sunday
+      const diff = day; // days since last Sunday
+      const sunday = new Date(now);
+      sunday.setDate(now.getDate() - diff);
+      sunday.setHours(0, 0, 0, 0);
+      return sunday;
+    }
+    case 'month': {
+      // First day of current month
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    case 'year': {
+      // January 1st of current year
+      return new Date(now.getFullYear(), 0, 1);
+    }
+    default:
+      return getChartPeriodStart('week');
+  }
+}
+
+/**
  * Get chart data for a specific channel
  * @param {string} channelKey - The channel to get charts for
  * @param {string} period - 'week', 'month', or 'year'
  * @returns {Promise<Array>} Array of songs with like counts
  */
 export async function getChannelCharts(channelKey, period = 'week') {
-  // Calculate the start date based on period
-  const now = new Date();
-  let startDate;
-
-  switch (period) {
-    case 'week':
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      break;
-    case 'month':
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      break;
-    case 'year':
-      startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      break;
-    default:
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  }
+  const startDate = getChartPeriodStart(period);
 
   const { data, error } = await supabase
     .from('song_likes')
     .select('song_title, song_artist, album_art, channel_name')
     .eq('channel_key', channelKey)
+    .gte('created_at', startDate.toISOString());
+
+  if (error) throw error;
+
+  // Group by song and count likes
+  const songMap = {};
+  (data || []).forEach(like => {
+    const key = `${like.song_title}|||${like.song_artist}`;
+    if (!songMap[key]) {
+      songMap[key] = {
+        title: like.song_title,
+        artist: like.song_artist,
+        albumArt: like.album_art,
+        channelName: like.channel_name,
+        likeCount: 0
+      };
+    }
+    songMap[key].likeCount++;
+  });
+
+  // Convert to array and sort by like count
+  return Object.values(songMap)
+    .sort((a, b) => b.likeCount - a.likeCount)
+    .slice(0, 50); // Top 50 songs
+}
+
+/**
+ * Get global chart data across all channels (for KracRadio cumulative)
+ * @param {string} period - 'week', 'month', or 'year'
+ * @returns {Promise<Array>} Array of songs with like counts
+ */
+export async function getGlobalCharts(period = 'week') {
+  const startDate = getChartPeriodStart(period);
+
+  const { data, error } = await supabase
+    .from('song_likes')
+    .select('song_title, song_artist, album_art, channel_name')
     .gte('created_at', startDate.toISOString());
 
   if (error) throw error;
