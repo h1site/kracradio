@@ -1,10 +1,12 @@
 // src/pages/Artists.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePublicProfiles } from '../hooks/useCommunity';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { COUNTRIES } from '../constants/countries';
+
+const ARTISTS_PER_PAGE = 90;
 
 export default function Artists() {
   const { t } = useI18n();
@@ -13,6 +15,7 @@ export default function Artists() {
   const countryFilter = searchParams.get('country');
   const { profiles, loading, error } = usePublicProfiles();
   const [searchQuery, setSearchQuery] = useState('');
+  const [displayCount, setDisplayCount] = useState(ARTISTS_PER_PAGE);
 
   // Extraire tous les genres uniques disponibles
   const availableGenres = useMemo(() => {
@@ -57,6 +60,22 @@ export default function Artists() {
 
     return filtered;
   }, [profiles, genreFilter, countryFilter, searchQuery]);
+
+  // Reset displayCount quand les filtres changent
+  useEffect(() => {
+    setDisplayCount(ARTISTS_PER_PAGE);
+  }, [genreFilter, countryFilter, searchQuery]);
+
+  // Artistes à afficher (avec pagination)
+  const displayedProfiles = useMemo(() => {
+    return filteredProfiles.slice(0, displayCount);
+  }, [filteredProfiles, displayCount]);
+
+  const hasMore = displayCount < filteredProfiles.length;
+
+  const loadMore = () => {
+    setDisplayCount(prev => prev + ARTISTS_PER_PAGE);
+  };
 
   if (loading) {
     return (
@@ -248,7 +267,7 @@ export default function Artists() {
           </div>
         )}
 
-        {filteredProfiles.length === 0 ? (
+        {displayedProfiles.length === 0 ? (
           <div className="text-center py-12 px-8">
             <div className="text-6xl mb-4">🎵</div>
             <h3 className="text-xl font-semibold text-text-primary mb-2">
@@ -275,7 +294,7 @@ export default function Artists() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8">
-            {filteredProfiles.map((profile) => {
+            {displayedProfiles.map((profile) => {
               const profileLink = profile.artist_slug || profile.user_id;
               return (
                 <Link
@@ -337,6 +356,21 @@ export default function Artists() {
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* Bouton Load More */}
+        {hasMore && displayedProfiles.length > 0 && (
+          <div className="flex justify-center mt-12 px-8">
+            <button
+              onClick={loadMore}
+              className="px-8 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              {t.artists.loadMore || 'Voir plus'}
+              <span className="text-sm text-red-200">
+                ({filteredProfiles.length - displayCount} {t.artists.remaining || 'restants'})
+              </span>
+            </button>
           </div>
         )}
       </div>

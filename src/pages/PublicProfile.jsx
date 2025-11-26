@@ -36,10 +36,8 @@ export default function PublicProfile() {
   const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const [articles, setArticles] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
-  const [followers, setFollowers] = useState([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [loadingPodcasts, setLoadingPodcasts] = useState(false);
-  const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState('');
   const [savingSpotify, setSavingSpotify] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -157,30 +155,6 @@ export default function PublicProfile() {
           if (!error) setPodcasts(data || []);
         })
         .finally(() => setLoadingPodcasts(false));
-    }
-  }, [userId]);
-
-  // Charger les followers
-  useEffect(() => {
-    if (userId) {
-      setLoadingFollowers(true);
-      supabase
-        .from('follows')
-        .select(`
-          follower_id,
-          profiles!follows_follower_id_fkey (
-            id,
-            username,
-            avatar_url,
-            artist_slug
-          )
-        `)
-        .eq('following_id', userId)
-        .then(({ data, error }) => {
-          if (!error) setFollowers(data || []);
-          else console.error('Error loading followers:', error);
-        })
-        .finally(() => setLoadingFollowers(false));
     }
   }, [userId]);
 
@@ -387,8 +361,8 @@ export default function PublicProfile() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Colonne 1 - Spotify Player + Podcasts */}
             <div className="space-y-8">
-              {/* Lecteur musical Spotify */}
-              {musicLinks && musicLinks.length > 0 ? (
+              {/* Lecteur musical Spotify - visible seulement si contenu ou si propre profil */}
+              {musicLinks && musicLinks.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                     <IconImg name="spotify" className="w-6 h-6" />
@@ -420,7 +394,9 @@ export default function PublicProfile() {
                     ))}
                   </div>
                 </div>
-              ) : isOwnProfile && (
+              )}
+              {/* Bouton ajouter Spotify - seulement pour proprio si pas de liens */}
+              {isOwnProfile && (!musicLinks || musicLinks.length === 0) && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                     <IconImg name="spotify" className="w-6 h-6" />
@@ -451,7 +427,8 @@ export default function PublicProfile() {
                 </div>
               )}
 
-              {/* Section Podcasts */}
+              {/* Section Podcasts - visible seulement si contenu ou si propre profil */}
+              {(podcasts.length > 0 || isOwnProfile) && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                   <IconImg name="mic" className="w-6 h-6" />
@@ -461,24 +438,21 @@ export default function PublicProfile() {
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
                   </div>
-                ) : podcasts.length === 0 ? (
+                ) : podcasts.length === 0 && isOwnProfile ? (
                   <div className="text-center py-12 text-text-secondary">
-                    <p className="mb-4">{t.publicProfile?.podcastsContent?.replace('{username}', profile.username) || `Les podcasts de ${profile.username}`}</p>
-                    {isOwnProfile && (
-                      <Link
-                        to="/dashboard/podcasts/edit"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
-                      >
-                        <img
-                          src="/icons/dark/mic.svg"
-                          alt=""
-                          className="w-5 h-5 invert"
-                        />
-                        {lang === 'fr' ? 'Ajouter un podcast' : lang === 'es' ? 'Añadir un podcast' : 'Add a podcast'}
-                      </Link>
-                    )}
+                    <Link
+                      to="/dashboard/podcasts/edit"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                    >
+                      <img
+                        src="/icons/dark/mic.svg"
+                        alt=""
+                        className="w-5 h-5 invert"
+                      />
+                      {lang === 'fr' ? 'Ajouter un podcast' : lang === 'es' ? 'Añadir un podcast' : 'Add a podcast'}
+                    </Link>
                   </div>
-                ) : (
+                ) : podcasts.length > 0 ? (
                   <div className="space-y-4">
                     {podcasts.map(podcast => {
                       const podcastLink = podcast.website_url || podcast.rss_url || `/podcast/${podcast.id}`;
@@ -532,11 +506,13 @@ export default function PublicProfile() {
                       );
                     })}
                   </div>
-                )}
+                ) : null}
               </div>
+              )}
             </div>
 
-            {/* Colonne 2 - Articles */}
+            {/* Colonne 2 - Articles - visible seulement si contenu ou si propre profil */}
+            {(articles.length > 0 || isOwnProfile) && (
             <div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
                 <IconImg name="paper" className="w-6 h-6" />
@@ -546,24 +522,21 @@ export default function PublicProfile() {
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
                 </div>
-              ) : articles.length === 0 ? (
+              ) : articles.length === 0 && isOwnProfile ? (
                 <div className="text-center py-12 text-text-secondary">
-                  <p className="mb-4">{t.publicProfile?.blogContent?.replace('{username}', profile.username) || `Les articles de blog de ${profile.username}`}</p>
-                  {isOwnProfile && (
-                    <Link
-                      to="/dashboard/articles/edit"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
-                    >
-                      <img
-                        src="/icons/dark/paper.svg"
-                        alt=""
-                        className="w-5 h-5 invert"
-                      />
-                      {lang === 'fr' ? 'Écrire un article' : lang === 'es' ? 'Escribir un artículo' : 'Write an article'}
-                    </Link>
-                  )}
+                  <Link
+                    to="/dashboard/articles/edit"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
+                  >
+                    <img
+                      src="/icons/dark/paper.svg"
+                      alt=""
+                      className="w-5 h-5 invert"
+                    />
+                    {lang === 'fr' ? 'Écrire un article' : lang === 'es' ? 'Escribir un artículo' : 'Write an article'}
+                  </Link>
                 </div>
-              ) : (
+              ) : articles.length > 0 ? (
                 <div className="space-y-6">
                   {articles.map(article => (
                     <Link
@@ -608,55 +581,10 @@ export default function PublicProfile() {
                     </Link>
                   ))}
                 </div>
-              )}
+              ) : null}
             </div>
+            )}
           </div>
-
-          {/* Section Connexions (Followers) */}
-          {followers.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                <span>👥</span>
-                {t.publicProfile?.connections || 'Connexions'}
-                <span className="text-base font-normal text-gray-500">({followers.length})</span>
-              </h2>
-              {loadingFollowers ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {followers.map(follow => (
-                    <Link
-                      key={follow.follower_id}
-                      to={`/profile/${follow.profiles?.artist_slug || follow.follower_id}`}
-                      className="group flex flex-col items-center gap-3 bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 hover:border-red-500 transition-all hover:shadow-lg"
-                    >
-                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent group-hover:ring-red-500 transition-all">
-                        {follow.profiles?.avatar_url ? (
-                          <img
-                            src={follow.profiles.avatar_url}
-                            alt={follow.profiles.username}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <span className="text-3xl">👤</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-center w-full">
-                        <h3 className="font-semibold text-sm text-gray-800 dark:text-white truncate group-hover:text-red-500 transition-colors">
-                          {follow.profiles?.username || t.publicProfile?.author || 'Utilisateur'}
-                        </h3>
-                        <p className="text-xs text-gray-500 truncate">@{follow.profiles?.artist_slug || 'artiste'}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Section posts - Feed communauté */}
           <div className="mt-12 pb-12">
