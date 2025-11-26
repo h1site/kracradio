@@ -1,6 +1,6 @@
 // src/lib/supabase.js
-import { supabase } from './supabaseClient';
-export { supabase }; // <-- makes { supabase } available from this module
+import { supabase, SUPABASE_FUNCTIONS_URL } from './supabaseClient';
+export { supabase, SUPABASE_FUNCTIONS_URL }; // <-- makes { supabase } available from this module
 
 // Small, safe slugify
 export function slugify(input = '') {

@@ -42,6 +42,10 @@ const STRINGS = {
     noPodcasts: 'Aucun podcast',
     noPodcastsDesc: 'Ajoutez votre premier podcast RSS',
     limitReached: 'Limite de 3 podcasts atteinte',
+    myStore: 'Boutique',
+    storeDesc: 'Vendez votre musique sur store.kracradio.com',
+    manageStore: 'Gérer ma boutique',
+    submitTrack: 'Soumettre un titre',
     delete: 'Supprimer',
     edit: 'Modifier',
     loading: 'Chargement...',
@@ -80,6 +84,10 @@ const STRINGS = {
     noPodcasts: 'No podcasts',
     noPodcastsDesc: 'Add your first RSS podcast',
     limitReached: 'Limit of 3 podcasts reached',
+    myStore: 'Store',
+    storeDesc: 'Sell your music on store.kracradio.com',
+    manageStore: 'Manage my store',
+    submitTrack: 'Submit a track',
     delete: 'Delete',
     edit: 'Edit',
     loading: 'Loading...',
@@ -118,6 +126,10 @@ const STRINGS = {
     noPodcasts: 'Sin podcasts',
     noPodcastsDesc: 'Agrega tu primer podcast RSS',
     limitReached: 'Límite de 3 podcasts alcanzado',
+    myStore: 'Tienda',
+    storeDesc: 'Vende tu música en store.kracradio.com',
+    manageStore: 'Administrar mi tienda',
+    submitTrack: 'Enviar una canción',
     delete: 'Eliminar',
     edit: 'Editar',
     loading: 'Cargando...',
@@ -657,6 +669,44 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        {/* Store Section - Admin only (module not ready for public) */}
+        {userRole === 'admin' && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor">
+                    <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12zm-7-8c-1.66 0-3-1.34-3-3H7c0 2.76 2.24 5 5 5s5-2.24 5-5h-2c0 1.66-1.34 3-3 3z"/>
+                  </svg>
+                </div>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">{L.myStore}</h2>
+              </div>
+              <Link
+                to="/store/submit"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                {L.submitTrack}
+              </Link>
+            </div>
+
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{L.storeDesc}</p>
+              <Link
+                to="/dashboard/store"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                  <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12z"/>
+                </svg>
+                {L.manageStore}
+              </Link>
+            </div>
+          </section>
+        )}
 
       </div>
     </div>

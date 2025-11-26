@@ -68,6 +68,8 @@ const STRINGS = {
     confirmToggleStatus: 'Changer le statut de cet article ?',
     confirmTogglePublic: 'Changer la visibilité de ce profil ?',
     confirmToggleVerified: 'Changer le statut vérifié de cet artiste ?',
+    store: 'Boutique',
+    manageStore: 'Gérer les soumissions boutique',
   },
   en: {
     title: 'Admin Panel',
@@ -129,6 +131,8 @@ const STRINGS = {
     confirmToggleStatus: 'Change article status?',
     confirmTogglePublic: 'Change profile visibility?',
     confirmToggleVerified: 'Change artist verified status?',
+    store: 'Store',
+    manageStore: 'Manage store submissions',
   },
   es: {
     title: 'Panel de Administración',
@@ -190,6 +194,8 @@ const STRINGS = {
     confirmToggleStatus: '¿Cambiar el estado del artículo?',
     confirmTogglePublic: '¿Cambiar la visibilidad del perfil?',
     confirmToggleVerified: '¿Cambiar el estado verificado del artista?',
+    store: 'Tienda',
+    manageStore: 'Gestionar envíos de tienda',
   },
 };
 
@@ -712,6 +718,12 @@ export default function AdminPanel() {
         >
           🎨 {L.artists} ({artists.length})
         </button>
+        <Link
+          to="/admin/store"
+          className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition"
+        >
+          🛒 {L.store}
+        </Link>
       </div>
 
       {/* Users Table */}

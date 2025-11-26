@@ -47,6 +47,9 @@ import LikedSongs from '../pages/LikedSongs';
 import Charts from '../pages/Charts';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
 import SubmitMusic from '../pages/SubmitMusic';
+import StoreSubmit from '../pages/StoreSubmit';
+import StoreDashboard from '../pages/StoreDashboard';
+import AdminStore from '../pages/AdminStore';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -205,6 +208,34 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/submit-music" element={<SubmitMusic />} />
+
+          {/* Store - Artist submission and dashboard */}
+          <Route
+            path="/store/submit"
+            element={
+              <ProtectedRoute>
+                <StoreSubmit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/store"
+            element={
+              <ProtectedRoute>
+                <StoreDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Store Management */}
+          <Route
+            path="/admin/store"
+            element={
+              <ProtectedRoute>
+                <AdminStore />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback */}
           <Route path="*" element={<Home />} />

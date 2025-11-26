@@ -165,7 +165,7 @@ const STRINGS = {
 };
 
 export default function SubmitMusic() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { lang } = useI18n();
   const L = STRINGS[lang] || STRINGS.fr;
 
@@ -174,6 +174,15 @@ export default function SubmitMusic() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+
+  // Show loading spinner while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#121212]">
+        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-red-600 rounded-full"></div>
+      </div>
+    );
+  }
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -508,9 +517,9 @@ export default function SubmitMusic() {
             href="https://kemp3.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block hover:opacity-80 transition-opacity"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
           >
-            <img src="https://kemp3.app/logo.png" alt="kemp3.app" className="h-12" />
+            {L.verifyLink}
           </a>
           <p className="mt-3 text-sm font-medium text-red-700 dark:text-red-400">
             {L.verifyNote}
