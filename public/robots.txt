@@ -1,4 +1,32 @@
+# KracRadio - robots.txt
+
 User-agent: *
 Allow: /
 
+# Block admin and dashboard pages
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /profile$
+Disallow: /messages
+Disallow: /liked-songs
+
+# Block auth pages
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password
+Disallow: /update-password
+Disallow: /confirm-email
+Disallow: /verify-email
+Disallow: /resend-verification
+Disallow: /auth/
+
+# Block store submission
+Disallow: /store/submit
+
+# Sitemaps
 Sitemap: https://kracradio.com/sitemap.xml
+Sitemap: https://gpcedzaflhiucwyjgdai.supabase.co/functions/v1/sitemap
+
+# Crawl delay for politeness
+Crawl-delay: 1
