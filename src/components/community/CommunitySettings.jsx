@@ -6,6 +6,56 @@ import { supabase } from '../../lib/supabase';
 import { COUNTRIES } from '../../constants/countries';
 import { useI18n } from '../../i18n';
 
+// Toggle Switch Component - Style Facebook
+function Toggle({ enabled, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      className={`
+        relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200
+        ${enabled ? 'bg-blue-500' : 'bg-gray-600'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+      `}
+    >
+      <span
+        className={`
+          inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200
+          ${enabled ? 'translate-x-6' : 'translate-x-1'}
+        `}
+      />
+    </button>
+  );
+}
+
+// Setting Row Component - Style Facebook épuré
+function SettingRow({ title, description, children, link }) {
+  return (
+    <div className="flex items-start justify-between px-4 py-4 gap-4">
+      <div className="flex-1 min-w-0">
+        <h4 className="text-[15px] font-medium text-white">{title}</h4>
+        {description && (
+          <p className="text-[13px] text-gray-400 mt-1 leading-relaxed">{description}</p>
+        )}
+        {link && (
+          <a href={link.href} className="text-[13px] text-blue-400 hover:underline mt-1 inline-block font-medium">
+            {link.text}
+          </a>
+        )}
+      </div>
+      <div className="flex-shrink-0 pt-0.5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Section Divider
+function Divider() {
+  return <div className="h-px bg-gray-800/50 my-1" />;
+}
+
 export default function CommunitySettings() {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -13,7 +63,7 @@ export default function CommunitySettings() {
   const { updateProfile, loading: updating } = useUpdateProfile();
 
   const [settings, setSettings] = useState({
-    is_public: false,
+    is_public: true,
     username: '',
     artist_slug: '',
     bio: '',
@@ -22,46 +72,41 @@ export default function CommunitySettings() {
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [slugPreview, setSlugPreview] = useState('');
-  const [slugStatus, setSlugStatus] = useState(null); // 'available', 'taken', 'checking'
+  const [slugStatus, setSlugStatus] = useState(null);
   const [slugError, setSlugError] = useState('');
+  const [showGenres, setShowGenres] = useState(false);
 
-  // Charger les settings du profil
   useEffect(() => {
     if (profile) {
       setSettings({
-        is_public: profile.is_public || false,
+        is_public: profile.is_public ?? true,
         username: profile.username || '',
         artist_slug: profile.artist_slug || '',
         bio: profile.bio || '',
         location: profile.location || '',
         genres: profile.genres || []
       });
-      setSlugPreview(profile.artist_slug || '');
     }
   }, [profile]);
 
-  // Fonction pour générer un slug propre
   const generateSlug = (text) => {
     return text
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Retire accents
-      .replace(/[^a-z0-9\s]/g, '') // Garde seulement lettres, chiffres, espaces
-      .replace(/\s+/g, '_') // Remplace espaces par _
-      .replace(/_+/g, '_') // Retire _ multiples
-      .replace(/^_|_$/g, ''); // Retire _ début/fin
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '');
   };
 
-  // Vérifier la disponibilité du slug
   const checkSlugAvailability = async (slug) => {
     if (!slug || slug.length < 3) {
       setSlugStatus(null);
-      setSlugError('Le nom d\'artiste doit contenir au moins 3 caractères');
+      setSlugError(t.community?.settings?.artistSlugMin || 'Min. 3 caractères');
       return;
     }
 
-    // Si c'est le slug actuel de l'utilisateur, pas besoin de vérifier
     if (slug === profile?.artist_slug) {
       setSlugStatus('available');
       setSlugError('');
@@ -82,7 +127,7 @@ export default function CommunitySettings() {
 
       if (data && data.length > 0) {
         setSlugStatus('taken');
-        setSlugError('Ce nom d\'artiste est déjà pris');
+        setSlugError(t.community?.settings?.artistSlugTaken || 'Ce nom est déjà pris');
       } else {
         setSlugStatus('available');
         setSlugError('');
@@ -90,16 +135,13 @@ export default function CommunitySettings() {
     } catch (error) {
       console.error('Error checking slug:', error);
       setSlugStatus(null);
-      setSlugError('Erreur lors de la vérification');
+      setSlugError('Erreur');
     }
   };
 
   const handleSlugChange = (e) => {
     const slug = generateSlug(e.target.value);
     setSettings(prev => ({ ...prev, artist_slug: slug }));
-    setSlugPreview(slug);
-
-    // Vérifier la disponibilité après un petit délai (debounce)
     if (slug) {
       setTimeout(() => checkSlugAvailability(slug), 500);
     } else {
@@ -109,55 +151,32 @@ export default function CommunitySettings() {
   };
 
   const handleTogglePublic = async () => {
+    const newValue = !settings.is_public;
+
+    if (newValue && (!settings.artist_slug || settings.artist_slug.length < 3)) {
+      setMessage({ type: 'error', text: t.community?.settings?.artistSlugRequired || 'Définissez un nom d\'artiste (min. 3 car.) pour être public' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+      return;
+    }
+
+    if (newValue && slugStatus === 'taken') {
+      setMessage({ type: 'error', text: t.community?.settings?.artistSlugTakenError || 'Ce nom est déjà pris' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+      return;
+    }
+
     try {
-      const newValue = !settings.is_public;
-
-      // Si on veut rendre le profil public, vérifier que le slug est valide
-      if (newValue && (!settings.artist_slug || settings.artist_slug.length < 3)) {
-        setMessage({
-          type: 'error',
-          text: '❌ Vous devez définir un nom d\'artiste (min. 3 caractères) pour rendre votre profil public'
-        });
-        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
-        return;
-      }
-
-      if (newValue && slugStatus === 'taken') {
-        setMessage({
-          type: 'error',
-          text: '❌ Le nom d\'artiste choisi est déjà pris. Veuillez en choisir un autre.'
-        });
-        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
-        return;
-      }
-
       await updateProfile(user.id, { is_public: newValue });
       setSettings(prev => ({ ...prev, is_public: newValue }));
-
-      // Rafraîchir le profil depuis la DB
       await refetch();
-
-      setMessage({
-        type: 'success',
-        text: newValue
-          ? '✅ Votre profil est maintenant public'
-          : '🔒 Votre profil est maintenant privé'
-      });
-
+      setMessage({ type: 'success', text: newValue ? (t.community?.settings?.publicEnabled || 'Public profile enabled') : (t.community?.settings?.privateEnabled || 'Private profile enabled') });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: '❌ Erreur lors de la mise à jour' });
-      console.error('Toggle public error:', error);
+      setMessage({ type: 'error', text: t.community?.customization?.error || 'Error' });
     }
   };
 
-  const handleSaveSettings = async (e) => {
-    e.preventDefault();
-
-    // Sauvegarder l'ancien slug pour vérifier s'il a changé
-    const oldSlug = profile?.artist_slug;
-    const slugChanged = oldSlug !== settings.artist_slug;
-
+  const handleSave = async () => {
     try {
       await updateProfile(user.id, {
         username: settings.username,
@@ -166,22 +185,11 @@ export default function CommunitySettings() {
         location: settings.location,
         genres: settings.genres
       });
-
-      // Rafraîchir le profil depuis la DB
       await refetch();
-
-      setMessage({ type: 'success', text: '✅ Paramètres enregistrés avec succès' });
-
-      // Si le slug a changé, rafraîchir la page après un court délai
-      if (slugChanged) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      }
+      setMessage({ type: 'success', text: t.community?.settings?.settingsSaved || 'Enregistré' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: `❌ Erreur: ${error.message}` });
+      setMessage({ type: 'error', text: error.message });
     }
   };
 
@@ -192,479 +200,225 @@ export default function CommunitySettings() {
   };
 
   const removeGenre = (genre) => {
-    setSettings(prev => ({
-      ...prev,
-      genres: prev.genres.filter(g => g !== genre)
-    }));
+    setSettings(prev => ({ ...prev, genres: prev.genres.filter(g => g !== genre) }));
   };
+
+  const allGenres = [
+    'Hip-Hop', 'Rap', 'R&B', 'Soul', 'Funk', 'Rock', 'Punk', 'Indie', 'Metal',
+    'Électro', 'House', 'Techno', 'Jazz', 'Blues', 'Pop', 'Reggae', 'Afrobeat',
+    'Classique', 'Lo-Fi', 'Ambient', 'Country', 'Latin', 'World'
+  ];
 
   if (loadingProfile) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-600 border-t-white"></div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '800px' }}>
-      {/* Header avec bouton Enregistrer */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-text-primary">
-          ⚙️ {t.community.settings.title}
-        </h2>
-        <button
-          onClick={handleSaveSettings}
-          disabled={updating}
-          className="px-6 py-2 bg-accent text-bg-primary font-semibold rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {updating ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-bg-primary"></div>
-              {t.community.saving}
-            </>
-          ) : (
-            <>
-              💾 {t.community.save}
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Messages de feedback */}
+    <div className="max-w-2xl">
+      {/* Message feedback */}
       {message.text && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          message.type === 'success'
-            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+        <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${
+          message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
         }`}>
           {message.text}
         </div>
       )}
 
-      {/* Section visibilité du profil */}
-      <div className="bg-bg-secondary rounded-lg p-6 mb-6 border border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className="text-xl font-semibold text-text-primary mb-2 flex items-center gap-2">
-              {settings.is_public ? '🌐 Profil public' : '🔒 Profil privé'}
-              {settings.is_public && (
-                <span className="px-2 py-1 text-xs bg-accent/20 text-accent rounded-full">
-                  PUBLIC
-                </span>
-              )}
-            </h3>
-            <p className="text-text-secondary text-sm">
-              {settings.is_public
-                ? 'Votre profil est visible par tous les visiteurs de KracRadio'
-                : 'Votre profil est visible uniquement par vos connexions'}
-            </p>
-          </div>
+      {/* Section: Visibilité */}
+      <div className="bg-[#242526] rounded-lg mb-4">
+        <SettingRow
+          title={t.community?.settings?.isPublic || "Profil public"}
+          description={settings.is_public
+            ? (t.community?.settings?.visibilityBannerPublic || "Votre profil est visible par tous les visiteurs. Vos articles, podcasts et informations sont accessibles publiquement.")
+            : (t.community?.settings?.visibilityBannerPrivate || "Votre profil est en mode privé. Activez pour être découvert par la communauté.")
+          }
+        >
+          <Toggle enabled={settings.is_public} onChange={handleTogglePublic} disabled={updating} />
+        </SettingRow>
 
-          <button
-            onClick={handleTogglePublic}
-            disabled={updating}
-            className={`
-              relative inline-flex h-8 w-14 items-center rounded-full transition-colors
-              ${settings.is_public ? 'bg-accent' : 'bg-border'}
-              ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-            `}
-          >
-            <span
-              className={`
-                inline-block h-6 w-6 transform rounded-full bg-white transition-transform
-                ${settings.is_public ? 'translate-x-7' : 'translate-x-1'}
-              `}
-            />
-          </button>
-        </div>
-
-        {settings.is_public && (
-          <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">
-            <p className="text-sm text-text-secondary">
-              💡 <strong>Mode public activé:</strong> Les gens peuvent voir votre profil,
-              vos posts publics, vos blogs et podcasts. Vous pouvez recevoir des demandes de follow.
-            </p>
-          </div>
+        {settings.is_public && settings.artist_slug && (
+          <>
+            <Divider />
+            <div className="px-4 py-3">
+              <p className="text-[13px] text-gray-400">{t.community?.settings?.yourPublicProfile || "Your public profile"}</p>
+              <a
+                href={`/profile/${settings.artist_slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline text-[15px] font-medium flex items-center gap-2"
+              >
+                kracradio.com/profile/{settings.artist_slug}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Formulaire des paramètres */}
-      <form onSubmit={handleSaveSettings} className="bg-bg-secondary rounded-lg p-6 border border-border">
-        <h3 className="text-xl font-semibold text-text-primary mb-4">
-          ✏️ {t.community.settings.profileInfo}
-        </h3>
+      {/* Section: Informations du profil */}
+      <div className="bg-[#242526] rounded-lg mb-4">
+        <div className="px-4 py-3 border-b border-gray-700/50">
+          <h3 className="text-[17px] font-semibold text-white">{t.community?.settings?.profileInfo || "Profile information"}</h3>
+        </div>
 
-        {/* Username */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            👤 {t.community.settings.username || 'Nom d\'utilisateur'}
-          </label>
+        {/* Nom d'utilisateur */}
+        <div className="px-4 py-4">
+          <label className="block text-[13px] text-gray-400 mb-2">{t.community?.settings?.username || "Username"}</label>
           <input
             type="text"
             value={settings.username}
             onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
-            placeholder="username"
-            className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
-                     text-text-primary placeholder-text-secondary
-                     focus:outline-none focus:ring-2 focus:ring-accent"
+            placeholder="votre_nom"
+            className="w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <p className="text-xs text-text-secondary mt-1">
-            📝 Votre nom d'utilisateur (ex: karpe_25, rhenoir, etc.). Peut contenir des lettres, chiffres et underscores.
-          </p>
         </div>
 
-        {/* Nom d'artiste / Slug */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            🎤 {t.community.settings.artistSlug} {settings.is_public && <span className="text-red-500">*</span>}
+        <Divider />
+
+        {/* Nom d'artiste (slug) */}
+        <div className="px-4 py-4">
+          <label className="block text-[13px] text-gray-400 mb-2">
+            {t.community?.settings?.artistSlug || "Artist name (public URL)"}
+            {settings.is_public && <span className="text-red-400 ml-1">*</span>}
           </label>
           <div className="relative">
             <input
               type="text"
               value={settings.artist_slug}
               onChange={handleSlugChange}
-              placeholder={t.community.settings.artistSlugPlaceholder}
-              className={`w-full px-4 py-2 pr-10 bg-bg-tertiary border rounded-lg
-                       text-text-primary placeholder-text-secondary
-                       focus:outline-none focus:ring-2 focus:ring-accent
-                       ${slugStatus === 'available' ? 'border-green-500' : ''}
-                       ${slugStatus === 'taken' ? 'border-red-500' : 'border-border'}`}
+              placeholder="mon_nom_artiste"
+              className={`w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 ${
+                slugStatus === 'available' ? 'focus:ring-green-500 ring-1 ring-green-500/50' :
+                slugStatus === 'taken' ? 'focus:ring-red-500 ring-1 ring-red-500/50' :
+                'focus:ring-blue-500'
+              }`}
             />
-            {/* Indicateur de statut */}
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {slugStatus === 'checking' && (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent"></div>
-              )}
-              {slugStatus === 'available' && (
-                <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            {slugStatus === 'checking' && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-white"></div>
+              </div>
+            )}
+            {slugStatus === 'available' && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-              )}
-              {slugStatus === 'taken' && (
-                <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              </div>
+            )}
+            {slugStatus === 'taken' && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-          {/* Messages d'erreur */}
-          {slugError && (
-            <p className="text-xs text-red-500 mt-1">
-              {slugError}
-            </p>
-          )}
-          {slugStatus === 'available' && slugPreview && (
-            <div className="mt-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-              <p className="text-sm text-green-400 flex items-center gap-2">
-                ✓ Nom d'artiste disponible
-              </p>
-              <p className="text-xs text-text-secondary mt-1">
-                🔗 Votre URL publique:
-              </p>
-              <p className="text-accent font-mono text-sm mt-1">
-                kracradio.com/profile/{slugPreview}
-              </p>
-            </div>
-          )}
-          {!slugError && (
-            <p className="text-xs text-text-secondary mt-1">
-              Les espaces seront remplacés par des underscores (_). Minimum 3 caractères.
-            </p>
+          {slugError && <p className="text-[12px] text-red-400 mt-1">{slugError}</p>}
+          {slugStatus === 'available' && settings.artist_slug && (
+            <p className="text-[12px] text-green-400 mt-1">{t.community?.settings?.available || "Available"}</p>
           )}
         </div>
 
+        <Divider />
+
         {/* Bio */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            {t.community.settings.bio}
-          </label>
+        <div className="px-4 py-4">
+          <label className="block text-[13px] text-gray-400 mb-2">{t.community?.settings?.bio || "Bio"}</label>
           <textarea
             value={settings.bio}
             onChange={(e) => setSettings(prev => ({ ...prev, bio: e.target.value }))}
-            placeholder={t.community.settings.bioPlaceholder}
+            placeholder={t.community?.settings?.bioPlaceholder || "Tell us about you, your music..."}
             maxLength={500}
-            rows={4}
-            className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
-                     text-text-primary placeholder-text-secondary
-                     focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+            rows={3}
+            className="w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
-          <p className="text-xs text-text-secondary mt-1">
-            {t.community.settings.bioCount.replace('{count}', settings.bio.length)}
-          </p>
+          <p className="text-[12px] text-gray-500 mt-1 text-right">{settings.bio.length}/500</p>
         </div>
 
+        <Divider />
+
         {/* Pays */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            📍 {t.community.settings.country}
-          </label>
+        <div className="px-4 py-4">
+          <label className="block text-[13px] text-gray-400 mb-2">{t.community?.settings?.country || "Country"}</label>
           <select
             value={settings.location}
             onChange={(e) => setSettings(prev => ({ ...prev, location: e.target.value }))}
-            className="w-full px-4 py-2 bg-bg-tertiary border border-border rounded-lg
-                     text-text-primary
-                     focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
-            <option value="">{t.community.settings.countryPlaceholder}</option>
+            <option value="">{t.community?.settings?.selectCountry || "Select a country"}</option>
             {COUNTRIES.map(country => (
-              <option key={country} value={country}>
-                {country}
-              </option>
+              <option key={country} value={country}>{country}</option>
             ))}
           </select>
         </div>
 
-        {/* Genres musicaux */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            🎵 {t.community.settings.genresMax}
-          </label>
+        <Divider />
 
-          {/* Tags sélectionnés */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {settings.genres.map(genre => (
-              <span
-                key={genre}
-                className="px-3 py-1 bg-accent/20 text-accent rounded-full text-sm flex items-center gap-2"
-              >
-                {genre}
-                <button
-                  type="button"
-                  onClick={() => removeGenre(genre)}
-                  className="hover:text-accent-hover"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+        {/* Genres */}
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[13px] text-gray-400">{t.community?.settings?.genresMax || "Music genres (max 3)"}</label>
+            <button
+              type="button"
+              onClick={() => setShowGenres(!showGenres)}
+              className="text-[13px] text-blue-400 hover:underline"
+            >
+              {showGenres ? (t.community?.settings?.hide || 'Hide') : (t.community?.settings?.edit || 'Edit')}
+            </button>
           </div>
 
-          {/* Suggestions de genres organisées par catégorie */}
-          {settings.genres.length < 3 && (
-            <div className="space-y-4">
-              {/* Musiques urbaines */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎤 Musiques urbaines</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Hip-Hop', 'Rap', 'Trap', 'Drill', 'R&B', 'Soul', 'Funk', 'Neo-Soul']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
+          {settings.genres.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {settings.genres.map(genre => (
+                <span
+                  key={genre}
+                  className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-[13px] flex items-center gap-1.5"
+                >
+                  {genre}
+                  <button type="button" onClick={() => removeGenre(genre)} className="hover:text-white">×</button>
+                </span>
+              ))}
+            </div>
+          )}
 
-              {/* Musiques Rock et alternatives */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎸 Musiques Rock et alternatives</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Rock', 'Hard Rock', 'Punk', 'Grunge', 'Indie', 'Alternative Rock', 'Garage Rock', 'Progressive Rock', 'Psychedelic Rock']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Musiques électroniques */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎧 Musiques électroniques</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Électro', 'House', 'Techno', 'Trance', 'Drum & Bass', 'Dubstep', 'Chillwave / Lo-Fi', 'Industrial / EBM', 'Synthwave']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Jazz, Blues et dérivés */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎷 Jazz, Blues et dérivés</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Jazz', 'Smooth Jazz', 'Blues', 'Swing', 'Funk-Jazz / Fusion', 'Bebop']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Pop et dérivés */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎵 Pop et dérivés</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Pop', 'Electro-Pop', 'Dream Pop', 'K-Pop / J-Pop / C-Pop', 'Dance Pop', 'Synth Pop']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Métal et ses branches */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🤘 Métal et ses branches</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Metal', 'Heavy Metal', 'Thrash Metal', 'Death Metal', 'Black Metal', 'Doom Metal', 'Metalcore', 'Industrial Metal']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Reggae et musiques tropicales */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🌴 Reggae et musiques tropicales</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Reggae', 'Dub', 'Ska', 'Dancehall', 'Calypso', 'Soca', 'Afrobeat']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Musiques classiques et instrumentales */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🎻 Musiques classiques et instrumentales</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Classique', 'Opéra', 'Baroque', 'Symphonique', 'Instrumental', 'Film Score / Soundtrack']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Musiques du monde */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">🌍 Musiques du monde</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Latin', 'Salsa', 'Bachata', 'Flamenco', 'Oriental / Arabe', 'Musique Africaine', 'Celtic / Folk', 'Country', 'Bluegrass']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Musiques modernes et hybrides */}
-              <div>
-                <h4 className="text-xs font-semibold text-text-secondary mb-2">💻 Musiques modernes et hybrides</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Lo-Fi', 'Chillout', 'Ambient', 'Experimental', 'Post-Rock', 'Alternative Electronic']
-                    .filter(g => !settings.genres.includes(g))
-                    .map(genre => (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => addGenre(genre)}
-                        className="px-3 py-1 bg-bg-tertiary border border-border rounded-full text-sm
-                                 hover:bg-accent/10 hover:border-accent/30 transition-colors"
-                      >
-                        + {genre}
-                      </button>
-                    ))}
-                </div>
-              </div>
+          {showGenres && settings.genres.length < 3 && (
+            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-700/50">
+              {allGenres.filter(g => !settings.genres.includes(g)).map(genre => (
+                <button
+                  key={genre}
+                  type="button"
+                  onClick={() => addGenre(genre)}
+                  className="px-3 py-1.5 bg-[#3a3b3c] hover:bg-[#4a4b4c] rounded-full text-[13px] text-gray-300 transition-colors"
+                >
+                  + {genre}
+                </button>
+              ))}
             </div>
           )}
         </div>
+      </div>
 
-      </form>
-
-      {/* Lien vers profil public */}
-      {settings.is_public && settings.artist_slug && (
-        <div className="mt-6 p-4 bg-bg-secondary rounded-lg border border-border">
-          <p className="text-sm text-text-secondary mb-2">
-            🔗 Votre profil public:
-          </p>
-          <a
-            href={`/profile/${settings.artist_slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent hover:text-accent-hover underline"
-          >
-            kracradio.com/profile/{settings.artist_slug}
-          </a>
-        </div>
-      )}
-
+      {/* Bouton Enregistrer */}
+      <button
+        onClick={handleSave}
+        disabled={updating}
+        className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+      >
+        {updating ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+            {t.community?.settings?.saving || "Saving..."}
+          </>
+        ) : (
+          t.community?.settings?.saveChanges || "Save changes"
+        )}
+      </button>
     </div>
   );
 }

@@ -158,7 +158,7 @@ const blankPodcast = { title: '', rss_url: '', description: '', image_url: '', a
 export default function Dashboard() {
   const { lang } = useI18n();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
-  const { user, userRole, isCreator, loading: authLoading } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -415,17 +415,15 @@ export default function Dashboard() {
               <h2 className="text-lg font-medium text-gray-900 dark:text-white">{L.myBlog}</h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">({articles.length})</span>
             </div>
-            {isCreator() && (
-              <Link
-                to="/dashboard/articles/edit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                </svg>
-                {L.createArticle}
-              </Link>
-            )}
+            <Link
+              to="/dashboard/articles/edit"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              </svg>
+              {L.createArticle}
+            </Link>
           </div>
 
           {articles.length === 0 ? (
@@ -496,7 +494,7 @@ export default function Dashboard() {
                   {importing ? L.importing : L.importAll}
                 </button>
               )}
-              {podcasts.length < 3 && isCreator() && !showPodcastForm && (
+              {podcasts.length < 3 && !showPodcastForm && (
                 <button
                   onClick={handleAddPodcast}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
