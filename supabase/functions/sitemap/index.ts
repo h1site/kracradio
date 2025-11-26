@@ -21,16 +21,15 @@ const STATIC_PAGES = [
   { path: '/submit-music', priority: 0.6, changefreq: 'monthly' },
 ]
 
-// Radio channels
+// Radio channels (must match src/data/channels.json)
 const CHANNELS = [
-  'chill',
-  'hits',
-  'oldies',
-  'hiphop',
-  'country',
+  'kracradio',
+  'ebm_industrial',
+  'electro',
+  'francophonie',
+  'jazz',
+  'metal',
   'rock',
-  'latino',
-  'lofi',
 ]
 
 function escapeXml(str: string): string {
