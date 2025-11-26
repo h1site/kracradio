@@ -315,12 +315,12 @@ export default function Charts() {
                 >
                   {/* Rank */}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0 ${
-                    index === 0 ? 'bg-gradient-to-br from-yellow-500 to-yellow-700 text-black shadow-lg shadow-yellow-600/40' :
-                    index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg shadow-gray-500/40' :
-                    index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-lg shadow-amber-600/40' :
+                    index === 0 ? 'bg-yellow-500 text-black' :
+                    index === 1 ? 'bg-gray-400 text-white' :
+                    index === 2 ? 'bg-amber-600 text-white' :
                     'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}>
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    {index + 1}
                   </div>
 
                   {/* Album Art */}
