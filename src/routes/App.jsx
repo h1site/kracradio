@@ -50,6 +50,7 @@ import SubmitMusic from '../pages/SubmitMusic';
 import StoreSubmit from '../pages/StoreSubmit';
 import StoreDashboard from '../pages/StoreDashboard';
 import AdminStore from '../pages/AdminStore';
+import Messages from '../pages/Messages';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -124,6 +125,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <LikedSongs />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Messages (protected) */}
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
               </ProtectedRoute>
             }
           />

@@ -1,5 +1,5 @@
 // supabase/functions/dropbox-upload-submission/index.ts
-// Upload store submission files to Dropbox when artist submits (before admin approval)
+// Upload store submission files directly to Dropbox when artist submits (before admin approval)
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -20,16 +20,10 @@ const corsHeaders = {
 // Base folder for store submissions (pending approval)
 const STORE_SUBMISSION_FOLDER = '/store-approval';
 
-interface UploadRequest {
-  artist_name: string;
-  track_title: string;
-  audio_file_url?: string;
-  cover_image_url?: string;
-}
-
 // Get fresh Dropbox access token
 async function getDropboxAccessToken(): Promise<string> {
   if (DROPBOX_REFRESH_TOKEN && DROPBOX_APP_KEY && DROPBOX_APP_SECRET) {
+    console.log('Getting fresh Dropbox access token...');
     const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -46,10 +40,12 @@ async function getDropboxAccessToken(): Promise<string> {
     }
 
     const data = await response.json();
+    console.log('Got fresh access token');
     return data.access_token;
   }
 
   if (DROPBOX_ACCESS_TOKEN) {
+    console.log('Using legacy access token');
     return DROPBOX_ACCESS_TOKEN;
   }
 
@@ -93,26 +89,14 @@ async function ensureFolderExists(accessToken: string, folderPath: string): Prom
   }
 }
 
-// Upload file to Dropbox from URL
-async function uploadFileFromUrl(
+// Upload file buffer to Dropbox
+async function uploadFileToDropbox(
   accessToken: string,
-  sourceUrl: string,
+  fileBuffer: ArrayBuffer,
   dropboxPath: string
 ): Promise<{ path: string; url: string } | null> {
-  console.log('Downloading file from:', sourceUrl);
+  console.log('Uploading to Dropbox:', dropboxPath, '- Size:', fileBuffer.byteLength);
 
-  // Download the file
-  const downloadResponse = await fetch(sourceUrl);
-  if (!downloadResponse.ok) {
-    console.error('Failed to download file:', downloadResponse.status);
-    return null;
-  }
-
-  const fileBuffer = await downloadResponse.arrayBuffer();
-  console.log('File downloaded, size:', fileBuffer.byteLength);
-
-  // Upload to Dropbox
-  console.log('Uploading to Dropbox:', dropboxPath);
   const uploadResponse = await fetch('https://content.dropboxapi.com/2/files/upload', {
     method: 'POST',
     headers: {
@@ -262,23 +246,31 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body
-    const body: UploadRequest = await req.json();
+    console.log('User authenticated:', user.email);
 
-    if (!body.artist_name || !body.track_title) {
+    // Parse FormData (direct file upload)
+    const formData = await req.formData();
+    const artistName = formData.get('artist_name') as string;
+    const trackTitle = formData.get('track_title') as string;
+    const audioFile = formData.get('audio_file') as File | null;
+    const coverFile = formData.get('cover_file') as File | null;
+
+    if (!artistName || !trackTitle) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields (artist_name, track_title)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processing submission upload for:', body.artist_name, '-', body.track_title);
+    console.log('Processing submission upload for:', artistName, '-', trackTitle);
+    console.log('Audio file:', audioFile?.name, audioFile?.size);
+    console.log('Cover file:', coverFile?.name, coverFile?.size);
 
     // Get Dropbox access token
     const accessToken = await getDropboxAccessToken();
 
     // Create artist folder path
-    const artistFolder = `${STORE_SUBMISSION_FOLDER}/${sanitizeFilename(body.artist_name)}`;
+    const artistFolder = `${STORE_SUBMISSION_FOLDER}/${sanitizeFilename(artistName)}`;
     await ensureFolderExists(accessToken, STORE_SUBMISSION_FOLDER);
     await ensureFolderExists(accessToken, artistFolder);
 
@@ -290,11 +282,12 @@ serve(async (req) => {
     } = {};
 
     // Upload audio file if provided
-    if (body.audio_file_url) {
-      const audioFilename = `${sanitizeFilename(body.artist_name)} - ${sanitizeFilename(body.track_title)}.mp3`;
+    if (audioFile && audioFile.size > 0) {
+      const audioFilename = `${sanitizeFilename(artistName)} - ${sanitizeFilename(trackTitle)}.mp3`;
       const audioPath = `${artistFolder}/${audioFilename}`;
+      const audioBuffer = await audioFile.arrayBuffer();
 
-      const audioResult = await uploadFileFromUrl(accessToken, body.audio_file_url, audioPath);
+      const audioResult = await uploadFileToDropbox(accessToken, audioBuffer, audioPath);
       if (audioResult) {
         results.audio_dropbox_url = audioResult.url;
         results.audio_dropbox_path = audioResult.path;
@@ -303,18 +296,30 @@ serve(async (req) => {
     }
 
     // Upload cover image if provided
-    if (body.cover_image_url) {
-      // Get file extension from URL or default to jpg
-      const coverExt = body.cover_image_url.match(/\.(jpg|jpeg|png|webp|gif)/i)?.[1] || 'jpg';
-      const coverFilename = `${sanitizeFilename(body.artist_name)} - ${sanitizeFilename(body.track_title)} - cover.${coverExt}`;
+    if (coverFile && coverFile.size > 0) {
+      // Get file extension from filename
+      const coverExt = coverFile.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)?.[1] || 'jpg';
+      const coverFilename = `${sanitizeFilename(artistName)} - ${sanitizeFilename(trackTitle)} - cover.${coverExt}`;
       const coverPath = `${artistFolder}/${coverFilename}`;
+      const coverBuffer = await coverFile.arrayBuffer();
 
-      const coverResult = await uploadFileFromUrl(accessToken, body.cover_image_url, coverPath);
+      const coverResult = await uploadFileToDropbox(accessToken, coverBuffer, coverPath);
       if (coverResult) {
         results.cover_dropbox_url = coverResult.url;
         results.cover_dropbox_path = coverResult.path;
         console.log('Cover uploaded:', coverResult.url);
       }
+    }
+
+    // Check if at least one file was uploaded
+    if (!results.audio_dropbox_url && !results.cover_dropbox_url) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No files were uploaded. Please provide audio or cover files.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(

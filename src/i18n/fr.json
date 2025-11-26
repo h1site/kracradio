@@ -84,7 +84,12 @@
     "register": "Inscription",
     "logout": "Déconnexion",
     "profile": "Profil",
-    "submitMusic": "Soumettre Musique"
+    "submitMusic": "Soumettre Musique",
+    "messages": "Messages",
+    "artistProfile": "Profil Artiste",
+    "dashboard": "Tableau de bord",
+    "likedSongs": "Chansons aimées",
+    "settings": "Paramètres"
   },
   "auth": {
     "login": "Connexion",
@@ -581,7 +586,8 @@
     "toConnect": "À connecter avec {type} existants",
     "verifiedArtist": "Artiste vérifié",
     "openOn": "Ouvrir sur",
-    "author": "Auteur"
+    "author": "Auteur",
+    "backToArtists": "Artistes"
   },
   "artists": {
     "title": "Artistes",

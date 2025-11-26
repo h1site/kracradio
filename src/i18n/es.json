@@ -84,7 +84,12 @@
     "register": "Registrarse",
     "logout": "Cerrar sesión",
     "profile": "Perfil",
-    "submitMusic": "Enviar Música"
+    "submitMusic": "Enviar Música",
+    "messages": "Mensajes",
+    "artistProfile": "Perfil de Artista",
+    "dashboard": "Panel",
+    "likedSongs": "Canciones favoritas",
+    "settings": "Ajustes"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -581,7 +586,8 @@
     "toConnect": "Por conectar con {type} existentes",
     "verifiedArtist": "Artista verificado",
     "openOn": "Abrir en",
-    "author": "Autor"
+    "author": "Autor",
+    "backToArtists": "Artistas"
   },
   "artists": {
     "title": "Artistas",

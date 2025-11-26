@@ -1,10 +1,11 @@
 // src/components/Header.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../hooks/useCommunity';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { useUI } from '../context/UIContext';
 import MobileMenu from './MobileMenu';
 
@@ -13,6 +14,7 @@ export default function Header() {
   const { isDark, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
+  const { unreadCount } = useUnreadMessages();
   const { isDesktop, sidebarOpen, openSidebar } = useUI();
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -142,6 +144,21 @@ export default function Header() {
                     </div>
                   )}
                   {t?.nav?.artistProfile ?? 'Artist Profile'}
+                </Link>
+                {/* Messages */}
+                <Link
+                  to="/messages"
+                  className="relative px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  title={t?.nav?.messages ?? 'Messages'}
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-0.5 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
                 {/* Liked Songs */}
                 <Link

@@ -1,16 +1,16 @@
 // src/pages/PublicProfile.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useTheme } from '../context/ThemeContext';
 import { useResolveUsername, useProfile, useMusicLinks, useFollowStats } from '../hooks/useCommunity';
-import { listUserArticles } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import FollowButton from '../components/community/FollowButton';
 import PostsFeed from '../components/posts/PostsFeed';
+import MessageModal from '../components/messages/MessageModal';
 
 function IconImg({ name, alt = '', className = 'w-6 h-6' }) {
   const { isDark } = useTheme();
@@ -41,6 +41,7 @@ export default function PublicProfile() {
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState('');
   const [savingSpotify, setSavingSpotify] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   // Résoudre le username (slug ou UUID) vers un user_id
   const { userId, loading: resolvingUser, error: resolveError } = useResolveUsername(username);
@@ -263,6 +264,19 @@ export default function PublicProfile() {
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          {/* Back button - top right */}
+          <Link
+            to="/artists"
+            className="absolute top-4 right-4 z-20 flex items-center gap-2 px-4 py-2 bg-black/50 hover:bg-black/70 text-white rounded-lg backdrop-blur-sm transition-colors"
+            style={{
+              marginRight: isDesktop && sidebarOpen ? 0 : 0,
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            {t.publicProfile?.backToArtists || 'Artistes'}
+          </Link>
           <div
             className="relative z-10 flex flex-col justify-end h-full p-8 text-white"
             style={{
@@ -324,7 +338,10 @@ export default function PublicProfile() {
                 ) : (
                   <div className="flex gap-3">
                     <FollowButton userId={userId} />
-                    <button className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-gray-800 dark:text-gray-200">
+                    <button
+                      onClick={() => setShowMessageModal(true)}
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                    >
                       💬 {t.publicProfile?.message || 'Message'}
                     </button>
                   </div>
@@ -634,6 +651,17 @@ export default function PublicProfile() {
           </div>
         </div>
       </div>
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={showMessageModal}
+        onClose={() => setShowMessageModal(false)}
+        recipient={{
+          id: userId,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+        }}
+      />
     </>
   );
 }

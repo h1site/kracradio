@@ -84,7 +84,12 @@
     "register": "Sign up",
     "logout": "Log out",
     "profile": "Profile",
-    "submitMusic": "Submit Music"
+    "submitMusic": "Submit Music",
+    "messages": "Messages",
+    "artistProfile": "Artist Profile",
+    "dashboard": "Dashboard",
+    "likedSongs": "Liked Songs",
+    "settings": "Settings"
   },
   "auth": {
     "login": "Log in",
@@ -581,7 +586,8 @@
     "toConnect": "To connect with existing {type}",
     "verifiedArtist": "Verified artist",
     "openOn": "Open on",
-    "author": "Author"
+    "author": "Author",
+    "backToArtists": "Artists"
   },
   "artists": {
     "title": "Artists",

@@ -4,6 +4,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
+import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { channels } from '../data/channels';
 
 function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
@@ -26,6 +27,7 @@ export default function MobileMenu({ open, onClose }) {
   const { isDark } = useTheme();
   const { t } = useI18n();
   const { user, signOut } = useAuth();
+  const { unreadCount } = useUnreadMessages();
   const location = useLocation();
   const [channelsOpen, setChannelsOpen] = React.useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -272,6 +274,32 @@ export default function MobileMenu({ open, onClose }) {
                   <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
                 </svg>
                 <span className="text-sm font-medium">{t?.nav?.dashboard ?? 'Dashboard'}</span>
+              </NavLink>
+
+              {/* Messages */}
+              <NavLink
+                to="/messages"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+                }
+              >
+                <div className="relative">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-medium">{t?.nav?.messages ?? 'Messages'}</span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto px-2 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
               </NavLink>
 
               {/* Liked Songs */}

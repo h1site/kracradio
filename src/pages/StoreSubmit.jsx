@@ -253,88 +253,61 @@ export default function StoreSubmit() {
     setSubmitting(true);
 
     try {
-      let audioUrl = null;
-      let coverUrl = null;
-
-      // Upload audio file if provided
-      if (audioFile) {
-        const audioPath = `store-submissions/${user.id}/${Date.now()}-${audioFile.name}`;
-        const { error: audioError } = await supabase.storage
-          .from('music')
-          .upload(audioPath, audioFile);
-
-        if (audioError) {
-          console.error('Audio upload error:', audioError);
-        } else {
-          const { data: urlData } = supabase.storage.from('music').getPublicUrl(audioPath);
-          audioUrl = urlData?.publicUrl;
-        }
-      }
-
-      // Upload cover image if provided
-      if (coverFile) {
-        const coverPath = `store-submissions/${user.id}/${Date.now()}-cover-${coverFile.name}`;
-        const { error: coverError } = await supabase.storage
-          .from('images')
-          .upload(coverPath, coverFile);
-
-        if (coverError) {
-          console.error('Cover upload error:', coverError);
-        } else {
-          const { data: urlData } = supabase.storage.from('images').getPublicUrl(coverPath);
-          coverUrl = urlData?.publicUrl;
-        }
-      }
-
-      // Upload to Dropbox for admin review (store-approval/{artist}/ folder)
       let dropboxAudioUrl = null;
       let dropboxCoverUrl = null;
 
-      if (audioUrl || coverUrl) {
-        try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const token = sessionData?.session?.access_token;
+      // Upload files directly to Dropbox via edge function (bypasses Supabase Storage)
+      if (audioFile || coverFile) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
 
-          console.log('Uploading to Dropbox for review...');
-          const dropboxResponse = await fetch(
-            `${SUPABASE_FUNCTIONS_URL}/dropbox-upload-submission`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                artist_name: form.artistName.trim(),
-                track_title: form.trackTitle.trim(),
-                audio_file_url: audioUrl,
-                cover_image_url: coverUrl,
-              }),
-            }
-          );
+        // Build FormData with files
+        const uploadFormData = new FormData();
+        uploadFormData.append('artist_name', form.artistName.trim());
+        uploadFormData.append('track_title', form.trackTitle.trim());
 
-          const dropboxResult = await dropboxResponse.json();
-          console.log('Dropbox upload result:', dropboxResult);
+        if (audioFile) {
+          uploadFormData.append('audio_file', audioFile);
+        }
+        if (coverFile) {
+          uploadFormData.append('cover_file', coverFile);
+        }
 
-          if (dropboxResponse.ok && dropboxResult.success) {
-            dropboxAudioUrl = dropboxResult.audio_dropbox_url;
-            dropboxCoverUrl = dropboxResult.cover_dropbox_url;
+        console.log('Uploading files directly to Dropbox...');
+        const dropboxResponse = await fetch(
+          `${SUPABASE_FUNCTIONS_URL}/dropbox-upload-submission`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              // Note: Don't set Content-Type for FormData - browser will set it with boundary
+            },
+            body: uploadFormData,
           }
-        } catch (dropboxError) {
-          console.error('Dropbox upload error (non-blocking):', dropboxError);
-          // Don't fail submission if Dropbox upload fails
+        );
+
+        const dropboxResult = await dropboxResponse.json();
+        console.log('Dropbox upload result:', dropboxResult);
+
+        if (!dropboxResponse.ok) {
+          throw new Error(dropboxResult.error || 'Failed to upload files');
+        }
+
+        if (dropboxResult.success) {
+          dropboxAudioUrl = dropboxResult.audio_dropbox_url;
+          dropboxCoverUrl = dropboxResult.cover_dropbox_url;
         }
       }
 
-      // Create submission with Dropbox URLs (fallback to Supabase URLs)
+      // Create submission record with Dropbox URLs
       const { error } = await supabase.from('store_submissions').insert({
         user_id: user.id,
         track_title: form.trackTitle.trim(),
         artist_name: form.artistName.trim(),
         requested_price: parseFloat(form.price),
         product_type: form.productType,
-        audio_file_url: dropboxAudioUrl || audioUrl,
-        cover_image_url: dropboxCoverUrl || coverUrl,
+        audio_file_url: dropboxAudioUrl,
+        cover_image_url: dropboxCoverUrl,
         rights_confirmed: form.rightsConfirmed,
         artist_message: form.artistMessage.trim() || null,
         status: 'pending',
