@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import FollowButton from '../components/community/FollowButton';
+import FollowersModal from '../components/community/FollowersModal';
 import PostsFeed from '../components/posts/PostsFeed';
 import MessageModal from '../components/messages/MessageModal';
 
@@ -42,6 +43,8 @@ export default function PublicProfile() {
   const [spotifyLink, setSpotifyLink] = useState('');
   const [savingSpotify, setSavingSpotify] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [followersModalType, setFollowersModalType] = useState('followers');
 
   // Résoudre le username (slug ou UUID) vers un user_id
   const { userId, loading: resolvingUser, error: resolveError } = useResolveUsername(username);
@@ -317,8 +320,18 @@ export default function PublicProfile() {
               <div className="flex items-center gap-6">
                 {!loadingStats && (
                     <div className="flex gap-6 text-lg">
-                      <div><strong className="font-bold">{stats.followers || 0}</strong> {t.publicProfile?.followers || 'Abonnés'}</div>
-                      <div><strong className="font-bold">{stats.following || 0}</strong> {t.publicProfile?.following || 'Abonnements'}</div>
+                      <button
+                        onClick={() => { setFollowersModalType('followers'); setShowFollowersModal(true); }}
+                        className="hover:underline transition-colors"
+                      >
+                        <strong className="font-bold">{stats.followers || 0}</strong> {t.publicProfile?.followers || 'Abonnés'}
+                      </button>
+                      <button
+                        onClick={() => { setFollowersModalType('following'); setShowFollowersModal(true); }}
+                        className="hover:underline transition-colors"
+                      >
+                        <strong className="font-bold">{stats.following || 0}</strong> {t.publicProfile?.following || 'Abonnements'}
+                      </button>
                     </div>
                   )}
                   {isOwnProfile ? (
@@ -661,6 +674,14 @@ export default function PublicProfile() {
           username: profile.username,
           avatar_url: profile.avatar_url,
         }}
+      />
+
+      {/* Followers/Following Modal */}
+      <FollowersModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        userId={userId}
+        type={followersModalType}
       />
     </>
   );

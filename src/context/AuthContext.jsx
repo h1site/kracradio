@@ -36,24 +36,22 @@ export function AuthProvider({ children }) {
     console.log('[Auth] Setting up auth listener...');
 
     // Utiliser uniquement onAuthStateChange - ne pas appeler getSession() qui peut bloquer
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
 
       console.log('[Auth] Event:', event, session?.user?.email || 'no user');
 
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+      setLoading(false);
 
-      // Fetch role BEFORE setting loading to false
+      // Fetch role in background (non-blocking)
       if (currentUser) {
-        const role = await fetchUserRole(currentUser.id);
-        if (isMounted) {
-          setUserRole(role);
-          setLoading(false);
-        }
+        fetchUserRole(currentUser.id).then(role => {
+          if (isMounted) setUserRole(role);
+        });
       } else {
         setUserRole(null);
-        setLoading(false);
       }
     });
 

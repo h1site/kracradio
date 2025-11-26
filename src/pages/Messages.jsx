@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
 import Seo from '../seo/Seo';
+import FollowButton from '../components/community/FollowButton';
 
 const STRINGS = {
   fr: {
@@ -24,6 +25,9 @@ const STRINGS = {
     login: 'Se connecter',
     selectConversation: 'Sélectionnez une conversation',
     newMessage: 'Nouveau message',
+    newFollowers: 'Nouveaux abonnés',
+    followedYou: 'vous suit maintenant',
+    viewProfile: 'Voir le profil',
   },
   en: {
     title: 'Messages',
@@ -42,6 +46,9 @@ const STRINGS = {
     login: 'Log In',
     selectConversation: 'Select a conversation',
     newMessage: 'New message',
+    newFollowers: 'New followers',
+    followedYou: 'started following you',
+    viewProfile: 'View profile',
   },
   es: {
     title: 'Mensajes',
@@ -60,6 +67,9 @@ const STRINGS = {
     login: 'Iniciar sesión',
     selectConversation: 'Selecciona una conversación',
     newMessage: 'Nuevo mensaje',
+    newFollowers: 'Nuevos seguidores',
+    followedYou: 'te sigue ahora',
+    viewProfile: 'Ver perfil',
   },
 };
 
@@ -77,6 +87,57 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [followNotifications, setFollowNotifications] = useState([]);
+
+  // Load follow notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const loadFollowNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select(`
+            *,
+            actor:profiles!notifications_actor_id_fkey(id, username, avatar_url, artist_slug)
+          `)
+          .eq('user_id', user.id)
+          .eq('type', 'follow')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        setFollowNotifications(data || []);
+      } catch (error) {
+        console.error('Error loading follow notifications:', error);
+      }
+    };
+
+    loadFollowNotifications();
+
+    // Subscribe to new follow notifications
+    const notifChannel = supabase
+      .channel('follow-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new.type === 'follow') {
+            loadFollowNotifications();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notifChannel);
+    };
+  }, [user]);
 
   // Load conversations
   useEffect(() => {
@@ -181,9 +242,9 @@ export default function Messages() {
         .eq('recipient_id', user.id)
         .is('read_at', null);
 
-      // Scroll to bottom
+      // Scroll to bottom - block: 'nearest' prevents page scroll
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
       }, 100);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -221,9 +282,9 @@ export default function Messages() {
       setMessages(prev => [...prev, data]);
       setNewMessage('');
 
-      // Scroll to bottom
+      // Scroll to bottom after sending
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -297,11 +358,52 @@ export default function Messages() {
 
             {/* Conversations list */}
             <div className="flex-1 overflow-y-auto">
+              {/* Follow notifications section */}
+              {followNotifications.length > 0 && (
+                <div className="border-b border-gray-200 dark:border-gray-800">
+                  <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20">
+                    <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                      <span>👥</span>
+                      {L.newFollowers}
+                    </h3>
+                  </div>
+                  {followNotifications.slice(0, 5).map(notif => (
+                    <Link
+                      key={notif.id}
+                      to={`/profile/${notif.actor?.artist_slug || notif.actor_id}`}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-100 dark:border-gray-800"
+                    >
+                      {notif.actor?.avatar_url ? (
+                        <img
+                          src={notif.actor.avatar_url}
+                          alt={notif.actor.username}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <span className="text-lg">👤</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          <span className="font-semibold">{notif.actor?.username || 'Utilisateur'}</span>
+                          {' '}{L.followedYou}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(notif.created_at)}
+                        </p>
+                      </div>
+                      <span className="text-blue-500 text-xs">→</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-red-600 rounded-full"></div>
                 </div>
-              ) : conversations.length === 0 ? (
+              ) : conversations.length === 0 && followNotifications.length === 0 ? (
                 <div className="text-center py-12 px-4">
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,7 +492,7 @@ export default function Messages() {
                   </button>
                   <Link
                     to={`/profile/${selectedConversation.partner?.artist_slug || selectedConversation.partnerId}`}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1"
                   >
                     {selectedConversation.partner?.avatar_url ? (
                       <img
@@ -412,6 +514,8 @@ export default function Messages() {
                       </p>
                     </div>
                   </Link>
+                  {/* Follow button */}
+                  <FollowButton userId={selectedConversation.partnerId} />
                 </div>
 
                 {/* Messages */}
