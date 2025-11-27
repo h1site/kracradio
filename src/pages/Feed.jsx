@@ -4,6 +4,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useUI } from '../context/UIContext';
 import { useI18n } from '../i18n';
 import CreatePost from '../components/posts/CreatePost';
 import Seo from '../seo/Seo';
@@ -467,6 +468,8 @@ export default function Feed() {
     setPosts(posts.filter(p => p.id !== postId));
   };
 
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+
   return (
     <>
       <Seo
@@ -476,17 +479,47 @@ export default function Feed() {
         path="/feed"
       />
 
-      <div className={`min-h-screen ${isDark ? 'bg-[#18191a]' : 'bg-gray-100'}`}>
-        {/* Header */}
-        <div className={`sticky top-16 z-30 ${isDark ? 'bg-[#242526]/95 backdrop-blur-xl border-b border-gray-700/50' : 'bg-white/95 backdrop-blur-xl border-b border-gray-200'}`}>
-          <div className="max-w-2xl mx-auto px-4 py-4">
-            <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {t.feed?.title || 'Feed'}
-            </h1>
+      <div className="min-h-screen bg-white dark:bg-black">
+        {/* Full-screen header */}
+        <header
+          className="relative w-full overflow-hidden"
+          style={{
+            marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
+            width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
+            transition: 'margin-left 300ms ease, width 300ms ease'
+          }}
+        >
+          <div className="absolute inset-0">
+            <img
+              src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&h=400&fit=crop&auto=format&q=80"
+              alt="Feed"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
           </div>
-        </div>
+          <div
+            className="relative py-16 md:py-24"
+            style={{
+              marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+              transition: 'margin-left 300ms ease'
+            }}
+          >
+            <div className="max-w-4xl pl-[60px] md:pl-[100px] pr-8">
+              <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
+                {t.feed?.badge || 'Community'}
+              </span>
+              <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase text-white">
+                {t.feed?.title || 'Feed'}
+              </h1>
+              <p className="mt-4 max-w-3xl text-lg text-gray-200">
+                {t.feed?.subtitle || 'Share your thoughts with the community'}
+              </p>
+            </div>
+          </div>
+        </header>
 
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <main className={`px-4 py-8 ${isDark ? 'bg-[#18191a]' : 'bg-gray-100'}`}>
+          <div className="max-w-2xl mx-auto">
           {/* Create post */}
           <div className={`rounded-2xl overflow-hidden mb-6 ${isDark ? 'bg-[#242526]' : 'bg-white'} shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}>
             <div className="p-4">
@@ -540,7 +573,8 @@ export default function Feed() {
               ))}
             </div>
           )}
-        </div>
+          </div>
+        </main>
       </div>
     </>
   );

@@ -687,6 +687,8 @@
   },
   "feed": {
     "title": "Feed",
+    "badge": "Comunidad",
+    "subtitle": "Comparte tus pensamientos con la comunidad",
     "description": "Feed de la comunidad KracRadio",
     "noPosts": "No hay publicaciones aún",
     "startConversation": "¡Sé el primero en publicar!",

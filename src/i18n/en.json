@@ -720,6 +720,8 @@
   },
   "feed": {
     "title": "Feed",
+    "badge": "Community",
+    "subtitle": "Share your thoughts with the community",
     "description": "KracRadio community feed",
     "noPosts": "No posts yet",
     "startConversation": "Be the first to post!",
