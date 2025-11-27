@@ -696,6 +696,7 @@
     "retry": "Reintentar",
     "like": "Me gusta",
     "comment": "Comentar",
-    "photo": "Foto"
+    "photo": "Foto",
+    "loginToPost": "Inicia sesión para compartir algo..."
   }
 }

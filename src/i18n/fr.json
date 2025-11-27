@@ -729,6 +729,7 @@
     "retry": "Réessayer",
     "like": "J'aime",
     "comment": "Commenter",
-    "photo": "Photo"
+    "photo": "Photo",
+    "loginToPost": "Connectez-vous pour partager quelque chose..."
   }
 }

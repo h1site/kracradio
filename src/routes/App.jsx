@@ -159,15 +159,8 @@ export default function App() {
             }
           />
 
-          {/* Feed (protected) */}
-          <Route
-            path="/feed"
-            element={
-              <ProtectedRoute>
-                <Feed />
-              </ProtectedRoute>
-            }
-          />
+          {/* Feed (public) */}
+          <Route path="/feed" element={<Feed />} />
 
           <Route
             path="/dashboard/articles/mine"

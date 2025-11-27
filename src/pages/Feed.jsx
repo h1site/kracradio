@@ -1,17 +1,19 @@
 // src/pages/Feed.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useUI } from '../context/UIContext';
 import { useI18n } from '../i18n';
+import { useProfile } from '../hooks/useCommunity';
 import CreatePost from '../components/posts/CreatePost';
 import Seo from '../seo/Seo';
 
 function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
   const { t, lang } = useI18n();
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [replies, setReplies] = useState([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -85,7 +87,10 @@ function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
   }, [post.id]);
 
   const handleLike = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
 
     try {
       if (isLiked) {
@@ -286,7 +291,13 @@ function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
         </button>
 
         <button
-          onClick={() => setShowReplyForm(!showReplyForm)}
+          onClick={() => {
+            if (!currentUser) {
+              navigate('/login');
+              return;
+            }
+            setShowReplyForm(!showReplyForm);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isDark ? 'text-gray-400 hover:bg-white/5 hover:text-blue-400' : 'text-gray-500 hover:bg-gray-100 hover:text-blue-500'}`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,14 +399,11 @@ export default function Feed() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const { isDark } = useTheme();
+  const { profile } = useProfile(user?.id);
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Redirect if not logged in
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
 
   const loadPosts = useCallback(async () => {
     try {
@@ -429,20 +437,24 @@ export default function Feed() {
         profiles.forEach(p => { profilesMap[p.id] = p; });
       }
 
-      // Check likes for current user
+      // Check likes for current user (only if logged in)
       const postsWithData = await Promise.all(
         postsData.map(async (post) => {
-          const { data: likeData } = await supabase
-            .from('post_likes')
-            .select('id')
-            .eq('post_id', post.id)
-            .eq('user_id', user.id)
-            .single();
+          let userHasLiked = false;
+          if (user) {
+            const { data: likeData } = await supabase
+              .from('post_likes')
+              .select('id')
+              .eq('post_id', post.id)
+              .eq('user_id', user.id)
+              .single();
+            userHasLiked = !!likeData;
+          }
 
           return {
             ...post,
             author: profilesMap[post.user_id] || null,
-            user_has_liked: !!likeData
+            user_has_liked: userHasLiked
           };
         })
       );
@@ -520,10 +532,28 @@ export default function Feed() {
 
         <main className={`px-4 py-8 ${isDark ? 'bg-[#18191a]' : 'bg-gray-100'}`}>
           <div className="max-w-2xl mx-auto">
-          {/* Create post */}
-          <div className={`mb-6 shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'} rounded-2xl overflow-hidden`}>
-            <CreatePost onPostCreated={handlePostCreated} />
-          </div>
+          {/* Create post - or login prompt */}
+          {user ? (
+            <div className={`mb-6 shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'} rounded-2xl overflow-hidden`}>
+              <CreatePost onPostCreated={handlePostCreated} />
+            </div>
+          ) : (
+            <div
+              onClick={() => navigate('/login')}
+              className={`mb-6 rounded-2xl cursor-pointer transition-all hover:shadow-md ${isDark ? 'bg-[#242526] hover:bg-[#2d2e2f]' : 'bg-white hover:bg-gray-50'} shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}
+            >
+              <div className="flex gap-3 p-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                  <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className={`flex-1 rounded-full px-4 py-2.5 ${isDark ? 'bg-[#3a3b3c] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                  {t.feed?.loginToPost || 'Log in to share something...'}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Posts list */}
           {loading ? (

@@ -729,6 +729,7 @@
     "retry": "Retry",
     "like": "Like",
     "comment": "Comment",
-    "photo": "Photo"
+    "photo": "Photo",
+    "loginToPost": "Log in to share something..."
   }
 }
