@@ -50,7 +50,7 @@ export default function ProfileEditor() {
 
     try {
       setUploading(prev => ({ ...prev, avatar: true }));
-      const avatarUrl = await uploadImage(file, 'profiles-images');
+      const avatarUrl = await uploadImage(file, 'profile-images');
       console.log('[ProfileEditor] Avatar URL:', avatarUrl);
       console.log('[ProfileEditor] Updating profile with avatar_url...');
       await updateProfile(user.id, { avatar_url: avatarUrl });
