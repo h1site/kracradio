@@ -70,6 +70,16 @@ const STRINGS = {
     confirmToggleVerified: 'Changer le statut vérifié de cet artiste ?',
     store: 'Boutique',
     manageStore: 'Gérer les soumissions boutique',
+    videos: 'Vidéos',
+    noVideos: 'Aucune vidéo',
+    pending: 'En attente',
+    approved: 'Approuvé',
+    rejected: 'Rejeté',
+    approve: 'Approuver',
+    reject: 'Rejeter',
+    youtubeUrl: 'URL YouTube',
+    artistName: 'Nom artiste',
+    submittedBy: 'Soumis par',
   },
   en: {
     title: 'Admin Panel',
@@ -133,6 +143,16 @@ const STRINGS = {
     confirmToggleVerified: 'Change artist verified status?',
     store: 'Store',
     manageStore: 'Manage store submissions',
+    videos: 'Videos',
+    noVideos: 'No videos',
+    pending: 'Pending',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    approve: 'Approve',
+    reject: 'Reject',
+    youtubeUrl: 'YouTube URL',
+    artistName: 'Artist name',
+    submittedBy: 'Submitted by',
   },
   es: {
     title: 'Panel de Administración',
@@ -196,6 +216,16 @@ const STRINGS = {
     confirmToggleVerified: '¿Cambiar el estado verificado del artista?',
     store: 'Tienda',
     manageStore: 'Gestionar envíos de tienda',
+    videos: 'Videos',
+    noVideos: 'Sin videos',
+    pending: 'Pendiente',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
+    approve: 'Aprobar',
+    reject: 'Rechazar',
+    youtubeUrl: 'URL de YouTube',
+    artistName: 'Nombre del artista',
+    submittedBy: 'Enviado por',
   },
 };
 
@@ -205,11 +235,12 @@ export default function AdminPanel() {
   const { user, userRole, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('users'); // users, rss, articles, artists
+  const [activeTab, setActiveTab] = useState('users'); // users, rss, articles, artists, videos
   const [users, setUsers] = useState([]);
   const [rssFeeds, setRssFeeds] = useState([]);
   const [articles, setArticles] = useState([]);
   const [artists, setArtists] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [importing, setImporting] = useState(null); // null or podcast ID being imported
@@ -220,6 +251,8 @@ export default function AdminPanel() {
   const [rssFilter, setRssFilter] = useState('');
   const [articleFilter, setArticleFilter] = useState('');
   const [artistFilter, setArtistFilter] = useState('');
+  const [videoFilter, setVideoFilter] = useState('');
+  const [previewVideo, setPreviewVideo] = useState(null);
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -258,11 +291,17 @@ export default function AdminPanel() {
             .not('artist_slug', 'is', null)
             .order('created_at', { ascending: false });
 
-          const [usersResult, rssResult, articlesResult, artistsResult] = await Promise.all([
+          const videosPromise = supabase
+            .from('videos')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          const [usersResult, rssResult, articlesResult, artistsResult, videosResult] = await Promise.all([
             usersPromise,
             rssPromise,
             articlesPromise,
-            artistsPromise
+            artistsPromise,
+            videosPromise
           ]);
 
           // Charger les emails depuis auth
@@ -278,6 +317,16 @@ export default function AdminPanel() {
           if (rssResult.data) setRssFeeds(rssResult.data);
           if (articlesResult.data) setArticles(articlesResult.data);
           if (artistsResult.data) setArtists(artistsResult.data);
+
+          // Debug videos loading
+          console.log('[AdminPanel] Videos result:', videosResult);
+          if (videosResult.error) {
+            console.error('[AdminPanel] Videos error:', videosResult.error);
+          }
+          if (videosResult.data) {
+            console.log('[AdminPanel] Videos loaded:', videosResult.data.length);
+            setVideos(videosResult.data);
+          }
         } catch (error) {
           console.error('[AdminPanel] Error loading data:', error);
         }
@@ -606,6 +655,50 @@ export default function AdminPanel() {
     }
   };
 
+  // Video functions
+  const handleVideoStatus = async (videoId, status) => {
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .update({
+          status,
+          updated_at: new Date().toISOString(),
+          ...(status === 'approved' ? {
+            approved_at: new Date().toISOString(),
+            approved_by: user.id
+          } : {})
+        })
+        .eq('id', videoId);
+
+      if (error) throw error;
+
+      setVideos(videos.map(v => v.id === videoId ? { ...v, status } : v));
+      setMessage({ type: 'success', text: `Video ${status}` });
+    } catch (error) {
+      console.error('Error updating video:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleDeleteVideo = async (videoId, title) => {
+    if (!window.confirm(`${L.confirmDelete} "${title}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (error) throw error;
+
+      setVideos(videos.filter(v => v.id !== videoId));
+      setMessage({ type: 'success', text: `Video deleted: ${title}` });
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     u.email?.toLowerCase().includes(userFilter.toLowerCase())
   );
@@ -717,6 +810,16 @@ export default function AdminPanel() {
           }`}
         >
           🎨 {L.artists} ({artists.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('videos')}
+          className={`px-4 py-2 text-sm font-semibold transition ${
+            activeTab === 'videos'
+              ? 'border-b-2 border-red-600 text-red-600'
+              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          🎬 {L.videos} ({videos.length})
         </button>
         <Link
           to="/admin/store"
@@ -1123,6 +1226,197 @@ export default function AdminPanel() {
             {filteredArtists.length === 0 && (
               <p className="p-8 text-center text-gray-500">{L.noArtists}</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Videos Table */}
+      {activeTab === 'videos' && (
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          <div className="p-4">
+            <input
+              type="text"
+              placeholder={L.filter}
+              value={videoFilter}
+              onChange={(e) => setVideoFilter(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Video</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.title_col}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.artistName}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.submittedBy}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.status}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.createdAt}</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-500">{L.actions}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {videos
+                  .filter(v =>
+                    v.title?.toLowerCase().includes(videoFilter.toLowerCase()) ||
+                    v.artist_name?.toLowerCase().includes(videoFilter.toLowerCase())
+                  )
+                  .map((video) => (
+                  <tr key={video.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setPreviewVideo(video)}
+                        className="relative group block"
+                      >
+                        <img
+                          src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/mqdefault.jpg`}
+                          alt={video.title}
+                          className="w-24 h-14 object-cover rounded"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded">
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={video.youtube_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-gray-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                      >
+                        {video.title}
+                      </a>
+                      {video.description && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{video.description}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                      {video.artist_name || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                      {video.user_id?.substring(0, 8) || '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                        video.status === 'approved'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                          : video.status === 'rejected'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                      }`}>
+                        {video.status === 'approved' ? L.approved : video.status === 'rejected' ? L.rejected : L.pending}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(video.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        {video.status !== 'approved' && (
+                          <button
+                            onClick={() => handleVideoStatus(video.id, 'approved')}
+                            className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                          >
+                            ✓ {L.approve}
+                          </button>
+                        )}
+                        {video.status !== 'rejected' && (
+                          <button
+                            onClick={() => handleVideoStatus(video.id, 'rejected')}
+                            className="rounded bg-yellow-600 px-3 py-1 text-xs font-semibold text-white hover:bg-yellow-700"
+                          >
+                            ✗ {L.reject}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteVideo(video.id, video.title)}
+                          className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                        >
+                          🗑️ {L.delete}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {videos.filter(v =>
+              v.title?.toLowerCase().includes(videoFilter.toLowerCase()) ||
+              v.artist_name?.toLowerCase().includes(videoFilter.toLowerCase())
+            ).length === 0 && (
+              <p className="p-8 text-center text-gray-500">{L.noVideos}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Video Preview Modal */}
+      {previewVideo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewVideo(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-gray-900 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div>
+                <h3 className="font-bold text-white text-lg">{previewVideo.title}</h3>
+                {previewVideo.artist_name && (
+                  <p className="text-sm text-gray-400">{previewVideo.artist_name}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewVideo(null)}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${previewVideo.youtube_id}?autoplay=1`}
+                title={previewVideo.title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            <div className="p-4 border-t border-gray-800 flex justify-between items-center">
+              <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+                previewVideo.status === 'approved'
+                  ? 'bg-green-900/50 text-green-200'
+                  : previewVideo.status === 'rejected'
+                  ? 'bg-red-900/50 text-red-200'
+                  : 'bg-yellow-900/50 text-yellow-200'
+              }`}>
+                {previewVideo.status === 'approved' ? L.approved : previewVideo.status === 'rejected' ? L.rejected : L.pending}
+              </span>
+              <div className="flex gap-2">
+                {previewVideo.status !== 'approved' && (
+                  <button
+                    onClick={() => { handleVideoStatus(previewVideo.id, 'approved'); setPreviewVideo(null); }}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                  >
+                    ✓ {L.approve}
+                  </button>
+                )}
+                {previewVideo.status !== 'rejected' && (
+                  <button
+                    onClick={() => { handleVideoStatus(previewVideo.id, 'rejected'); setPreviewVideo(null); }}
+                    className="rounded-lg bg-yellow-600 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-700"
+                  >
+                    ✗ {L.reject}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

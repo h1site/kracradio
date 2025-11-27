@@ -18,6 +18,7 @@ export default function Header() {
   const { isDesktop, sidebarOpen, openSidebar } = useUI();
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
@@ -127,7 +128,7 @@ export default function Header() {
                 >
                   {t?.nav?.dashboard ?? 'Dashboard'}
                 </Link>
-                {/* Artist Profile */}
+                {/* Profile */}
                 <Link
                   to={artistProfileLink}
                   className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
@@ -143,7 +144,7 @@ export default function Header() {
                       👤
                     </div>
                   )}
-                  {t?.nav?.artistProfile ?? 'Artist Profile'}
+                  {t?.nav?.profile ?? 'Profile'}
                 </Link>
                 {/* Messages */}
                 <Link
@@ -160,16 +161,50 @@ export default function Header() {
                     </span>
                   )}
                 </Link>
-                {/* Liked Songs */}
-                <Link
-                  to="/liked-songs"
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
-                  title={t?.nav?.likedSongs ?? 'Liked Songs'}
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                </Link>
+                {/* Playlists Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
+                    className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                    title="Playlists"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </button>
+                  {showPlaylistMenu && (
+                    <>
+                      {/* Backdrop to close menu when clicking outside */}
+                      <div
+                        className="fixed inset-0 z-[100]"
+                        onClick={() => setShowPlaylistMenu(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[101]">
+                        <Link
+                          to="/liked-songs"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
+                          onClick={() => setShowPlaylistMenu(false)}
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                          </svg>
+                          <span className="text-sm font-medium">Playlist Musique</span>
+                        </Link>
+                        <div className="h-px bg-white/10"></div>
+                        <Link
+                          to="/liked-videos"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
+                          onClick={() => setShowPlaylistMenu(false)}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm font-medium">Playlist Vidéos</span>
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
                 {/* Settings */}
                 <Link
                   to="/settings"

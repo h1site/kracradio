@@ -6,6 +6,36 @@ import { supabase } from '../../lib/supabase';
 import { COUNTRIES } from '../../constants/countries';
 import { useI18n } from '../../i18n';
 
+// Info Popup Component
+function InfoPopup({ title, content, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={onClose}>
+      <div className="bg-[#242526] rounded-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        <div className="text-[15px] text-gray-300 leading-relaxed space-y-3">
+          {content}
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-6 w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
+        >
+          Compris
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Toggle Switch Component - Style Facebook
 function Toggle({ enabled, onChange, disabled }) {
   return (
@@ -75,6 +105,8 @@ export default function CommunitySettings() {
   const [slugStatus, setSlugStatus] = useState(null);
   const [slugError, setSlugError] = useState('');
   const [showGenres, setShowGenres] = useState(false);
+  const [showArtistModePopup, setShowArtistModePopup] = useState(false);
+  const [showPublicProfilePopup, setShowPublicProfilePopup] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -176,6 +208,26 @@ export default function CommunitySettings() {
     }
   };
 
+  const handleToggleArtistMode = async () => {
+    const isCurrentlyArtist = profile?.role === 'creator';
+    const newRole = isCurrentlyArtist ? 'user' : 'creator';
+
+    try {
+      await updateProfile(user.id, { role: newRole });
+      await refetch();
+      setMessage({
+        type: 'success',
+        text: isCurrentlyArtist
+          ? 'Mode utilisateur activé'
+          : 'Mode artiste activé - Vous pouvez maintenant ajouter vos liens de musique'
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Erreur lors du changement de mode' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }
+  };
+
   const handleSave = async () => {
     try {
       await updateProfile(user.id, {
@@ -217,8 +269,49 @@ export default function CommunitySettings() {
     );
   }
 
+  const isArtistMode = profile?.role === 'creator';
+
   return (
     <div className="max-w-2xl">
+      {/* Popups */}
+      {showArtistModePopup && (
+        <InfoPopup
+          title="Mode Artiste"
+          content={
+            <>
+              <p>Le <strong>mode artiste</strong> vous permet de :</p>
+              <ul className="list-disc list-inside space-y-2 mt-2">
+                <li>Ajouter vos liens de musique (Spotify, Apple Music, YouTube, etc.)</li>
+                <li>Afficher ces liens sur votre profil public</li>
+                <li>Être identifié comme créateur de contenu</li>
+              </ul>
+              <p className="mt-3">Si vous n'êtes pas un artiste, restez en mode utilisateur simple. Vous pouvez activer/désactiver ce mode à tout moment.</p>
+            </>
+          }
+          onClose={() => setShowArtistModePopup(false)}
+        />
+      )}
+
+      {showPublicProfilePopup && (
+        <InfoPopup
+          title="Profil Public"
+          content={
+            <>
+              <p>Votre <strong>profil public</strong> est visible par tous les visiteurs de KracRadio.</p>
+              <p className="mt-2">Il affiche :</p>
+              <ul className="list-disc list-inside space-y-2 mt-2">
+                <li>Votre nom d'utilisateur et photo</li>
+                <li>Votre bio et localisation</li>
+                <li>Vos articles et podcasts publiés</li>
+                <li>Vos liens de musique (si mode artiste activé)</li>
+              </ul>
+              <p className="mt-3">Vous pouvez désactiver votre profil public à tout moment pour le rendre privé.</p>
+            </>
+          }
+          onClose={() => setShowPublicProfilePopup(false)}
+        />
+      )}
+
       {/* Message feedback */}
       {message.text && (
         <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${
@@ -227,6 +320,30 @@ export default function CommunitySettings() {
           {message.text}
         </div>
       )}
+
+      {/* Section: Mode Artiste */}
+      <div className="bg-[#242526] rounded-lg mb-4">
+        <SettingRow
+          title="Mode Artiste"
+          description={isArtistMode
+            ? "Vous êtes en mode artiste - Vous pouvez gérer vos liens de musique dans l'onglet Music."
+            : "Activez le mode artiste pour ajouter vos liens de musique (Spotify, Apple Music, etc.) à votre profil."
+          }
+        >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowArtistModePopup(true)}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="En savoir plus"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <Toggle enabled={isArtistMode} onChange={handleToggleArtistMode} disabled={updating} />
+          </div>
+        </SettingRow>
+      </div>
 
       {/* Section: Visibilité */}
       <div className="bg-[#242526] rounded-lg mb-4">
@@ -237,7 +354,18 @@ export default function CommunitySettings() {
             : (t.community?.settings?.visibilityBannerPrivate || "Votre profil est en mode privé. Activez pour être découvert par la communauté.")
           }
         >
-          <Toggle enabled={settings.is_public} onChange={handleTogglePublic} disabled={updating} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowPublicProfilePopup(true)}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="En savoir plus"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <Toggle enabled={settings.is_public} onChange={handleTogglePublic} disabled={updating} />
+          </div>
         </SettingRow>
 
         {settings.is_public && settings.artist_slug && (

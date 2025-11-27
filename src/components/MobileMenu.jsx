@@ -177,6 +177,17 @@ export default function MobileMenu({ open, onClose }) {
           </NavLink>
 
           <NavLink
+            to="/videos"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+            }
+          >
+            <IconImg name="video" />
+            <span className="text-sm font-medium">{t.nav.videos}</span>
+          </NavLink>
+
+          <NavLink
             to="/charts"
             onClick={onClose}
             className={({ isActive }) =>

@@ -167,6 +167,7 @@ export default function Sidebar() {
             <Item to="/articles" iconName="paper" label={t.nav.articles} />
             <Item to="/artists" iconName="artist" label={t.nav.artists} />
             <Item to="/podcasts" iconName="mic" label={t.nav.podcasts} />
+            <Item to="/videos" iconName="video" label={t.nav.videos} />
             <Item to="/charts" iconName="chart" label={t.nav.charts} />
             <Item to="/spotify" iconName="spotify" label={t.nav.spotify} />
             <Item to="/schedule" iconName="calendar" label={t.nav.schedule} />

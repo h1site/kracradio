@@ -339,3 +339,493 @@ export async function getGlobalCharts(period = 'week') {
     .sort((a, b) => b.likeCount - a.likeCount)
     .slice(0, 50); // Top 50 songs
 }
+
+// ==================== VIDEO FUNCTIONS ====================
+
+/**
+ * Extract YouTube video ID from URL
+ */
+export function extractYouTubeId(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/**
+ * Get approved videos (random order) with submitter profile info
+ */
+export async function getApprovedVideos() {
+  const { data: videos, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Get unique user_ids to fetch profiles
+  const userIds = [...new Set((videos || []).map(v => v.user_id).filter(Boolean))];
+
+  // Fetch profiles for these users
+  let profilesMap = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, artist_slug, role')
+      .in('id', userIds);
+
+    if (profiles) {
+      profiles.forEach(p => {
+        profilesMap[p.id] = p;
+      });
+    }
+  }
+
+  // Attach profile info to videos
+  const videosWithProfiles = (videos || []).map(video => ({
+    ...video,
+    submitter: profilesMap[video.user_id] || null
+  }));
+
+  // Shuffle for random order
+  const shuffled = videosWithProfiles.sort(() => Math.random() - 0.5);
+  return shuffled;
+}
+
+/**
+ * Get video by ID
+ */
+export async function getVideoById(id) {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Submit a new video (by artist)
+ */
+export async function submitVideo({ youtubeUrl, userId }) {
+  const youtubeId = extractYouTubeId(youtubeUrl);
+  if (!youtubeId) throw new Error('Invalid YouTube URL');
+
+  // Fetch video info from YouTube oEmbed API
+  let title = 'Video';
+  let artistName = '';
+  try {
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
+    const response = await fetch(oembedUrl);
+    if (response.ok) {
+      const oembedData = await response.json();
+      title = oembedData.title || 'Video';
+      artistName = oembedData.author_name || '';
+    }
+  } catch (e) {
+    console.warn('Could not fetch YouTube info:', e);
+  }
+
+  const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+
+  const { data, error } = await supabase
+    .from('videos')
+    .insert({
+      youtube_url: youtubeUrl,
+      youtube_id: youtubeId,
+      title,
+      description: '',
+      thumbnail_url: thumbnailUrl,
+      artist_name: artistName,
+      user_id: userId,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get user's submitted videos
+ */
+export async function getUserVideos(userId) {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Get all videos for admin
+ */
+export async function getAllVideosAdmin() {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Update video status (admin)
+ */
+export async function updateVideoStatus(videoId, status, adminId) {
+  const updateData = {
+    status,
+    updated_at: new Date().toISOString()
+  };
+
+  if (status === 'approved') {
+    updateData.approved_at = new Date().toISOString();
+    updateData.approved_by = adminId;
+  }
+
+  const { data, error } = await supabase
+    .from('videos')
+    .update(updateData)
+    .eq('id', videoId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Delete video (admin)
+ */
+export async function deleteVideo(videoId) {
+  const { error } = await supabase
+    .from('videos')
+    .delete()
+    .eq('id', videoId);
+
+  if (error) throw error;
+}
+
+/**
+ * Update video information (title, description)
+ */
+export async function updateVideo(videoId, updates) {
+  const { data, error } = await supabase
+    .from('videos')
+    .update(updates)
+    .eq('id', videoId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Like a video
+ */
+export async function likeVideo(videoId, userId, sessionId) {
+  const { error } = await supabase
+    .from('video_likes')
+    .insert({
+      video_id: videoId,
+      user_id: userId || null,
+      session_id: userId ? null : sessionId
+    });
+
+  if (error && error.code !== '23505') throw error; // Ignore duplicate
+  return true;
+}
+
+/**
+ * Unlike a video
+ */
+export async function unlikeVideo(videoId, userId, sessionId) {
+  let query = supabase.from('video_likes').delete().eq('video_id', videoId);
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  } else {
+    query = query.eq('session_id', sessionId);
+  }
+
+  const { error } = await query;
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * Check if user liked a video
+ */
+export async function hasLikedVideo(videoId, userId, sessionId) {
+  let query = supabase
+    .from('video_likes')
+    .select('id')
+    .eq('video_id', videoId);
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  } else {
+    query = query.eq('session_id', sessionId);
+  }
+
+  const { data } = await query.maybeSingle();
+  return !!data;
+}
+
+/**
+ * Get video like count
+ */
+export async function getVideoLikeCount(videoId) {
+  const { count, error } = await supabase
+    .from('video_likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('video_id', videoId);
+
+  if (error) throw error;
+  return count || 0;
+}
+
+/**
+ * Get user's liked videos
+ */
+export async function getUserLikedVideos(userId, sessionId) {
+  if (!userId && !sessionId) return [];
+
+  const query = supabase
+    .from('video_likes')
+    .select('video_id, created_at')
+    .order('created_at', { ascending: false });
+
+  if (userId) {
+    query.eq('user_id', userId);
+  } else if (sessionId) {
+    query.eq('session_id', sessionId);
+  }
+
+  const { data: likes, error: likesError } = await query;
+  if (likesError) throw likesError;
+  if (!likes || likes.length === 0) return [];
+
+  // Get video IDs
+  const videoIds = likes.map(like => like.video_id);
+
+  // Fetch full video details
+  const { data: videos, error: videosError } = await supabase
+    .from('videos')
+    .select('*')
+    .in('id', videoIds)
+    .eq('status', 'approved');
+
+  if (videosError) throw videosError;
+
+  // Get unique user_ids to fetch profiles
+  const userIds = [...new Set((videos || []).map(v => v.user_id).filter(Boolean))];
+
+  // Fetch profiles for these users
+  let profilesMap = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, artist_slug, role')
+      .in('id', userIds);
+
+    if (profiles) {
+      profiles.forEach(p => {
+        profilesMap[p.id] = p;
+      });
+    }
+  }
+
+  // Create a map of liked_at times
+  const likedAtMap = {};
+  likes.forEach(like => {
+    likedAtMap[like.video_id] = like.created_at;
+  });
+
+  // Attach profile info and sort by liked date
+  const videosWithProfiles = (videos || [])
+    .map(video => ({
+      ...video,
+      submitter: profilesMap[video.user_id] || null,
+      liked_at: likedAtMap[video.id]
+    }))
+    .sort((a, b) => new Date(b.liked_at) - new Date(a.liked_at));
+
+  return videosWithProfiles;
+}
+
+/**
+ * Get video comments
+ */
+export async function getVideoComments(videoId) {
+  const { data, error } = await supabase
+    .from('video_comments')
+    .select('*')
+    .eq('video_id', videoId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Add video comment
+ */
+export async function addVideoComment(videoId, userId, username, avatarUrl, content) {
+  const { data, error } = await supabase
+    .from('video_comments')
+    .insert({
+      video_id: videoId,
+      user_id: userId,
+      username,
+      avatar_url: avatarUrl,
+      content
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Delete video comment
+ */
+export async function deleteVideoComment(commentId) {
+  const { error } = await supabase
+    .from('video_comments')
+    .delete()
+    .eq('id', commentId);
+
+  if (error) throw error;
+}
+
+/**
+ * Get video charts (most liked videos)
+ */
+export async function getVideoCharts(period = 'week') {
+  const startDate = getChartPeriodStart(period);
+
+  const { data, error } = await supabase
+    .from('video_likes')
+    .select('video_id, videos(id, title, youtube_id, thumbnail_url, artist_name)')
+    .gte('created_at', startDate.toISOString());
+
+  if (error) throw error;
+
+  // Group by video and count likes
+  const videoMap = {};
+  (data || []).forEach(like => {
+    if (!like.videos) return;
+    const key = like.video_id;
+    if (!videoMap[key]) {
+      videoMap[key] = {
+        id: like.videos.id,
+        title: like.videos.title,
+        youtubeId: like.videos.youtube_id,
+        thumbnailUrl: like.videos.thumbnail_url,
+        artistName: like.videos.artist_name,
+        likeCount: 0
+      };
+    }
+    videoMap[key].likeCount++;
+  });
+
+  return Object.values(videoMap)
+    .sort((a, b) => b.likeCount - a.likeCount)
+    .slice(0, 50);
+}
+
+// ---- Music Submissions ----
+
+/**
+ * Get user's music submissions
+ */
+export async function getUserMusicSubmissions(userId) {
+  const { data, error } = await supabase
+    .from('music_submissions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Get all music submissions (admin only)
+ */
+export async function getAllMusicSubmissions() {
+  const { data, error } = await supabase
+    .from('music_submissions')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Update music submission
+ */
+export async function updateMusicSubmission(id, updates) {
+  const { data, error } = await supabase
+    .from('music_submissions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Delete music submission (users can only delete pending)
+ */
+export async function deleteMusicSubmission(id) {
+  const { error } = await supabase
+    .from('music_submissions')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * Admin: Update submission status
+ */
+export async function updateSubmissionStatus(id, status, adminNotes = null, reviewedBy = null) {
+  const updates = {
+    status,
+    reviewed_at: new Date().toISOString()
+  };
+
+  if (adminNotes) updates.admin_notes = adminNotes;
+  if (reviewedBy) updates.reviewed_by = reviewedBy;
+
+  const { data, error } = await supabase
+    .from('music_submissions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

@@ -44,7 +44,10 @@ import PodcastEditor from '../pages/PodcastEditor';
 import CommunityDashboard from '../pages/CommunityDashboard';
 import PublicProfile from '../pages/PublicProfile';
 import LikedSongs from '../pages/LikedSongs';
+import LikedVideos from '../pages/LikedVideos';
 import Charts from '../pages/Charts';
+import Videos from '../pages/Videos';
+import VideoDetail from '../pages/VideoDetail';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
 import SubmitMusic from '../pages/SubmitMusic';
 import StoreSubmit from '../pages/StoreSubmit';
@@ -54,6 +57,9 @@ import Messages from '../pages/Messages';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
+import { NotificationProvider } from '../context/NotificationContext';
+import { LikedSongsProvider } from '../context/LikedSongsContext';
+import NotificationPopup from '../components/NotificationPopup';
 
 export default function App() {
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
@@ -72,10 +78,13 @@ export default function App() {
   };
 
   return (
-    <div className="bg-white text-black dark:bg-[#1e1e1e] dark:text-white">
-      <ScrollToTop />
-      <Header />
-      <Sidebar />
+    <NotificationProvider>
+      <LikedSongsProvider>
+        <div className="bg-white text-black dark:bg-[#1e1e1e] dark:text-white">
+          <ScrollToTop />
+          <Header />
+          <NotificationPopup />
+        <Sidebar />
 
       <main style={mainStyle}>
         <Routes>
@@ -125,6 +134,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <LikedSongs />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Liked Videos (protected) */}
+          <Route
+            path="/liked-videos"
+            element={
+              <ProtectedRoute>
+                <LikedVideos />
               </ProtectedRoute>
             }
           />
@@ -191,6 +210,10 @@ export default function App() {
 
           {/* Charts - Public access */}
           <Route path="/charts" element={<Charts />} />
+
+          {/* Videos - Public access */}
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/videos/:slug" element={<VideoDetail />} />
           <Route
             path="/dashboard"
             element={
@@ -252,8 +275,10 @@ export default function App() {
         </Routes>
       </main>
 
-      <Footer />
-      <PlayerBar />
-    </div>
+        <Footer />
+        <PlayerBar />
+      </div>
+      </LikedSongsProvider>
+    </NotificationProvider>
   );
 }

@@ -5,8 +5,20 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import Seo from '../seo/Seo';
-import { supabase, listUserArticles, deleteArticleById } from '../lib/supabase';
+import { supabase, listUserArticles, deleteArticleById, submitVideo, getUserVideos, deleteVideo, updateVideo, extractYouTubeId } from '../lib/supabase';
 import { importAllUserPodcasts, importPodcastEpisodes } from '../utils/podcastRssParser';
+import MusicSubmissionsManager from '../components/MusicSubmissionsManager';
+
+// Music Genres (same as SubmitMusic.jsx)
+const MUSIC_GENRES = [
+  { category: 'Pop', genres: ['Pop', 'Pop mainstream / Top 40', 'Pop rock', 'Pop électro / electro-pop', 'Synth-pop', 'Dance-pop', 'Teen pop / boy bands / girl groups', 'K-Pop', 'J-Pop', 'Indie pop', 'Dream pop'] },
+  { category: 'Rock', genres: ['Rock', 'Rock classique / classic rock', 'Rock n\' roll', 'Rock alternatif', 'Rock moderne', 'Rock psychédélique', 'Rock progressif', 'Garage rock', 'Stoner rock', 'Post-rock', 'Southern rock', 'Arena rock / stadium rock'] },
+  { category: 'Metal', genres: ['Metal', 'Heavy metal', 'Thrash metal', 'Speed metal', 'Power metal', 'Death metal', 'Black metal', 'Doom metal', 'Gothic metal', 'Symphonic metal', 'Progressive metal', 'Industrial metal', 'Nu-metal', 'Metalcore', 'Deathcore', 'Sludge metal'] },
+  { category: 'Punk / Hardcore', genres: ['Punk', 'Punk rock', 'Hardcore punk', 'Skate punk', 'Pop punk', 'Street punk / Oi!', 'Post-punk', 'Emo', 'Post-hardcore', 'Screamo'] },
+  { category: 'Hip-Hop / Rap', genres: ['Hip-hop / rap', 'Rap old school', 'Rap 90s', 'Boom bap', 'Rap moderne', 'Trap', 'Drill', 'Cloud rap', 'Gangsta rap', 'Hip-hop alternatif', 'Conscious rap', 'Underground hip-hop', 'Latin rap', 'Grime'] },
+  { category: 'Électro / Dance', genres: ['Musique électronique', 'EDM', 'Dance', 'Eurodance', 'Big room', 'Electro house', 'Future house', 'Bass house'] },
+  { category: 'Industrial / EBM / Dark / Goth', genres: ['Industrial', 'EBM', 'Dark electro', 'Electro-indus', 'Aggrotech / hellectro', 'Industrial rock', 'Industrial metal', 'Darkwave', 'Coldwave', 'Goth rock / gothic rock', 'Post-punk dark', 'Cyberpunk / futurepop'] }
+];
 
 function IconImg({ name, alt = '', className = 'w-5 h-5' }) {
   const { isDark } = useTheme();
@@ -66,6 +78,25 @@ const STRINGS = {
     author: 'Auteur',
     newPodcast: 'Nouveau podcast',
     editPodcast: 'Modifier le podcast',
+    myVideos: 'Vidéos',
+    addVideo: 'Soumettre une vidéo',
+    noVideos: 'Aucune vidéo',
+    noVideosDesc: 'Soumettez votre premier vidéoclip',
+    videoSubmitted: 'Vidéo soumise pour approbation',
+    videoDeleted: 'Vidéo supprimée',
+    youtubeUrl: 'URL YouTube',
+    videoTitle: 'Titre de la vidéo',
+    videoDescription: 'Description',
+    videoGenres: 'Genres musicaux',
+    selectGenres: 'Sélectionner jusqu\'à 3 genres',
+    pending: 'En attente',
+    approved: 'Approuvée',
+    rejected: 'Refusée',
+    newVideo: 'Soumettre un vidéoclip',
+    videoWarning: 'Seuls les vidéoclips musicaux sont acceptés. Les vidéos avec image fixe seront refusées.',
+    videoApprovalTime: 'Délai d\'approbation : 2-3 jours ouvrables.',
+    myMusicSubmissions: 'Soumissions musicales',
+    noMusicSubmissions: 'Aucune soumission',
   },
   en: {
     metaTitle: 'My Dashboard — KracRadio',
@@ -108,6 +139,25 @@ const STRINGS = {
     author: 'Author',
     newPodcast: 'New podcast',
     editPodcast: 'Edit podcast',
+    myVideos: 'Videos',
+    addVideo: 'Submit a video',
+    noVideos: 'No videos',
+    noVideosDesc: 'Submit your first music video',
+    videoSubmitted: 'Video submitted for approval',
+    videoDeleted: 'Video deleted',
+    youtubeUrl: 'YouTube URL',
+    videoTitle: 'Video title',
+    videoDescription: 'Description',
+    videoGenres: 'Music genres',
+    selectGenres: 'Select up to 3 genres',
+    pending: 'Pending',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    newVideo: 'Submit a music video',
+    videoWarning: 'Only music videos are accepted. Videos with static images will be rejected.',
+    videoApprovalTime: 'Approval time: 2-3 business days.',
+    myMusicSubmissions: 'Music Submissions',
+    noMusicSubmissions: 'No submissions',
   },
   es: {
     metaTitle: 'Mi panel — KracRadio',
@@ -150,6 +200,21 @@ const STRINGS = {
     author: 'Autor',
     newPodcast: 'Nuevo podcast',
     editPodcast: 'Editar podcast',
+    myVideos: 'Videos',
+    addVideo: 'Enviar un video',
+    noVideos: 'Sin videos',
+    noVideosDesc: 'Envía tu primer videoclip musical',
+    videoSubmitted: 'Video enviado para aprobación',
+    videoDeleted: 'Video eliminado',
+    youtubeUrl: 'URL de YouTube',
+    pending: 'Pendiente',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
+    newVideo: 'Enviar un videoclip',
+    videoWarning: 'Solo se aceptan videoclips musicales. Los videos con imagen fija serán rechazados.',
+    videoApprovalTime: 'Tiempo de aprobación: 2-3 días hábiles.',
+    myMusicSubmissions: 'Envíos de música',
+    noMusicSubmissions: 'Sin envíos',
   },
 };
 
@@ -174,6 +239,17 @@ export default function Dashboard() {
   const [podcastForm, setPodcastForm] = useState(blankPodcast);
   const [savingPodcast, setSavingPodcast] = useState(false);
 
+  // Video state
+  const [videos, setVideos] = useState([]);
+  const [showVideoForm, setShowVideoForm] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoDescription, setVideoDescription] = useState('');
+  const [videoGenres, setVideoGenres] = useState([]);
+  const [savingVideo, setSavingVideo] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState(null);
+  const [editVideoForm, setEditVideoForm] = useState({});
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/login');
@@ -184,6 +260,7 @@ export default function Dashboard() {
     if (user) {
       loadPodcasts();
       loadArticles();
+      loadVideos();
     } else {
       // Reset loading si pas de user
       setLoading(false);
@@ -234,6 +311,17 @@ export default function Dashboard() {
       setPodcasts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVideos = async () => {
+    if (!user?.id) return;
+    try {
+      const data = await getUserVideos(user.id);
+      setVideos(data || []);
+    } catch (error) {
+      console.error('Error loading videos:', error);
+      setVideos([]);
     }
   };
 
@@ -352,6 +440,91 @@ export default function Dashboard() {
     }
   };
 
+  const handleAddVideo = () => {
+    setVideoUrl('');
+    setVideoTitle('');
+    setVideoDescription('');
+    setVideoGenres([]);
+    setShowVideoForm(true);
+  };
+
+  const handleCancelVideoForm = () => {
+    setShowVideoForm(false);
+    setVideoUrl('');
+    setVideoTitle('');
+    setVideoDescription('');
+    setVideoGenres([]);
+  };
+
+  const handleSaveVideo = async (e) => {
+    e.preventDefault();
+    if (!videoUrl || !videoTitle || videoGenres.length === 0) {
+      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs requis' });
+      return;
+    }
+
+    setSavingVideo(true);
+    try {
+      await submitVideo({
+        youtubeUrl: videoUrl,
+        title: videoTitle,
+        description: videoDescription,
+        genres: videoGenres.join(', '),
+        userId: user.id
+      });
+      setMessage({ type: 'success', text: L.videoSubmitted });
+      handleCancelVideoForm();
+      loadVideos();
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setSavingVideo(false);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId) => {
+    if (!window.confirm(L.confirmDelete)) return;
+    try {
+      await deleteVideo(videoId);
+      setMessage({ type: 'success', text: L.videoDeleted });
+      loadVideos();
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const startEditVideo = (video) => {
+    setEditingVideoId(video.id);
+    setEditVideoForm({
+      title: video.title,
+      description: video.description || '',
+      genres: video.genres ? video.genres.split(', ') : [],
+    });
+  };
+
+  const cancelEditVideo = () => {
+    setEditingVideoId(null);
+    setEditVideoForm({});
+  };
+
+  const saveEditVideo = async (videoId) => {
+    try {
+      await updateVideo(videoId, {
+        title: editVideoForm.title,
+        description: editVideoForm.description,
+        genres: editVideoForm.genres.join(', '),
+      });
+      setMessage({ type: 'success', text: 'Vidéo mise à jour' });
+      setEditingVideoId(null);
+      loadVideos();
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -404,6 +577,340 @@ export default function Dashboard() {
 
       {/* Content */}
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+        {/* Videos Section */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                <IconImg name="video" className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">{L.myVideos}</h2>
+              <span className="text-sm text-gray-500 dark:text-gray-400">({videos.length})</span>
+            </div>
+            {!showVideoForm && (
+              <button
+                onClick={handleAddVideo}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                {L.addVideo}
+              </button>
+            )}
+          </div>
+
+          {/* Video Form */}
+          {showVideoForm && (
+            <div className="mb-6 bg-white dark:bg-[#1a1a1a] rounded-xl border border-pink-200 dark:border-pink-800 overflow-hidden">
+              <div className="px-5 py-4 bg-pink-50 dark:bg-pink-900/20 border-b border-pink-200 dark:border-pink-800">
+                <h3 className="font-medium text-pink-900 dark:text-pink-100">
+                  {L.newVideo}
+                </h3>
+              </div>
+              <form onSubmit={handleSaveVideo} className="p-5 space-y-4">
+                {/* Warning */}
+                <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-xs text-yellow-800 dark:text-yellow-200 font-medium">{L.videoWarning}</p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">{L.videoApprovalTime}</p>
+                </div>
+
+                {/* YouTube URL */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    {L.youtubeUrl} *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+
+                {/* Video Title */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    {L.videoTitle} *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={videoTitle}
+                    onChange={(e) => setVideoTitle(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition"
+                    placeholder="Ex: Mon nouveau clip 2024"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    {L.videoDescription}
+                  </label>
+                  <textarea
+                    value={videoDescription}
+                    onChange={(e) => setVideoDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition resize-none"
+                    placeholder="Description de votre vidéo..."
+                  />
+                </div>
+
+                {/* Genres */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    {L.videoGenres} * ({videoGenres.length}/3)
+                  </label>
+
+                  {/* Selected genres */}
+                  {videoGenres.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {videoGenres.map((genre) => (
+                        <span
+                          key={genre}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-pink-600 text-white rounded text-xs"
+                        >
+                          {genre}
+                          <button
+                            type="button"
+                            onClick={() => setVideoGenres(videoGenres.filter(g => g !== genre))}
+                            className="hover:text-pink-200 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Genre selector */}
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value && videoGenres.length < 3 && !videoGenres.includes(e.target.value)) {
+                        setVideoGenres([...videoGenres, e.target.value]);
+                      }
+                    }}
+                    disabled={videoGenres.length >= 3}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition disabled:opacity-50"
+                  >
+                    <option value="">{L.selectGenres}</option>
+                    {MUSIC_GENRES.map((category) => (
+                      <optgroup key={category.category} label={category.category}>
+                        {category.genres.map((genre) => (
+                          <option
+                            key={genre}
+                            value={genre}
+                            disabled={videoGenres.includes(genre)}
+                          >
+                            {genre}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelVideoForm}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    {L.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingVideo}
+                    className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {savingVideo ? '...' : L.save}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {videos.length === 0 && !showVideoForm ? (
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                <IconImg name="video" className="w-6 h-6 opacity-50" />
+              </div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{L.noVideos}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{L.noVideosDesc}</p>
+            </div>
+          ) : videos.length > 0 && (
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+              {videos.map((video) => {
+                const isEditing = editingVideoId === video.id;
+                return (
+                  <div key={video.id} className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/mqdefault.jpg`}
+                        alt={video.title}
+                        className="w-20 h-12 object-cover rounded flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={editVideoForm.title}
+                              onChange={(e) => setEditVideoForm({ ...editVideoForm, title: e.target.value })}
+                              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                              placeholder="Titre de la vidéo"
+                            />
+                            <textarea
+                              value={editVideoForm.description}
+                              onChange={(e) => setEditVideoForm({ ...editVideoForm, description: e.target.value })}
+                              rows={2}
+                              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+                              placeholder="Description (optionnel)"
+                            />
+
+                            {/* Genre selector for editing */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                  Genres ({editVideoForm.genres?.length || 0}/3)
+                                </label>
+                              </div>
+
+                              {/* Selected genres */}
+                              {editVideoForm.genres && editVideoForm.genres.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                  {editVideoForm.genres.map((genre) => (
+                                    <span
+                                      key={genre}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-pink-600 text-white rounded text-xs"
+                                    >
+                                      {genre}
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditVideoForm({
+                                          ...editVideoForm,
+                                          genres: editVideoForm.genres.filter(g => g !== genre)
+                                        })}
+                                        className="hover:text-pink-200 transition-colors"
+                                      >
+                                        ×
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Genre selector */}
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  if (e.target.value && (!editVideoForm.genres || editVideoForm.genres.length < 3) && !editVideoForm.genres?.includes(e.target.value)) {
+                                    setEditVideoForm({
+                                      ...editVideoForm,
+                                      genres: [...(editVideoForm.genres || []), e.target.value]
+                                    });
+                                  }
+                                }}
+                                disabled={editVideoForm.genres && editVideoForm.genres.length >= 3}
+                                className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-pink-500 disabled:opacity-50"
+                              >
+                                <option value="">{editVideoForm.genres?.length >= 3 ? 'Maximum 3 genres' : 'Ajouter un genre...'}</option>
+                                {MUSIC_GENRES.map((category) => (
+                                  <optgroup key={category.category} label={category.category}>
+                                    {category.genres.map((genre) => (
+                                      <option
+                                        key={genre}
+                                        value={genre}
+                                        disabled={editVideoForm.genres?.includes(genre)}
+                                      >
+                                        {genre}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">{video.title}</h3>
+                            {video.description && (
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{video.description}</p>
+                            )}
+                            {video.genres && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {video.genres.split(', ').map((genre, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded"
+                                  >
+                                    {genre}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          {video.artist_name && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{video.artist_name}</span>
+                          )}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            video.status === 'approved'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : video.status === 'rejected'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          }`}>
+                            {video.status === 'approved' ? L.approved : video.status === 'rejected' ? L.rejected : L.pending}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={() => saveEditVideo(video.id)}
+                              className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                            >
+                              Enregistrer
+                            </button>
+                            <button
+                              onClick={cancelEditVideo}
+                              className="px-3 py-1.5 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                            >
+                              Annuler
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => startEditVideo(video)}
+                              className="px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVideo(video.id)}
+                              className="px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                            >
+                              {L.delete}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* Articles Section */}
         <section>
@@ -666,6 +1173,22 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Music Submissions Section */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">{L.myMusicSubmissions}</h2>
+          </div>
+
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+            <MusicSubmissionsManager />
+          </div>
         </section>
 
         {/* Store Section - Admin only (module not ready for public) */}

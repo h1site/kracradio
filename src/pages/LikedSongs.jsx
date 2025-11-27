@@ -1,11 +1,12 @@
 // src/pages/LikedSongs.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAudio } from '../context/AudioPlayerContext';
 import { useI18n } from '../i18n';
-import { getUserLikedSongs, removeSongLike } from '../lib/supabase';
+import { removeSongLike } from '../lib/supabase';
 import { SUPABASE_FUNCTIONS_URL } from '../lib/supabaseClient';
+import { useLikedSongs } from '../context/LikedSongsContext';
 
 const STORAGE_KEY = 'likedSongs_warning_dismissed';
 
@@ -14,9 +15,8 @@ export default function LikedSongs() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { playLikedSong, playPlaylist, playing, podcastMeta, currentType, togglePlay } = useAudio();
+  const { likedSongs, loading, removeSongFromList } = useLikedSongs();
 
-  const [likedSongs, setLikedSongs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
 
@@ -46,33 +46,12 @@ export default function LikedSongs() {
     return shuffled;
   };
 
+  // Redirect if not logged in
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
       navigate('/login');
-      return;
     }
-
-    const loadLikedSongs = async () => {
-      try {
-        setLoading(true);
-        const songs = await getUserLikedSongs();
-        setLikedSongs(songs);
-        setError(null);
-      } catch (err) {
-        console.error('Error loading liked songs:', err);
-        if (err.message?.includes('relation') || err.message?.includes('does not exist')) {
-          setError('La fonctionnalité de likes n\'est pas encore activée.');
-        } else {
-          setError(err.message);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadLikedSongs();
   }, [user, authLoading, navigate]);
 
   // Search Dropbox for a song
@@ -180,7 +159,12 @@ export default function LikedSongs() {
         title: song.song_title,
         artist: song.song_artist
       });
-      setLikedSongs(prev => prev.filter(s => s.id !== song.id));
+      // Remove from context (updates immediately)
+      removeSongFromList({
+        title: song.song_title,
+        artist: song.song_artist,
+        channelKey: song.channel_key
+      });
     } catch (err) {
       console.error('Error unliking song:', err);
     }
@@ -225,11 +209,22 @@ export default function LikedSongs() {
     <div className="container-max px-4 md:px-5 pb-16 overflow-hidden">
       <header className="pt-12 md:pt-16 pb-6 md:pb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-5xl font-black mb-1 md:mb-2">{t.likedSongs?.title || 'Liked Songs'}</h1>
-            <p className="text-sm md:text-lg opacity-80">
-              {likedSongs.length} {likedSongs.length === 1 ? (t.likedSongs?.song || 'song') : (t.likedSongs?.songs || 'songs')}
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-2xl md:text-5xl font-black mb-1 md:mb-2">{t.likedSongs?.title || 'Liked Songs'}</h1>
+              <p className="text-sm md:text-lg opacity-80">
+                {likedSongs.length} {likedSongs.length === 1 ? (t.likedSongs?.song || 'song') : (t.likedSongs?.songs || 'songs')}
+              </p>
+            </div>
+            <Link
+              to="/liked-videos"
+              className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-300 hover:text-white transition-colors text-xs font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span className="hidden sm:inline">Playlist Vidéos</span>
+            </Link>
           </div>
 
           {likedSongs.length > 0 && (

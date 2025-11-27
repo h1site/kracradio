@@ -12,6 +12,8 @@ import { addSongLike, removeSongLike, isSongLiked } from '../lib/supabase';
 import PlayerBarMobile from './PlayerBarMobile';
 import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
+import { useNotification } from '../context/NotificationContext';
+import { useLikedSongs } from '../context/LikedSongsContext';
 
 export default function PlayerBar() {
   const {
@@ -22,6 +24,9 @@ export default function PlayerBar() {
   const { profile } = useProfile(user?.id);
   const { isDark } = useTheme();
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
+  const { addSongToList, removeSongFromList } = useLikedSongs();
+  const { lang } = useI18n();
   const [meta, setMeta] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
@@ -253,6 +258,9 @@ export default function PlayerBar() {
           artist
         });
         setIsLiked(false);
+
+        // Remove from local state
+        removeSongFromList({ title, artist, channelKey: current.key });
       } else {
         // Like
         await addSongLike({
@@ -263,6 +271,23 @@ export default function PlayerBar() {
           albumArt: art
         });
         setIsLiked(true);
+
+        // Add to local state
+        addSongToList({
+          title,
+          artist,
+          channelKey: current.key,
+          channelName: current.name,
+          albumArt: art
+        });
+
+        // Show notification
+        const messages = {
+          fr: 'Chanson ajoutée',
+          en: 'Song added',
+          es: 'Canción añadida'
+        };
+        showNotification(messages[lang] || messages.fr, 'song');
       }
     } catch (error) {
       console.error('Error toggling like:', error);

@@ -37,8 +37,10 @@ export default function PublicProfile() {
   const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
   const [articles, setArticles] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [loadingPodcasts, setLoadingPodcasts] = useState(false);
+  const [loadingVideos, setLoadingVideos] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState('');
   const [savingSpotify, setSavingSpotify] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -156,6 +158,23 @@ export default function PublicProfile() {
           if (!error) setPodcasts(data || []);
         })
         .finally(() => setLoadingPodcasts(false));
+    }
+  }, [userId]);
+
+  // Charger les vidéos approuvées
+  useEffect(() => {
+    if (userId) {
+      setLoadingVideos(true);
+      supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (!error) setVideos(data || []);
+        })
+        .finally(() => setLoadingVideos(false));
     }
   }, [userId]);
 
@@ -598,6 +617,50 @@ export default function PublicProfile() {
             </div>
             )}
           </div>
+
+          {/* Section Vidéos - Full width */}
+          {videos.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <IconImg name="video" className="w-6 h-6" />
+                {t.publicProfile?.videos || 'Vidéos'}
+              </h2>
+              {loadingVideos ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videos.map(video => (
+                    <div
+                      key={video.id}
+                      className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
+                    >
+                      <div className="aspect-video w-full">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${video.youtube_id}`}
+                          title={video.title}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-2">
+                          {video.title}
+                        </h3>
+                        {video.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                            {video.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Section posts - Feed communauté */}
           <div className="mt-12 pb-12">
