@@ -728,6 +728,7 @@
     "loading": "Loading...",
     "retry": "Retry",
     "like": "Like",
-    "comment": "Comment"
+    "comment": "Comment",
+    "photo": "Photo"
   }
 }

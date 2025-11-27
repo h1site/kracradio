@@ -521,10 +521,8 @@ export default function Feed() {
         <main className={`px-4 py-8 ${isDark ? 'bg-[#18191a]' : 'bg-gray-100'}`}>
           <div className="max-w-2xl mx-auto">
           {/* Create post */}
-          <div className={`rounded-2xl overflow-hidden mb-6 ${isDark ? 'bg-[#242526]' : 'bg-white'} shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}>
-            <div className="p-4">
-              <CreatePost onPostCreated={handlePostCreated} />
-            </div>
+          <div className={`mb-6 shadow-sm border ${isDark ? 'border-gray-700/50' : 'border-gray-200'} rounded-2xl overflow-hidden`}>
+            <CreatePost onPostCreated={handlePostCreated} />
           </div>
 
           {/* Posts list */}
