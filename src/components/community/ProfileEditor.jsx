@@ -25,16 +25,22 @@ export default function ProfileEditor() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
+    console.log('[ProfileEditor] Uploading to bucket:', bucket, 'file:', fileName);
+
     const { error } = await supabase.storage
       .from(bucket)
       .upload(fileName, file, { cacheControl: '3600', upsert: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[ProfileEditor] Upload error:', error);
+      throw error;
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
       .getPublicUrl(fileName);
 
+    console.log('[ProfileEditor] Upload success, publicUrl:', publicUrl);
     return publicUrl;
   };
 
@@ -45,12 +51,17 @@ export default function ProfileEditor() {
     try {
       setUploading(prev => ({ ...prev, avatar: true }));
       const avatarUrl = await uploadImage(file, 'profiles-images');
+      console.log('[ProfileEditor] Avatar URL:', avatarUrl);
+      console.log('[ProfileEditor] Updating profile with avatar_url...');
       await updateProfile(user.id, { avatar_url: avatarUrl });
+      console.log('[ProfileEditor] Profile updated, refetching...');
       await refetch();
+      console.log('[ProfileEditor] Refetch done');
       setMessage({ type: 'success', text: t.community?.customization?.avatarUpdated || 'Avatar updated' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      console.error('[ProfileEditor] Avatar change error:', error);
+      setMessage({ type: 'error', text: error.message || 'Upload failed' });
     } finally {
       setUploading(prev => ({ ...prev, avatar: false }));
     }
@@ -63,12 +74,17 @@ export default function ProfileEditor() {
     try {
       setUploading(prev => ({ ...prev, banner: true }));
       const bannerUrl = await uploadImage(file, 'banners');
+      console.log('[ProfileEditor] Banner URL:', bannerUrl);
+      console.log('[ProfileEditor] Updating profile with banner_url...');
       await updateProfile(user.id, { banner_url: bannerUrl });
+      console.log('[ProfileEditor] Profile updated, refetching...');
       await refetch();
+      console.log('[ProfileEditor] Refetch done');
       setMessage({ type: 'success', text: t.community?.customization?.bannerUpdated || 'Banner updated' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      console.error('[ProfileEditor] Banner change error:', error);
+      setMessage({ type: 'error', text: error.message || 'Upload failed' });
     } finally {
       setUploading(prev => ({ ...prev, banner: false }));
     }
