@@ -7,7 +7,6 @@ import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import CommunitySettings from '../components/community/CommunitySettings';
 import ProfileEditor from '../components/community/ProfileEditor';
-import MusicLinksManager from '../components/community/MusicLinksManager';
 import CommunityTutorial from '../components/CommunityTutorial';
 import { useProfile } from '../hooks/useCommunity';
 
@@ -18,7 +17,7 @@ export default function CommunityDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('settings');
   const [showTutorial, setShowTutorial] = useState(false);
-  const { profile, refetch: refetchProfile } = useProfile(user?.id);
+  const { profile } = useProfile(user?.id);
 
   // Rediriger si non authentifié (après que l'auth soit prêt)
   useEffect(() => {
@@ -38,9 +37,6 @@ export default function CommunityDashboard() {
     }
   }, [user]);
 
-  // Only show Music tab if user is in artist mode (role === 'creator')
-  const isArtistMode = profile?.role === 'creator';
-
   const TABS = [
     {
       id: 'settings',
@@ -59,16 +55,7 @@ export default function CommunityDashboard() {
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
       )
-    },
-    ...(isArtistMode ? [{
-      id: 'music',
-      label: t?.community?.tabs?.musicLinks || 'Music',
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-        </svg>
-      )
-    }] : [])
+    }
   ];
 
   // Lien vers le profil public
@@ -222,9 +209,8 @@ export default function CommunityDashboard() {
               <div className="absolute -top-20 right-0 w-72 h-72 bg-red-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
               <div className="relative z-10">
-                {activeTab === 'settings' && <CommunitySettings onProfileUpdate={refetchProfile} />}
+                {activeTab === 'settings' && <CommunitySettings />}
                 {activeTab === 'profile' && <ProfileEditor />}
-                {activeTab === 'music' && <MusicLinksManager />}
               </div>
             </div>
 

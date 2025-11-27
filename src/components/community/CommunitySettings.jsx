@@ -86,7 +86,7 @@ function Divider() {
   return <div className="h-px bg-gray-800/50 my-1" />;
 }
 
-export default function CommunitySettings({ onProfileUpdate }) {
+export default function CommunitySettings() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { profile, loading: loadingProfile, refetch } = useProfile(user?.id);
@@ -105,7 +105,6 @@ export default function CommunitySettings({ onProfileUpdate }) {
   const [slugStatus, setSlugStatus] = useState(null);
   const [slugError, setSlugError] = useState('');
   const [showGenres, setShowGenres] = useState(false);
-  const [showArtistModePopup, setShowArtistModePopup] = useState(false);
   const [showPublicProfilePopup, setShowPublicProfilePopup] = useState(false);
 
   useEffect(() => {
@@ -208,30 +207,6 @@ export default function CommunitySettings({ onProfileUpdate }) {
     }
   };
 
-  const handleToggleArtistMode = async () => {
-    const isCurrentlyArtist = profile?.role === 'creator';
-    const newRole = isCurrentlyArtist ? 'user' : 'creator';
-
-    try {
-      await updateProfile(user.id, { role: newRole });
-      await refetch();
-      // Also update parent component's profile
-      if (onProfileUpdate) {
-        await onProfileUpdate();
-      }
-      setMessage({
-        type: 'success',
-        text: isCurrentlyArtist
-          ? 'Mode utilisateur activé'
-          : 'Mode artiste activé - Vous pouvez maintenant ajouter vos liens de musique'
-      });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur lors du changement de mode' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }
-  };
-
   const handleSave = async () => {
     try {
       await updateProfile(user.id, {
@@ -273,29 +248,9 @@ export default function CommunitySettings({ onProfileUpdate }) {
     );
   }
 
-  const isArtistMode = profile?.role === 'creator';
-
   return (
     <div className="max-w-2xl">
       {/* Popups */}
-      {showArtistModePopup && (
-        <InfoPopup
-          title="Mode Artiste"
-          content={
-            <>
-              <p>Le <strong>mode artiste</strong> vous permet de :</p>
-              <ul className="list-disc list-inside space-y-2 mt-2">
-                <li>Ajouter vos liens de musique (Spotify, Apple Music, YouTube, etc.)</li>
-                <li>Afficher ces liens sur votre profil public</li>
-                <li>Être identifié comme créateur de contenu</li>
-              </ul>
-              <p className="mt-3">Si vous n'êtes pas un artiste, restez en mode utilisateur simple. Vous pouvez activer/désactiver ce mode à tout moment.</p>
-            </>
-          }
-          onClose={() => setShowArtistModePopup(false)}
-        />
-      )}
-
       {showPublicProfilePopup && (
         <InfoPopup
           title="Profil Public"
@@ -307,7 +262,6 @@ export default function CommunitySettings({ onProfileUpdate }) {
                 <li>Votre nom d'utilisateur et photo</li>
                 <li>Votre bio et localisation</li>
                 <li>Vos articles et podcasts publiés</li>
-                <li>Vos liens de musique (si mode artiste activé)</li>
               </ul>
               <p className="mt-3">Vous pouvez désactiver votre profil public à tout moment pour le rendre privé.</p>
             </>
@@ -324,30 +278,6 @@ export default function CommunitySettings({ onProfileUpdate }) {
           {message.text}
         </div>
       )}
-
-      {/* Section: Mode Artiste */}
-      <div className="bg-[#242526] rounded-lg mb-4">
-        <SettingRow
-          title="Mode Artiste"
-          description={isArtistMode
-            ? "Vous êtes en mode artiste - Vous pouvez gérer vos liens de musique dans l'onglet Music."
-            : "Activez le mode artiste pour ajouter vos liens de musique (Spotify, Apple Music, etc.) à votre profil."
-          }
-        >
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowArtistModePopup(true)}
-              className="text-gray-400 hover:text-white transition-colors"
-              title="En savoir plus"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <Toggle enabled={isArtistMode} onChange={handleToggleArtistMode} disabled={updating} />
-          </div>
-        </SettingRow>
-      </div>
 
       {/* Section: Visibilité */}
       <div className="bg-[#242526] rounded-lg mb-4">
