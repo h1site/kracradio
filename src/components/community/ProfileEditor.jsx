@@ -44,7 +44,7 @@ export default function ProfileEditor() {
 
     try {
       setUploading(prev => ({ ...prev, avatar: true }));
-      const avatarUrl = await uploadImage(file, 'avatars');
+      const avatarUrl = await uploadImage(file, 'profiles-images');
       await updateProfile(user.id, { avatar_url: avatarUrl });
       await refetch();
       setMessage({ type: 'success', text: t.community?.customization?.avatarUpdated || 'Avatar updated' });
