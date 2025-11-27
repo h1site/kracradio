@@ -97,14 +97,12 @@ export default function CommunitySettings() {
     username: '',
     artist_slug: '',
     bio: '',
-    location: '',
-    genres: []
+    location: ''
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [slugStatus, setSlugStatus] = useState(null);
   const [slugError, setSlugError] = useState('');
-  const [showGenres, setShowGenres] = useState(false);
   const [showPublicProfilePopup, setShowPublicProfilePopup] = useState(false);
 
   useEffect(() => {
@@ -114,8 +112,7 @@ export default function CommunitySettings() {
         username: profile.username || '',
         artist_slug: profile.artist_slug || '',
         bio: profile.bio || '',
-        location: profile.location || '',
-        genres: profile.genres || []
+        location: profile.location || ''
       });
     }
   }, [profile]);
@@ -208,49 +205,23 @@ export default function CommunitySettings() {
   };
 
   const handleSave = async () => {
-    console.log('[CommunitySettings] handleSave called');
-    console.log('[CommunitySettings] user.id:', user?.id);
-    console.log('[CommunitySettings] settings:', settings);
-
     try {
       const updateData = {
         username: settings.username,
         artist_slug: settings.artist_slug,
         bio: settings.bio,
-        location: settings.location,
-        genres: settings.genres
+        location: settings.location
       };
-      console.log('[CommunitySettings] Calling updateProfile with:', updateData);
 
       await updateProfile(user.id, updateData);
-      console.log('[CommunitySettings] updateProfile done, refetching...');
-
       await refetch();
-      console.log('[CommunitySettings] refetch done');
 
       setMessage({ type: 'success', text: t.community?.settings?.settingsSaved || 'Enregistré' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      console.error('[CommunitySettings] handleSave error:', error);
       setMessage({ type: 'error', text: error.message });
     }
   };
-
-  const addGenre = (genre) => {
-    if (genre && !settings.genres.includes(genre) && settings.genres.length < 3) {
-      setSettings(prev => ({ ...prev, genres: [...prev.genres, genre] }));
-    }
-  };
-
-  const removeGenre = (genre) => {
-    setSettings(prev => ({ ...prev, genres: prev.genres.filter(g => g !== genre) }));
-  };
-
-  const allGenres = [
-    'Hip-Hop', 'Rap', 'R&B', 'Soul', 'Funk', 'Rock', 'Punk', 'Indie', 'Metal',
-    'Électro', 'House', 'Techno', 'Jazz', 'Blues', 'Pop', 'Reggae', 'Afrobeat',
-    'Classique', 'Lo-Fi', 'Ambient', 'Country', 'Latin', 'World'
-  ];
 
   if (loadingProfile) {
     return (
@@ -432,50 +403,6 @@ export default function CommunitySettings() {
           </select>
         </div>
 
-        <Divider />
-
-        {/* Genres */}
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-[13px] text-gray-400">{t.community?.settings?.genresMax || "Music genres (max 3)"}</label>
-            <button
-              type="button"
-              onClick={() => setShowGenres(!showGenres)}
-              className="text-[13px] text-blue-400 hover:underline"
-            >
-              {showGenres ? (t.community?.settings?.hide || 'Hide') : (t.community?.settings?.edit || 'Edit')}
-            </button>
-          </div>
-
-          {settings.genres.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {settings.genres.map(genre => (
-                <span
-                  key={genre}
-                  className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-[13px] flex items-center gap-1.5"
-                >
-                  {genre}
-                  <button type="button" onClick={() => removeGenre(genre)} className="hover:text-white">×</button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {showGenres && settings.genres.length < 3 && (
-            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-700/50">
-              {allGenres.filter(g => !settings.genres.includes(g)).map(genre => (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => addGenre(genre)}
-                  className="px-3 py-1.5 bg-[#3a3b3c] hover:bg-[#4a4b4c] rounded-full text-[13px] text-gray-300 transition-colors"
-                >
-                  + {genre}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Bouton Enregistrer */}
