@@ -516,6 +516,77 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Sponsors Section */}
+      <section className="py-16 bg-gray-900">
+        <div className="max-w-4xl mx-auto px-5">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
+              {lang === 'en' ? 'Our Sponsors' : lang === 'es' ? 'Nuestros Patrocinadores' : 'Nos Commanditaires'}
+            </h2>
+          </div>
+
+          {/* H1Site Sponsor */}
+          <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700 mb-8">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <a href="https://h1site.com" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 hover:opacity-80 transition-opacity">
+                <img
+                  src="/images/sponsors/h1site_logo_svg.svg"
+                  alt="H1Site"
+                  className="h-16 md:h-20 w-auto"
+                />
+              </a>
+              <div className="text-center md:text-left">
+                <p className="text-gray-300 text-lg leading-relaxed">
+                  {lang === 'en'
+                    ? 'This platform is developed by H1Site. For all your website, web application, and SEO needs.'
+                    : lang === 'es'
+                    ? 'Esta plataforma está desarrollada por H1Site. Para todas sus necesidades de sitios web, aplicaciones web y SEO.'
+                    : 'Cette plateforme est développée par H1Site. Pour tous vos besoins de site internet, application web et SEO.'}
+                </p>
+                <a
+                  href="https://h1site.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 mt-4 text-red-400 font-semibold hover:underline"
+                >
+                  {lang === 'en' ? 'Visit H1Site' : lang === 'es' ? 'Visitar H1Site' : 'Visiter H1Site'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Become a Sponsor CTA */}
+          <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-8 text-center text-white">
+            <h3 className="text-2xl font-bold mb-3">
+              {lang === 'en'
+                ? 'Want to sponsor KracRadio?'
+                : lang === 'es'
+                ? '¿Quieres patrocinar KracRadio?'
+                : 'Vous voulez commanditer KracRadio?'}
+            </h3>
+            <p className="text-white/90 mb-6 max-w-xl mx-auto">
+              {lang === 'en'
+                ? 'Join our sponsors and reach thousands of music lovers. Contact us to learn more about sponsorship opportunities.'
+                : lang === 'es'
+                ? 'Únete a nuestros patrocinadores y llega a miles de amantes de la música. Contáctanos para conocer las oportunidades de patrocinio.'
+                : 'Rejoignez nos commanditaires et rejoignez des milliers d\'amateurs de musique. Contactez-nous pour en savoir plus sur les opportunités de commandite.'}
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-white text-red-600 rounded-full font-bold hover:bg-gray-100 transition-colors"
+            >
+              {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Espacement en bas - 30px sur mobile au lieu de la cale pour le player */}
       <div className="pb-[30px] sm:pb-0" />
     </div>

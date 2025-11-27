@@ -65,7 +65,7 @@ export default function App() {
   const isFullWidth = fullWidthPages.includes(location.pathname) || location.pathname.startsWith('/article/');
 
   const mainStyle = {
-    paddingBottom: PLAYER_H,
+    paddingBottom: 0,
     marginLeft: isFullWidth ? 0 : (isDesktop && sidebarOpen ? sidebarWidth : 0),
     transition: 'margin-left 300ms ease',
     minHeight: '100vh',

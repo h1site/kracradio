@@ -97,16 +97,16 @@ export default function Footer() {
 
   return (
     <footer
-      className="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
+      className="bg-black"
       style={footerStyle}
     >
       <div className="px-8 py-12">
         {/* Newsletter Section */}
         <div className="mx-auto max-w-2xl text-center">
-          <h3 className="mb-2 text-2xl font-bold uppercase tracking-wide text-gray-900 dark:text-white">
+          <h3 className="mb-2 text-2xl font-bold uppercase tracking-wide text-white">
             {L.newsletter.title}
           </h3>
-          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mb-6 text-sm text-gray-400">
             {L.newsletter.subtitle}
           </p>
 
@@ -141,7 +141,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 border-t border-gray-200 pt-8 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+        <div className="mt-12 border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
           {L.copyright}
         </div>
       </div>
