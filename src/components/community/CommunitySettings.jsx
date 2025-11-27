@@ -86,7 +86,7 @@ function Divider() {
   return <div className="h-px bg-gray-800/50 my-1" />;
 }
 
-export default function CommunitySettings() {
+export default function CommunitySettings({ onProfileUpdate }) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { profile, loading: loadingProfile, refetch } = useProfile(user?.id);
@@ -215,6 +215,10 @@ export default function CommunitySettings() {
     try {
       await updateProfile(user.id, { role: newRole });
       await refetch();
+      // Also update parent component's profile
+      if (onProfileUpdate) {
+        await onProfileUpdate();
+      }
       setMessage({
         type: 'success',
         text: isCurrentlyArtist

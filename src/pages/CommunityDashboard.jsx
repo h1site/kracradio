@@ -18,7 +18,7 @@ export default function CommunityDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('settings');
   const [showTutorial, setShowTutorial] = useState(false);
-  const { profile } = useProfile(user?.id);
+  const { profile, refetch: refetchProfile } = useProfile(user?.id);
 
   // Rediriger si non authentifié (après que l'auth soit prêt)
   useEffect(() => {
@@ -222,7 +222,7 @@ export default function CommunityDashboard() {
               <div className="absolute -top-20 right-0 w-72 h-72 bg-red-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
               <div className="relative z-10">
-                {activeTab === 'settings' && <CommunitySettings />}
+                {activeTab === 'settings' && <CommunitySettings onProfileUpdate={refetchProfile} />}
                 {activeTab === 'profile' && <ProfileEditor />}
                 {activeTab === 'music' && <MusicLinksManager />}
               </div>
