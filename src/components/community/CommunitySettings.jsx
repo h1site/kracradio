@@ -104,6 +104,8 @@ export default function CommunitySettings() {
   const [slugStatus, setSlugStatus] = useState(null);
   const [slugError, setSlugError] = useState('');
   const [showPublicProfilePopup, setShowPublicProfilePopup] = useState(false);
+  const [useCustomUrl, setUseCustomUrl] = useState(false);
+  const [showCustomUrlPopup, setShowCustomUrlPopup] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -114,6 +116,11 @@ export default function CommunitySettings() {
         bio: profile.bio || '',
         location: profile.location || ''
       });
+      // Check if user has a custom URL (different from username slug)
+      const usernameSlug = generateSlug(profile.username || '');
+      if (profile.artist_slug && profile.artist_slug !== usernameSlug) {
+        setUseCustomUrl(true);
+      }
     }
   }, [profile]);
 
@@ -178,24 +185,38 @@ export default function CommunitySettings() {
     }
   };
 
+  // Get the effective public URL (custom or from username)
+  const getPublicUrl = () => {
+    if (useCustomUrl && settings.artist_slug) {
+      return settings.artist_slug;
+    }
+    return generateSlug(settings.username) || '';
+  };
+
   const handleTogglePublic = async () => {
     const newValue = !settings.is_public;
+    const publicUrl = getPublicUrl();
 
-    if (newValue && (!settings.artist_slug || settings.artist_slug.length < 3)) {
-      setMessage({ type: 'error', text: t.community?.settings?.artistSlugRequired || 'Définissez un nom d\'artiste (min. 3 car.) pour être public' });
+    if (newValue && (!publicUrl || publicUrl.length < 3)) {
+      setMessage({ type: 'error', text: t.community?.settings?.usernameRequired || 'Enter a username (min. 3 characters) to be public' });
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
       return;
     }
 
-    if (newValue && slugStatus === 'taken') {
-      setMessage({ type: 'error', text: t.community?.settings?.artistSlugTakenError || 'Ce nom est déjà pris' });
+    if (newValue && useCustomUrl && slugStatus === 'taken') {
+      setMessage({ type: 'error', text: t.community?.settings?.customUrlTaken || 'This custom URL is already taken' });
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
       return;
     }
 
     try {
-      await updateProfile(user.id, { is_public: newValue });
-      setSettings(prev => ({ ...prev, is_public: newValue }));
+      // If using username as URL, update artist_slug to match
+      const updateData = { is_public: newValue };
+      if (!useCustomUrl) {
+        updateData.artist_slug = publicUrl;
+      }
+      await updateProfile(user.id, updateData);
+      setSettings(prev => ({ ...prev, is_public: newValue, artist_slug: useCustomUrl ? prev.artist_slug : publicUrl }));
       await refetch();
       setMessage({ type: 'success', text: newValue ? (t.community?.settings?.publicEnabled || 'Public profile enabled') : (t.community?.settings?.privateEnabled || 'Private profile enabled') });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -206,20 +227,46 @@ export default function CommunitySettings() {
 
   const handleSave = async () => {
     try {
+      // If not using custom URL, derive artist_slug from username
+      const effectiveSlug = useCustomUrl ? settings.artist_slug : generateSlug(settings.username);
+
       const updateData = {
         username: settings.username,
-        artist_slug: settings.artist_slug,
+        artist_slug: effectiveSlug,
         bio: settings.bio,
         location: settings.location
       };
 
       await updateProfile(user.id, updateData);
+      setSettings(prev => ({ ...prev, artist_slug: effectiveSlug }));
       await refetch();
 
-      setMessage({ type: 'success', text: t.community?.settings?.settingsSaved || 'Enregistré' });
+      setMessage({ type: 'success', text: t.community?.settings?.settingsSaved || 'Saved' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleToggleCustomUrl = () => {
+    if (useCustomUrl) {
+      // Switching back to username-based URL
+      setUseCustomUrl(false);
+      setSettings(prev => ({ ...prev, artist_slug: generateSlug(prev.username) }));
+      setSlugStatus(null);
+      setSlugError('');
+    } else {
+      // Show info popup before enabling custom URL
+      setShowCustomUrlPopup(true);
+    }
+  };
+
+  const enableCustomUrl = () => {
+    setUseCustomUrl(true);
+    setShowCustomUrlPopup(false);
+    // Keep current slug or initialize with username
+    if (!settings.artist_slug) {
+      setSettings(prev => ({ ...prev, artist_slug: generateSlug(prev.username) }));
     }
   };
 
@@ -236,21 +283,57 @@ export default function CommunitySettings() {
       {/* Popups */}
       {showPublicProfilePopup && (
         <InfoPopup
-          title="Profil Public"
+          title={t.community?.settings?.publicProfileTitle || "Public Profile"}
           content={
             <>
-              <p>Votre <strong>profil public</strong> est visible par tous les visiteurs de KracRadio.</p>
-              <p className="mt-2">Il affiche :</p>
+              <p>{t.community?.settings?.publicProfileDesc1 || "Your public profile is visible to all KracRadio visitors."}</p>
+              <p className="mt-2">{t.community?.settings?.publicProfileDesc2 || "It displays:"}</p>
               <ul className="list-disc list-inside space-y-2 mt-2">
-                <li>Votre nom d'utilisateur et photo</li>
-                <li>Votre bio et localisation</li>
-                <li>Vos articles et podcasts publiés</li>
+                <li>{t.community?.settings?.publicProfileItem1 || "Your username and photo"}</li>
+                <li>{t.community?.settings?.publicProfileItem2 || "Your bio and location"}</li>
+                <li>{t.community?.settings?.publicProfileItem3 || "Your published articles and podcasts"}</li>
               </ul>
-              <p className="mt-3">Vous pouvez désactiver votre profil public à tout moment pour le rendre privé.</p>
+              <p className="mt-3">{t.community?.settings?.publicProfileDesc3 || "You can disable your public profile at any time to make it private."}</p>
             </>
           }
           onClose={() => setShowPublicProfilePopup(false)}
         />
+      )}
+
+      {showCustomUrlPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => setShowCustomUrlPopup(false)}>
+          <div className="bg-[#242526] rounded-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">{t.community?.settings?.customUrlTitle || "Custom URL"}</h3>
+              <button onClick={() => setShowCustomUrlPopup(false)} className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-[15px] text-gray-300 leading-relaxed space-y-3">
+              <p>{t.community?.settings?.customUrlDesc1 || "By default, your public profile URL uses your username."}</p>
+              <p><strong>{t.community?.settings?.defaultUrl || "Default URL:"}</strong></p>
+              <p className="bg-[#18191a] px-3 py-2 rounded text-[14px]">kracradio.com/profile/<span className="text-blue-400">{generateSlug(settings.username) || 'your_username'}</span></p>
+              <p className="mt-2">{t.community?.settings?.customUrlDesc2 || "A custom URL allows you to choose a different URL for your profile, useful for artists who want a stage name or brand."}</p>
+              <p className="text-yellow-400 text-[13px]">{t.community?.settings?.customUrlWarning || "Note: Custom URLs must be unique and at least 3 characters."}</p>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setShowCustomUrlPopup(false)}
+                className="flex-1 py-2.5 bg-[#3a3b3c] hover:bg-[#4a4b4c] text-white font-medium rounded-lg transition-colors"
+              >
+                {t.community?.settings?.cancel || "Cancel"}
+              </button>
+              <button
+                onClick={enableCustomUrl}
+                className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
+              >
+                {t.community?.settings?.enableCustomUrl || "Enable custom URL"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Message feedback */}
@@ -285,18 +368,18 @@ export default function CommunitySettings() {
           </div>
         </SettingRow>
 
-        {settings.is_public && settings.artist_slug && (
+        {settings.is_public && getPublicUrl() && (
           <>
             <Divider />
             <div className="px-4 py-3">
               <p className="text-[13px] text-gray-400">{t.community?.settings?.yourPublicProfile || "Your public profile"}</p>
               <a
-                href={`/profile/${settings.artist_slug}`}
+                href={`/profile/${getPublicUrl()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:underline text-[15px] font-medium flex items-center gap-2"
               >
-                kracradio.com/profile/{settings.artist_slug}
+                kracradio.com/profile/{getPublicUrl()}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -319,54 +402,94 @@ export default function CommunitySettings() {
             type="text"
             value={settings.username}
             onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
-            placeholder="votre_nom"
+            placeholder={t.community?.settings?.usernamePlaceholder || "your_name"}
             className="w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          {!useCustomUrl && settings.username && (
+            <p className="text-[12px] text-gray-500 mt-1">
+              {t.community?.settings?.urlPreview || "Your URL:"} kracradio.com/profile/<span className="text-blue-400">{generateSlug(settings.username)}</span>
+            </p>
+          )}
         </div>
 
         <Divider />
 
-        {/* Nom d'artiste (slug) */}
+        {/* Custom URL Section */}
         <div className="px-4 py-4">
-          <label className="block text-[13px] text-gray-400 mb-2">
-            {t.community?.settings?.artistSlug || "Artist name (public URL)"}
-            {settings.is_public && <span className="text-red-400 ml-1">*</span>}
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={settings.artist_slug}
-              onChange={handleSlugChange}
-              placeholder="mon_nom_artiste"
-              className={`w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 ${
-                slugStatus === 'available' ? 'focus:ring-green-500 ring-1 ring-green-500/50' :
-                slugStatus === 'taken' ? 'focus:ring-red-500 ring-1 ring-red-500/50' :
-                'focus:ring-blue-500'
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <label className="block text-[13px] text-gray-400">
+                {t.community?.settings?.customUrl || "Custom URL"}
+              </label>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                {useCustomUrl
+                  ? (t.community?.settings?.customUrlActive || "Using custom URL for your profile")
+                  : (t.community?.settings?.customUrlInactive || "Using username as your profile URL")
+                }
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleCustomUrl}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                useCustomUrl
+                  ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                  : 'bg-[#3a3b3c] text-gray-300 hover:bg-[#4a4b4c]'
               }`}
-            />
-            {slugStatus === 'checking' && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-white"></div>
-              </div>
-            )}
-            {slugStatus === 'available' && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-            {slugStatus === 'taken' && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
+            >
+              {useCustomUrl
+                ? (t.community?.settings?.disableCustomUrl || "Use username")
+                : (t.community?.settings?.enableCustomUrlBtn || "Customize URL")
+              }
+            </button>
           </div>
-          {slugError && <p className="text-[12px] text-red-400 mt-1">{slugError}</p>}
-          {slugStatus === 'available' && settings.artist_slug && (
-            <p className="text-[12px] text-green-400 mt-1">{t.community?.settings?.available || "Available"}</p>
+
+          {/* Custom URL input - only shown when enabled */}
+          {useCustomUrl && (
+            <div className="mt-3">
+              <label className="block text-[13px] text-gray-400 mb-2">
+                {t.community?.settings?.customUrlLabel || "Custom profile URL"}
+                <span className="text-red-400 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={settings.artist_slug}
+                  onChange={handleSlugChange}
+                  placeholder={t.community?.settings?.customUrlPlaceholder || "my_artist_name"}
+                  className={`w-full px-3 py-2.5 bg-[#3a3b3c] rounded-lg text-white text-[15px] placeholder-gray-500 focus:outline-none focus:ring-2 ${
+                    slugStatus === 'available' ? 'focus:ring-green-500 ring-1 ring-green-500/50' :
+                    slugStatus === 'taken' ? 'focus:ring-red-500 ring-1 ring-red-500/50' :
+                    'focus:ring-blue-500'
+                  }`}
+                />
+                {slugStatus === 'checking' && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-white"></div>
+                  </div>
+                )}
+                {slugStatus === 'available' && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {slugStatus === 'taken' && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {slugError && <p className="text-[12px] text-red-400 mt-1">{slugError}</p>}
+              {slugStatus === 'available' && settings.artist_slug && (
+                <p className="text-[12px] text-green-400 mt-1">
+                  {t.community?.settings?.available || "Available"} - kracradio.com/profile/<span className="text-green-300">{settings.artist_slug}</span>
+                </p>
+              )}
+            </div>
           )}
         </div>
 
