@@ -112,7 +112,7 @@ export default function Artists() {
         ]}
       />
 
-      <div className="">
+      <div className="pb-[50px]">
         {/* En-tête avec filtres */}
         <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
           <div className="absolute inset-0">
