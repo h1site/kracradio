@@ -165,7 +165,7 @@ export default function Sidebar() {
 
             {/* Other links */}
             <Item to="/articles" iconName="paper" label={t.nav.articles} />
-            <Item to="/artists" iconName="artist" label={t.nav.artists} />
+            <Item to="/artists" iconName="artist" label={t.nav.members} />
             <Item to="/podcasts" iconName="mic" label={t.nav.podcasts} />
             <Item to="/videos" iconName="video" label={t.nav.videos} />
             <Item to="/charts" iconName="chart" label={t.nav.charts} />

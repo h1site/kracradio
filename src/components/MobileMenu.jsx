@@ -162,7 +162,7 @@ export default function MobileMenu({ open, onClose }) {
             }
           >
             <IconImg name="artist" />
-            <span className="text-sm font-medium">{t.nav.artists}</span>
+            <span className="text-sm font-medium">{t.nav.members}</span>
           </NavLink>
 
           <NavLink
