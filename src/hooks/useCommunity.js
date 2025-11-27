@@ -173,18 +173,51 @@ export function useUpdateProfile() {
 
       console.log('[useUpdateProfile] Updating profile:', userId, updates);
 
-      // UPDATE sans .select() pour éviter erreur RLS
-      const { error: updateError, count } = await supabase
+      // First check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.log('[useUpdateProfile] Existing profile check:', existingProfile, 'error:', checkError);
+
+      if (!existingProfile) {
+        console.log('[useUpdateProfile] Profile does not exist, creating...');
+        // Profile doesn't exist, create it
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: userId, ...updates });
+
+        if (insertError) {
+          console.error('[useUpdateProfile] Insert error:', insertError);
+          throw insertError;
+        }
+        console.log('[useUpdateProfile] Profile created successfully');
+        return { success: true };
+      }
+
+      // Profile exists, update it
+      const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', userId);
 
-      console.log('[useUpdateProfile] Result - error:', updateError, 'count:', count);
+      console.log('[useUpdateProfile] Update result - error:', updateError);
 
       if (updateError) {
         console.error('[useUpdateProfile] Update profile error:', updateError);
         throw updateError;
       }
+
+      // Verify the update worked
+      const { data: verifyData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.log('[useUpdateProfile] Verification - saved data:', verifyData);
 
       console.log('[useUpdateProfile] Success');
       return { success: true };
