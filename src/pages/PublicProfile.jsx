@@ -11,7 +11,6 @@ import { personSchema, musicGroupSchema, breadcrumbSchema } from '../seo/schemas
 import { useI18n } from '../i18n';
 import FollowButton from '../components/community/FollowButton';
 import FollowersModal from '../components/community/FollowersModal';
-import PostsFeed from '../components/posts/PostsFeed';
 import MessageModal from '../components/messages/MessageModal';
 
 function IconImg({ name, alt = '', className = 'w-6 h-6' }) {
@@ -662,11 +661,7 @@ export default function PublicProfile() {
             </div>
           )}
 
-          {/* Section posts - Feed communauté */}
-          <div className="mt-12 pb-12">
-            <PostsFeed userId={null} showCreatePost={user?.id === userId} />
           </div>
-        </div>
       </div>
 
       {/* Message Modal */}

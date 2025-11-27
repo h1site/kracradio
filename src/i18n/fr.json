@@ -73,6 +73,7 @@
   "nav": {
     "home": "Accueil",
     "channels": "Chaînes",
+    "feed": "Feed",
     "articles": "Articles",
     "artists": "Artistes",
     "members": "Membres",
@@ -716,5 +717,15 @@
       "loadingError": "Erreur lors du chargement des posts",
       "retry": "Réessayer"
     }
+  },
+  "feed": {
+    "title": "Feed",
+    "description": "Feed de la communauté KracRadio",
+    "noPosts": "Aucun post pour le moment",
+    "startConversation": "Soyez le premier à publier !",
+    "loading": "Chargement...",
+    "retry": "Réessayer",
+    "like": "J'aime",
+    "comment": "Commenter"
   }
 }

@@ -144,6 +144,17 @@ export default function MobileMenu({ open, onClose }) {
 
           {/* Autres pages */}
           <NavLink
+            to="/feed"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition ${itemHover} ${isActive ? activeCls : ''}`
+            }
+          >
+            <IconImg name="chat" />
+            <span className="text-sm font-medium">{t.nav.feed}</span>
+          </NavLink>
+
+          <NavLink
             to="/articles"
             onClick={onClose}
             className={({ isActive }) =>

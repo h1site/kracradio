@@ -164,6 +164,7 @@ export default function Sidebar() {
             </div>
 
             {/* Other links */}
+            <Item to="/feed" iconName="chat" label={t.nav.feed} />
             <Item to="/articles" iconName="paper" label={t.nav.articles} />
             <Item to="/artists" iconName="artist" label={t.nav.members} />
             <Item to="/podcasts" iconName="mic" label={t.nav.podcasts} />

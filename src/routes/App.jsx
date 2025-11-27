@@ -54,6 +54,7 @@ import StoreSubmit from '../pages/StoreSubmit';
 import StoreDashboard from '../pages/StoreDashboard';
 import AdminStore from '../pages/AdminStore';
 import Messages from '../pages/Messages';
+import Feed from '../pages/Feed';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -154,6 +155,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Messages />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Feed (protected) */}
+          <Route
+            path="/feed"
+            element={
+              <ProtectedRoute>
+                <Feed />
               </ProtectedRoute>
             }
           />

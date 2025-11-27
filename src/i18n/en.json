@@ -73,6 +73,7 @@
   "nav": {
     "home": "Home",
     "channels": "Channels",
+    "feed": "Feed",
     "articles": "Articles",
     "artists": "Artists",
     "members": "Members",
@@ -716,5 +717,15 @@
       "loadingError": "Error loading posts",
       "retry": "Retry"
     }
+  },
+  "feed": {
+    "title": "Feed",
+    "description": "KracRadio community feed",
+    "noPosts": "No posts yet",
+    "startConversation": "Be the first to post!",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "like": "Like",
+    "comment": "Comment"
   }
 }
