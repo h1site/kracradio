@@ -189,7 +189,7 @@
     "accessDashboard": "➡️ Accéder au tableau de bord",
     "manageAccount": "Gérez votre compte",
     "communityTitle": "🌐 Mon Profil Public",
-    "communityDesc": "Gérez votre profil d'artiste, vos liens musicaux et interagissez avec d'autres artistes",
+    "communityDesc": "Gérez votre profil",
     "accessCommunity": "➡️ Gérer mon profil",
     "publicProfileTitle": "Mon Profil Public",
     "publicProfileDesc": "Votre profil est visible publiquement",
@@ -385,7 +385,7 @@
   },
   "community": {
     "title": "Mon Profil Public",
-    "description": "Gérez votre profil d'artiste, vos liens musicaux et vos paramètres",
+    "description": "Gérez votre profil",
     "viewProfile": "Voir Profil",
     "backToSettings": "Retour Paramètres",
     "save": "Enregistrer",

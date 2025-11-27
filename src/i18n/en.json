@@ -189,7 +189,7 @@
     "accessDashboard": "➡️ Access Dashboard",
     "manageAccount": "Manage your account",
     "communityTitle": "🌐 My Public Profile",
-    "communityDesc": "Manage your artist profile, music links, and interact with other artists",
+    "communityDesc": "Manage your profile",
     "accessCommunity": "➡️ Manage my profile",
     "publicProfileTitle": "My Public Profile",
     "publicProfileDesc": "Your profile is publicly visible",
@@ -385,7 +385,7 @@
   },
   "community": {
     "title": "My Public Profile",
-    "description": "Manage your artist profile, music links and settings",
+    "description": "Manage your profile",
     "viewProfile": "View Profile",
     "backToSettings": "Back to Settings",
     "save": "Save",
