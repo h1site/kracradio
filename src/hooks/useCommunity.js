@@ -171,21 +171,25 @@ export function useUpdateProfile() {
       setLoading(true);
       setError(null);
 
+      console.log('[useUpdateProfile] Updating profile:', userId, updates);
+
       // UPDATE sans .select() pour éviter erreur RLS
-      const { error: updateError } = await supabase
+      const { error: updateError, count } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', userId);
 
+      console.log('[useUpdateProfile] Result - error:', updateError, 'count:', count);
+
       if (updateError) {
-        console.error('Update profile error:', updateError);
+        console.error('[useUpdateProfile] Update profile error:', updateError);
         throw updateError;
       }
 
-      // Pas de retour de data, l'appelant doit refetch si besoin
+      console.log('[useUpdateProfile] Success');
       return { success: true };
     } catch (err) {
-      console.error('useUpdateProfile error:', err);
+      console.error('[useUpdateProfile] Error:', err);
       setError(err.message);
       throw err;
     } finally {

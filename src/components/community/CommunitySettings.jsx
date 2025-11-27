@@ -208,18 +208,30 @@ export default function CommunitySettings() {
   };
 
   const handleSave = async () => {
+    console.log('[CommunitySettings] handleSave called');
+    console.log('[CommunitySettings] user.id:', user?.id);
+    console.log('[CommunitySettings] settings:', settings);
+
     try {
-      await updateProfile(user.id, {
+      const updateData = {
         username: settings.username,
         artist_slug: settings.artist_slug,
         bio: settings.bio,
         location: settings.location,
         genres: settings.genres
-      });
+      };
+      console.log('[CommunitySettings] Calling updateProfile with:', updateData);
+
+      await updateProfile(user.id, updateData);
+      console.log('[CommunitySettings] updateProfile done, refetching...');
+
       await refetch();
+      console.log('[CommunitySettings] refetch done');
+
       setMessage({ type: 'success', text: t.community?.settings?.settingsSaved || 'Enregistré' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
+      console.error('[CommunitySettings] handleSave error:', error);
       setMessage({ type: 'error', text: error.message });
     }
   };
