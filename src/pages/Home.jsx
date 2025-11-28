@@ -470,21 +470,21 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {latestPodcasts.slice(0, 3).map((podcast) => (
-              <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group block bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-white/10">
-                <div className="aspect-square overflow-hidden">
+              <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all border border-white/10">
+                <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                   <img
                     src={podcast.image_url}
                     alt={podcast.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-white group-hover:text-white/80 transition-colors line-clamp-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-white group-hover:text-white/80 transition-colors line-clamp-2 text-sm">
                     {podcast.title}
                   </h3>
-                  <p className="text-sm text-white/70 mt-1 line-clamp-2">
+                  <p className="text-xs text-white/60 mt-1 line-clamp-2">
                     {podcast.description}
                   </p>
                 </div>
