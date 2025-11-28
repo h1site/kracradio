@@ -1,18 +1,52 @@
 // src/components/PlayerBarMobile.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAudio } from '../context/AudioPlayerContext';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { getNowPlaying } from '../utils/azura';
 import { mmss } from '../utils/time';
+import { channels } from '../data/channels';
 
 const RED = '#E50914';
 
+// Composant texte défilant pour les textes trop longs
+function MarqueeText({ text, className = '' }) {
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (containerRef.current && textRef.current) {
+        const isOverflowing = textRef.current.scrollWidth > containerRef.current.clientWidth;
+        setShouldScroll(isOverflowing);
+      }
+    };
+
+    checkOverflow();
+    // Re-check on resize
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className={`overflow-hidden whitespace-nowrap ${className}`}>
+      {shouldScroll ? (
+        <div className="inline-flex animate-marquee">
+          <span ref={textRef} className="pr-8">{text}</span>
+          <span className="pr-8">{text}</span>
+        </div>
+      ) : (
+        <span ref={textRef} className="truncate block">{text}</span>
+      )}
+    </div>
+  );
+}
+
 export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
-  const { current, playing, togglePlay, podcastMeta, currentType } = useAudio();
+  const { current, playing, togglePlay, podcastMeta, currentType, playChannel } = useAudio();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -25,8 +59,33 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showChannelPicker, setShowChannelPicker] = useState(false);
   const tickRef = useRef(null);
   const menuRef = useRef(null);
+  const channelPickerRef = useRef(null);
+
+  // Get current channel index
+  const currentChannelIndex = useMemo(() => {
+    if (!current?.key) return -1;
+    return channels.findIndex(c => c.key === current.key);
+  }, [current?.key]);
+
+  // Switch to next/previous channel
+  const switchChannel = useCallback((direction) => {
+    if (currentType !== 'radio' || currentChannelIndex === -1) return;
+
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentChannelIndex + 1) % channels.length;
+    } else {
+      newIndex = currentChannelIndex - 1 < 0 ? channels.length - 1 : currentChannelIndex - 1;
+    }
+
+    const newChannel = channels[newIndex];
+    if (newChannel) {
+      playChannel(newChannel.key);
+    }
+  }, [currentType, currentChannelIndex, playChannel]);
 
   // 1) Poll AzuraCast toutes les 15s (titre / artiste / pochette + elapsed/duration si dispo)
   useEffect(() => {
@@ -81,8 +140,11 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowMenu(false);
       }
+      if (channelPickerRef.current && !channelPickerRef.current.contains(e.target)) {
+        setShowChannelPicker(false);
+      }
     };
-    if (showMenu) {
+    if (showMenu || showChannelPicker) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchstart', handleClickOutside);
     }
@@ -90,7 +152,7 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [showMenu]);
+  }, [showMenu, showChannelPicker]);
 
   // 4) Données à afficher (avec fallback)
   // Pour les liked songs (currentType === 'liked'), utiliser podcastMeta
@@ -101,7 +163,7 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
     ? (podcastMeta?.image || '/channels/default.webp')
     : (meta?.art || current?.now?.art || current?.art || current?.image || '/channels/default.webp');
 
-  const title = isLikedSong
+  const songTitle = isLikedSong
     ? (podcastMeta?.title || '—')
     : (meta?.title || current?.now?.title || current?.title || '—');
 
@@ -109,16 +171,102 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
     ? (podcastMeta?.podcastTitle || '—')
     : (meta?.artist || current?.now?.artist || current?.artist || current?.name || '—');
 
+  // Check if we're in radio mode (can switch channels)
+  const isRadioMode = currentType === 'radio' && currentChannelIndex !== -1;
+
+  // Nom de la chaîne courante
+  const channelName = current?.name || '';
+
+  // Format mobile: "Titre - Chaîne: Nom" pour les radios, sinon juste le titre
+  const displayTitle = isRadioMode && channelName ? `${songTitle} - Chaîne: ${channelName}` : songTitle;
+
   return (
     // ⚠️ Ce composant est pensé pour être inclus dans un conteneur fixe (PlayerBar) — pas de position fixed ici.
-    <div className="md:hidden h-16 px-3 flex items-center gap-3">
-      {/* Jaquette */}
-      <img
-        src={art}
-        alt=""
-        loading="lazy"
-        className="w-12 h-12 rounded border border-white/10 object-cover shrink-0"
-      />
+    <div className="md:hidden h-16 px-3 flex items-center gap-2">
+      {/* Channel switcher area */}
+      <div className="relative flex items-center gap-1 shrink-0" ref={channelPickerRef}>
+        {/* Prev Channel Button */}
+        {isRadioMode && (
+          <button
+            type="button"
+            onClick={() => switchChannel('prev')}
+            className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+            aria-label="Chaîne précédente"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+          </button>
+        )}
+
+        {/* Jaquette - clickable pour ouvrir le picker */}
+        <button
+          type="button"
+          onClick={() => isRadioMode && setShowChannelPicker(!showChannelPicker)}
+          className={`w-12 h-12 rounded border border-white/10 overflow-hidden shrink-0 ${isRadioMode ? 'cursor-pointer hover:border-white/30 transition-colors' : ''}`}
+        >
+          <img
+            src={art}
+            alt=""
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+        </button>
+
+        {/* Next Channel Button */}
+        {isRadioMode && (
+          <button
+            type="button"
+            onClick={() => switchChannel('next')}
+            className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+            aria-label="Chaîne suivante"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+          </button>
+        )}
+
+        {/* Channel Picker Popup */}
+        {showChannelPicker && isRadioMode && (
+          <div className="absolute bottom-full left-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden w-[280px] max-h-[300px] overflow-y-auto z-50">
+            <div className="px-3 py-2 border-b border-white/10 sticky top-0 bg-[#1a1a1a]">
+              <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                {nav.channels || 'Chaînes'}
+              </span>
+            </div>
+            {channels.map((channel, idx) => (
+              <button
+                key={channel.key}
+                onClick={() => {
+                  playChannel(channel.key);
+                  setShowChannelPicker(false);
+                }}
+                className={`w-full px-3 py-2 text-left hover:bg-white/5 transition-colors flex items-center gap-3 ${
+                  idx === currentChannelIndex ? 'bg-white/10' : ''
+                }`}
+              >
+                <img
+                  src={channel.image || '/channels/default.webp'}
+                  alt={channel.name}
+                  className="w-10 h-10 rounded object-cover"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium truncate ${idx === currentChannelIndex ? 'text-red-400' : 'text-white'}`}>
+                    {channel.name}
+                  </div>
+                  {channel.description && (
+                    <div className="text-xs text-white/50 truncate">{channel.description}</div>
+                  )}
+                </div>
+                {idx === currentChannelIndex && (
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Play/Pause */}
       <button
@@ -142,12 +290,8 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
 
       {/* Infos */}
       <div className="min-w-0 flex-1">
-        <div className="text-white text-sm font-semibold truncate" title={title}>
-          {title}
-        </div>
-        <div className="text-white/70 text-xs truncate" title={artist}>
-          {artist}
-        </div>
+        <MarqueeText text={displayTitle} className="text-white text-sm font-semibold" />
+        <div className="text-white/70 text-xs truncate">{artist}</div>
 
         {/* Ligne temps / live (compacte) */}
         <div className="mt-0.5 flex items-center gap-2">
