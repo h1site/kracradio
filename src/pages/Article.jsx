@@ -111,6 +111,25 @@ export default function Article() {
     };
   }, [article, lang]);
 
+  // Build schemas for SEO - Must be called before any conditional returns
+  const articleJsonLd = useMemo(() => {
+    if (!article) return null;
+    const author = article.author_name ? {
+      username: article.author_name,
+      artist_slug: article.author_slug,
+    } : null;
+    return articleSchema(article, author);
+  }, [article]);
+
+  const breadcrumbJsonLd = useMemo(() => {
+    if (!article || !langContent) return null;
+    return breadcrumbSchema([
+      { name: 'Accueil', url: '/' },
+      { name: 'Articles', url: '/articles' },
+      { name: langContent.title || article.title },
+    ]);
+  }, [article, langContent]);
+
   if (notFound) return <Navigate to="/articles" replace />;
 
   if (!article || !langContent) {
@@ -135,25 +154,6 @@ export default function Article() {
     month: 'long',
     day: 'numeric'
   }) : '';
-
-  // Build schemas for SEO
-  const articleJsonLd = useMemo(() => {
-    if (!article) return null;
-    const author = article.author_name ? {
-      username: article.author_name,
-      artist_slug: article.author_slug,
-    } : null;
-    return articleSchema(article, author);
-  }, [article]);
-
-  const breadcrumbJsonLd = useMemo(() => {
-    if (!article) return null;
-    return breadcrumbSchema([
-      { name: 'Accueil', url: '/' },
-      { name: 'Articles', url: '/articles' },
-      { name: langContent?.title || article.title },
-    ]);
-  }, [article, langContent]);
 
   return (
     <div style={containerStyle} className="min-h-screen bg-white dark:bg-black">
