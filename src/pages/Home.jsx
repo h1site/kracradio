@@ -609,6 +609,50 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Section Vidéos */}
+      <section className="py-20 bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+        </div>
+
+        <div className="max-w-4xl mx-auto px-5 relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-10">
+            {/* Left: Icon/Visual */}
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-2xl">
+                <svg className="w-16 h-16 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                {lang === 'en' ? 'Watch Our Videos' : lang === 'es' ? 'Mira Nuestros Videos' : 'Regardez Nos Vidéos'}
+              </h2>
+              <p className="text-lg text-white/80 mb-8 max-w-xl">
+                {lang === 'en'
+                  ? 'Discover exclusive interviews, live performances, and behind-the-scenes content from our favorite artists.'
+                  : lang === 'es'
+                  ? 'Descubre entrevistas exclusivas, actuaciones en vivo y contenido detrás de escena de nuestros artistas favoritos.'
+                  : 'Découvrez des interviews exclusives, des performances live et du contenu en coulisses de nos artistes préférés.'}
+              </p>
+              <Link
+                to="/videos"
+                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-purple-900 rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                {lang === 'en' ? 'Watch Videos' : lang === 'es' ? 'Ver Videos' : 'Voir les vidéos'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Publicité Google Ads */}
       <div className="py-10">
         <div className="px-5">
