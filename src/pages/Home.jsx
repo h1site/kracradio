@@ -58,6 +58,7 @@ export default function Home() {
   const { current, playing, playChannel, togglePlay } = useAudio();
   const [latestBlogs, setLatestBlogs] = useState([]);
   const [latestPodcasts, setLatestPodcasts] = useState([]);
+  const [latestPosts, setLatestPosts] = useState([]);
   const [showApkBanner, setShowApkBanner] = useState(true);
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
@@ -175,6 +176,41 @@ export default function Home() {
     };
 
     loadRandomPodcasts();
+  }, []);
+
+  // Charger les 5 derniers posts du feed
+  useEffect(() => {
+    const loadLatestPosts = async () => {
+      const { data: postsData } = await supabase
+        .from('posts')
+        .select('*')
+        .is('deleted_at', null)
+        .is('reply_to_id', null)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (postsData && postsData.length > 0) {
+        const userIds = [...new Set(postsData.map(p => p.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, artist_slug, avatar_url')
+          .in('id', userIds);
+
+        const profilesMap = {};
+        if (profiles) {
+          profiles.forEach(p => { profilesMap[p.id] = p; });
+        }
+
+        const postsWithAuthors = postsData.map(post => ({
+          ...post,
+          author: profilesMap[post.user_id] || null
+        }));
+
+        setLatestPosts(postsWithAuthors);
+      }
+    };
+
+    loadLatestPosts();
   }, []);
 
   const segments = useMemo(() => {
@@ -433,31 +469,95 @@ export default function Home() {
               </div>
             )}
 
-            {/* Podcasts */}
-            <div className="lg:col-span-1">
-              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6 h-full">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Podcasts en vedette</h3>
-                <div className="space-y-4">
+            {/* Podcasts & Feed Column */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Podcasts */}
+              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Podcasts en vedette</h3>
+                <div className="space-y-3">
                   {latestPodcasts.slice(0, 3).map((podcast) => (
-                    <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group flex items-center gap-4 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+                    <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group flex items-center gap-3 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
                       <img
                         src={podcast.image_url}
                         alt={podcast.title}
-                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-red-500 line-clamp-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-red-500 line-clamp-2">
                           {podcast.title}
                         </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                          {podcast.description}
-                        </p>
                       </div>
                     </Link>
                   ))}
                 </div>
-                <Link to="/podcasts" className="mt-6 block text-center w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors">
-                  Tous les podcasts
+                <Link to="/podcasts" className="mt-4 block text-center w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
+                  {t.home?.viewAll || 'Voir tout'}
+                </Link>
+              </div>
+
+              {/* Feed */}
+              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.feed?.title || 'Feed'}</h3>
+                <div className="space-y-3">
+                  {latestPosts.slice(0, 5).map((post) => {
+                    const author = post.author;
+                    const profileLink = author?.artist_slug
+                      ? `/profile/${author.artist_slug}`
+                      : `/profile/${post.user_id}`;
+
+                    // Format relative time
+                    const getRelativeTime = (dateString) => {
+                      const date = new Date(dateString);
+                      const now = new Date();
+                      const diff = now - date;
+                      const minutes = Math.floor(diff / 60000);
+                      const hours = Math.floor(diff / 3600000);
+                      const days = Math.floor(diff / 86400000);
+                      if (minutes < 60) return `${minutes}m`;
+                      if (hours < 24) return `${hours}h`;
+                      return `${days}d`;
+                    };
+
+                    return (
+                      <div key={post.id} className="group p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <Link to={profileLink} className="shrink-0">
+                            {author?.avatar_url ? (
+                              <img
+                                src={author.avatar_url}
+                                alt={author.username}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+                                {author?.username?.[0]?.toUpperCase() || '?'}
+                              </div>
+                            )}
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Link to={profileLink} className="font-semibold text-sm text-gray-900 dark:text-white hover:underline truncate">
+                                {author?.username || 'User'}
+                              </Link>
+                              <span className="text-xs text-gray-400">·</span>
+                              <span className="text-xs text-gray-400">{getRelativeTime(post.created_at)}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">
+                              {post.content}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {latestPosts.length === 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                      {t.feed?.noPosts || 'Aucun post'}
+                    </p>
+                  )}
+                </div>
+                <Link to="/feed" className="mt-4 block text-center w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
+                  {t.home?.viewAll || 'Voir tout'}
                 </Link>
               </div>
             </div>
