@@ -374,34 +374,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Soumettre Musique à la Radio */}
-      <section className="py-16 bg-gray-900 text-white dark">
-        <div className="max-w-4xl mx-auto text-center px-5">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-            {t.home?.submitMusicTitle || 'Soumettez votre musique'}
-          </h2>
-          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-            {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/submit-music"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
-            </Link>
-            <Link
-              to="/artists"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-gray-600 text-white rounded-full font-bold text-lg hover:bg-gray-800 transition-colors"
-            >
-              {t.home?.discoverArtists || 'Découvrir les artistes'}
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Carrousel des chaînes */}
-      <section className="w-full relative z-10 overflow-visible py-16 bg-gray-100 dark:bg-gray-900">
+      <section className="w-full relative z-10 overflow-visible py-16 bg-gray-100 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
             {t.home?.channelsHeading || 'Nos Chaînes Musicales'}
@@ -412,6 +386,32 @@ export default function Home() {
         </div>
         <div className="overflow-visible">
           <ChannelCarousel channels={channels} />
+        </div>
+      </section>
+
+      {/* Section Soumettre Musique à la Radio */}
+      <section className="py-16 bg-gradient-to-br from-red-900 via-red-800 to-orange-900 text-white">
+        <div className="max-w-4xl mx-auto text-center px-5">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+            {t.home?.submitMusicTitle || 'Soumettez votre musique'}
+          </h2>
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+            {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/submit-music"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-red-900 rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
+            </Link>
+            <Link
+              to="/artists"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/50 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors"
+            >
+              {t.home?.discoverArtists || 'Découvrir les artistes'}
+            </Link>
+          </div>
         </div>
       </section>
 
