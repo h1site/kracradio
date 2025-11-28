@@ -374,13 +374,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Carrousel des chaînes */}
-      <section className="w-full relative z-10 overflow-visible py-16 bg-gray-100 dark:bg-gray-800">
+      {/* Carrousel des chaînes - Background #1E1E1E */}
+      <section className="w-full relative z-10 overflow-visible py-16" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             {t.home?.channelsHeading || 'Nos Chaînes Musicales'}
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-gray-400">
             Explorez notre sélection de chaînes thématiques pour tous les goûts.
           </p>
         </div>
@@ -389,8 +389,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Soumettre Musique à la Radio */}
-      <section className="py-16 bg-gradient-to-br from-red-900 via-red-800 to-orange-900 text-white">
+      {/* Section Soumettre Musique à la Radio - Background #931F19 */}
+      <section className="py-16 text-white" style={{ backgroundColor: '#931F19' }}>
         <div className="max-w-4xl mx-auto text-center px-5">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             {t.home?.submitMusicTitle || 'Soumettez votre musique'}
@@ -401,7 +401,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/submit-music"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-red-900 rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
             </Link>
@@ -416,14 +416,14 @@ export default function Home() {
       </section>
 
 
-      {/* Section Articles */}
-      <section className="w-full py-16 px-4 md:px-8">
+      {/* Section Articles - Background #1E1E1E */}
+      <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+            <h2 className="text-3xl md:text-4xl font-black text-white">
               {lang === 'en' ? 'Latest Articles' : lang === 'es' ? 'Últimos Artículos' : 'Derniers Articles'}
             </h2>
-            <Link to="/articles" className="text-red-500 font-semibold hover:underline">
+            <Link to="/articles" className="text-red-400 font-semibold hover:underline">
               {t.home?.viewAll || 'Voir tout'} →
             </Link>
           </div>
@@ -458,21 +458,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Podcasts */}
-      <section className="w-full py-16 px-4 md:px-8 bg-gray-100 dark:bg-gray-900">
+      {/* Section Podcasts - Background #931F19 */}
+      <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#931F19' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+            <h2 className="text-3xl md:text-4xl font-black text-white">
               {lang === 'en' ? 'Featured Podcasts' : lang === 'es' ? 'Podcasts Destacados' : 'Podcasts en Vedette'}
             </h2>
-            <Link to="/podcasts" className="text-red-500 font-semibold hover:underline">
+            <Link to="/podcasts" className="text-white/80 font-semibold hover:text-white hover:underline">
               {t.home?.viewAll || 'Voir tout'} →
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {latestPodcasts.slice(0, 3).map((podcast) => (
-              <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group block bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group block bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-white/10">
                 <div className="aspect-square overflow-hidden">
                   <img
                     src={podcast.image_url}
@@ -481,10 +481,10 @@ export default function Home() {
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-red-500 transition-colors line-clamp-2">
+                  <h3 className="font-bold text-white group-hover:text-white/80 transition-colors line-clamp-2">
                     {podcast.title}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                  <p className="text-sm text-white/70 mt-1 line-clamp-2">
                     {podcast.description}
                   </p>
                 </div>
@@ -494,14 +494,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Feed */}
-      <section className="w-full py-16 px-4 md:px-8">
+      {/* Section Feed - Background #1E1E1E */}
+      <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+            <h2 className="text-3xl md:text-4xl font-black text-white">
               {t.feed?.title || 'Feed'}
             </h2>
-            <Link to="/feed" className="text-red-500 font-semibold hover:underline">
+            <Link to="/feed" className="text-red-400 font-semibold hover:underline">
               {t.home?.viewAll || 'Voir tout'} →
             </Link>
           </div>
@@ -521,7 +521,7 @@ export default function Home() {
               };
 
               return (
-                <div key={post.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div key={post.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-colors">
                   <div className="flex items-start gap-3">
                     <Link to={profileLink} className="shrink-0">
                       {author?.avatar_url ? (
@@ -534,13 +534,13 @@ export default function Home() {
                     </Link>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Link to={profileLink} className="font-semibold text-gray-900 dark:text-white hover:underline">
+                        <Link to={profileLink} className="font-semibold text-white hover:underline">
                           {author?.username || 'User'}
                         </Link>
-                        <span className="text-gray-400">·</span>
-                        <span className="text-sm text-gray-400">{getRelativeTime(post.created_at)}</span>
+                        <span className="text-gray-500">·</span>
+                        <span className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</span>
                       </div>
-                      <p className="text-gray-700 dark:text-gray-300 line-clamp-3">
+                      <p className="text-gray-300 line-clamp-3">
                         {post.content}
                       </p>
                     </div>
@@ -549,7 +549,7 @@ export default function Home() {
               );
             })}
             {latestPosts.length === 0 && (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+              <p className="text-center text-gray-500 py-8">
                 {t.feed?.noPosts || 'Aucun post'}
               </p>
             )}
@@ -557,8 +557,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Vidéos */}
-      <section className="py-20 bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 relative overflow-hidden">
+      {/* Section Vidéos - Background #931F19 */}
+      <section className="py-20 relative overflow-hidden" style={{ backgroundColor: '#931F19' }}>
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
@@ -589,7 +589,7 @@ export default function Home() {
               </p>
               <Link
                 to="/videos"
-                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-purple-900 rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
@@ -601,15 +601,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Publicité Google Ads */}
-      <div className="py-10">
+      {/* Publicité Google Ads - Background #1E1E1E */}
+      <div className="py-10" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="px-5">
           <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
         </div>
       </div>
 
-      {/* Sponsors Section */}
-      <section className="py-16 bg-gray-900">
+      {/* Sponsors Section - Background #1E1E1E (continuation) */}
+      <section className="py-16" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-4xl mx-auto px-5">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
@@ -618,7 +618,7 @@ export default function Home() {
           </div>
 
           {/* H1Site Sponsor */}
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700 mb-8">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/10 mb-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <a href="https://h1site.com" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 hover:opacity-80 transition-opacity">
                 <img
@@ -651,7 +651,7 @@ export default function Home() {
           </div>
 
           {/* Become a Sponsor CTA */}
-          <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-8 text-center text-white">
+          <div className="rounded-2xl p-8 text-center text-white" style={{ backgroundColor: '#931F19' }}>
             <h3 className="text-2xl font-bold mb-3">
               {lang === 'en'
                 ? 'Want to sponsor KracRadio?'
@@ -668,7 +668,7 @@ export default function Home() {
             </p>
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-white text-red-600 rounded-full font-bold hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-white text-[#931F19] rounded-full font-bold hover:bg-gray-100 transition-colors"
             >
               {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
