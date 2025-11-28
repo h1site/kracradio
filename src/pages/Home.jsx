@@ -656,7 +656,7 @@ export default function Home() {
       {storeProducts.length > 0 && (
         <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-3xl md:text-4xl font-black text-white">
                 {lang === 'en' ? 'Store' : lang === 'es' ? 'Tienda' : 'Boutique'}
               </h2>
@@ -670,35 +670,81 @@ export default function Home() {
               </a>
             </div>
 
+            {/* Black Friday / Cyber Monday Banner */}
+            <div className="mb-8 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 rounded-xl p-4 md:p-6 text-center relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)' }} />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-2xl">🔥</span>
+                  <span className="text-lg md:text-xl font-black text-white uppercase tracking-wider">
+                    Black Friday & Cyber Monday
+                  </span>
+                  <span className="text-2xl">🔥</span>
+                </div>
+                <p className="text-white text-2xl md:text-3xl font-black">
+                  {lang === 'en' ? '15% OFF on everything!' : lang === 'es' ? '¡15% DE DESCUENTO en todo!' : '15% DE RABAIS sur tout!'}
+                </p>
+                <p className="text-white/80 text-sm mt-2">
+                  {lang === 'en' ? 'Limited time offer' : lang === 'es' ? 'Oferta por tiempo limitado' : 'Offre à durée limitée'}
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              {storeProducts.slice(0, 5).map((product, index) => (
-                <a
-                  key={product.id}
-                  href={`https://store.kracradio.com/products/${product.handle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`group block bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all hover:border-white/20 ${index === 4 ? 'hidden sm:block' : ''}`}
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img
-                      src={product.image_url || '/images/default-cover.jpg'}
-                      alt={product.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
-                      {product.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 line-clamp-1 mt-1">
-                      {product.vendor}
-                    </p>
-                    <p className="text-sm font-bold text-red-400 mt-2">
-                      ${parseFloat(product.price || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </a>
-              ))}
+              {storeProducts.slice(0, 5).map((product, index) => {
+                const currentPrice = parseFloat(product.price || 0);
+                const comparePrice = product.compare_at_price ? parseFloat(product.compare_at_price) : null;
+                const hasDiscount = comparePrice && comparePrice > currentPrice;
+
+                return (
+                  <a
+                    key={product.id}
+                    href={`https://store.kracradio.com/products/${product.handle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group block bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all hover:border-white/20 ${index === 4 ? 'hidden sm:block' : ''}`}
+                  >
+                    <div className="aspect-square overflow-hidden relative">
+                      <img
+                        src={product.image_url || '/images/default-cover.jpg'}
+                        alt={product.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      {hasDiscount && (
+                        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                          -15%
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
+                        {product.title}
+                      </h3>
+                      <p className="text-xs text-gray-400 line-clamp-1 mt-1">
+                        {product.vendor}
+                      </p>
+                      <div className="mt-2">
+                        {hasDiscount ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-red-400">
+                              ${currentPrice.toFixed(2)}
+                            </span>
+                            <span className="text-xs text-gray-500 line-through">
+                              ${comparePrice.toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-bold text-red-400">
+                            ${currentPrice.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
 
             <div className="text-center mt-8">

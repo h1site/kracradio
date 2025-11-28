@@ -57,6 +57,7 @@ serve(async (req) => {
       title: product.title,
       vendor: product.vendor,
       price: product.variants?.[0]?.price || '0.00',
+      compare_at_price: product.variants?.[0]?.compare_at_price || null,
       image_url: product.image?.src || product.images?.[0]?.src || null,
       handle: product.handle,
       product_type: product.product_type,
