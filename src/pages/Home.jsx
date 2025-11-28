@@ -496,7 +496,7 @@ export default function Home() {
 
       {/* Section Feed - Background #1E1E1E */}
       <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl md:text-4xl font-black text-white">
               {t.feed?.title || 'Feed'}
