@@ -630,14 +630,14 @@ export default function Home() {
             {/* Right: Content */}
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-                {lang === 'en' ? 'Watch Our Videos' : lang === 'es' ? 'Mira Nuestros Videos' : 'Regardez Nos Vidéos'}
+                {lang === 'en' ? 'Music Videos' : lang === 'es' ? 'Videos Musicales' : 'Clips Musicaux'}
               </h2>
               <p className="text-lg text-white/80 mb-8 max-w-xl">
                 {lang === 'en'
-                  ? 'Discover exclusive interviews, live performances, and behind-the-scenes content from our favorite artists.'
+                  ? 'Watch the best music videos from artists featured on KracRadio.'
                   : lang === 'es'
-                  ? 'Descubre entrevistas exclusivas, actuaciones en vivo y contenido detrás de escena de nuestros artistas favoritos.'
-                  : 'Découvrez des interviews exclusives, des performances live et du contenu en coulisses de nos artistes préférés.'}
+                  ? 'Mira los mejores videos musicales de los artistas destacados en KracRadio.'
+                  : 'Regardez les meilleurs clips musicaux des artistes diffusés sur KracRadio.'}
               </p>
               <Link
                 to="/videos"
@@ -646,7 +646,7 @@ export default function Home() {
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
-                {lang === 'en' ? 'Watch Videos' : lang === 'es' ? 'Ver Videos' : 'Voir les vidéos'}
+                {lang === 'en' ? 'Watch Videos' : lang === 'es' ? 'Ver Videos' : 'Voir les clips'}
               </Link>
             </div>
           </div>
