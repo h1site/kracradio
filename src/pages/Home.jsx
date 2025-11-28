@@ -389,9 +389,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Soumettre Musique à la Radio - Background #931F19 */}
-      <section className="py-16 text-white" style={{ backgroundColor: '#931F19' }}>
-        <div className="max-w-4xl mx-auto text-center px-5">
+      {/* Section Soumettre Musique à la Radio - Background avec image */}
+      <section
+        className="py-16 text-white relative"
+        style={{
+          backgroundImage: 'url(/images/concert-bg.jpg)',
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(147, 31, 25, 0.85)' }} />
+        <div className="max-w-4xl mx-auto text-center px-5 relative z-10">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             {t.home?.submitMusicTitle || 'Soumettez votre musique'}
           </h2>
@@ -458,9 +467,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Podcasts - Background #931F19 */}
-      <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#931F19' }}>
-        <div className="max-w-7xl mx-auto">
+      {/* Section Podcasts - Background avec image */}
+      <section
+        className="w-full py-16 px-4 md:px-8 relative"
+        style={{
+          backgroundImage: 'url(/images/concert-bg.jpg)',
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(147, 31, 25, 0.85)' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl md:text-4xl font-black text-white">
               {lang === 'en' ? 'Featured Podcasts' : lang === 'es' ? 'Podcasts Destacados' : 'Podcasts en Vedette'}
@@ -557,13 +575,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Vidéos - Background #931F19 */}
-      <section className="py-20 relative overflow-hidden" style={{ backgroundColor: '#931F19' }}>
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
-        </div>
-
+      {/* Section Vidéos - Background avec image */}
+      <section
+        className="py-20 relative overflow-hidden"
+        style={{
+          backgroundImage: 'url(/images/concert-bg.jpg)',
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(147, 31, 25, 0.85)' }} />
         <div className="max-w-4xl mx-auto px-5 relative z-10">
           <div className="flex flex-col md:flex-row items-center gap-10">
             {/* Left: Icon/Visual */}
@@ -651,29 +673,39 @@ export default function Home() {
           </div>
 
           {/* Become a Sponsor CTA */}
-          <div className="rounded-2xl p-8 text-center text-white" style={{ backgroundColor: '#931F19' }}>
-            <h3 className="text-2xl font-bold mb-3">
-              {lang === 'en'
-                ? 'Want to sponsor KracRadio?'
-                : lang === 'es'
-                ? '¿Quieres patrocinar KracRadio?'
-                : 'Vous voulez commanditer KracRadio?'}
-            </h3>
-            <p className="text-white/90 mb-6 max-w-xl mx-auto">
-              {lang === 'en'
-                ? 'Join our sponsors and reach thousands of music lovers. Contact us to learn more about sponsorship opportunities.'
-                : lang === 'es'
-                ? 'Únete a nuestros patrocinadores y llega a miles de amantes de la música. Contáctanos para conocer las oportunidades de patrocinio.'
-                : 'Rejoignez nos commanditaires et rejoignez des milliers d\'amateurs de musique. Contactez-nous pour en savoir plus sur les opportunités de commandite.'}
-            </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-white text-[#931F19] rounded-full font-bold hover:bg-gray-100 transition-colors"
-            >
-              {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+          <div
+            className="rounded-2xl p-8 text-center text-white relative overflow-hidden"
+            style={{
+              backgroundImage: 'url(/images/concert-bg.jpg)',
+              backgroundAttachment: 'fixed',
+              backgroundPosition: 'center',
+              backgroundSize: 'cover'
+            }}
+          >
+            <div className="absolute inset-0 rounded-2xl" style={{ backgroundColor: 'rgba(147, 31, 25, 0.9)' }} />
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-3">
+                {lang === 'en'
+                  ? 'Want to sponsor KracRadio?'
+                  : lang === 'es'
+                  ? '¿Quieres patrocinar KracRadio?'
+                  : 'Vous voulez commanditer KracRadio?'}
+              </h3>
+              <p className="text-white/90 mb-6 max-w-xl mx-auto">
+                {lang === 'en'
+                  ? 'Join our sponsors and reach thousands of music lovers. Contact us to learn more about sponsorship opportunities.'
+                  : lang === 'es'
+                  ? 'Únete a nuestros patrocinadores y llega a miles de amantes de la música. Contáctanos para conocer las oportunidades de patrocinio.'
+                  : 'Rejoignez nos commanditaires et rejoignez des milliers d\'amateurs de musique. Contactez-nous pour en savoir plus sur les opportunités de commandite.'}
+              </p>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-[#931F19] rounded-full font-bold hover:bg-gray-100 transition-colors"
+              >
+                {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
             </Link>
           </div>
         </div>
