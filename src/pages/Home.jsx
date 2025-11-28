@@ -634,10 +634,10 @@ export default function Home() {
               </h2>
               <p className="text-lg text-white/80 mb-8 max-w-xl">
                 {lang === 'en'
-                  ? 'Watch the best music videos from artists featured on KracRadio.'
+                  ? 'Watch the best music videos from artists featured on KracRadio. Like and build your playlist!'
                   : lang === 'es'
-                  ? 'Mira los mejores videos musicales de los artistas destacados en KracRadio.'
-                  : 'Regardez les meilleurs clips musicaux des artistes diffusés sur KracRadio.'}
+                  ? 'Mira los mejores videos musicales de los artistas destacados en KracRadio. ¡Dale like y crea tu playlist!'
+                  : 'Regardez les meilleurs clips musicaux des artistes diffusés sur KracRadio. Likez et construisez votre playlist!'}
               </p>
               <Link
                 to="/videos"
