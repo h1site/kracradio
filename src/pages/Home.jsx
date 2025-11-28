@@ -416,195 +416,143 @@ export default function Home() {
       </section>
 
 
-      {/* Section Articles & Podcasts - Magazine Style */}
-      <section className="w-full relative z-10 overflow-visible py-16 px-[10px]">
-        <div>
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
-              Dernières Nouvelles
+      {/* Section Articles */}
+      <section className="w-full py-16 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+              {lang === 'en' ? 'Latest Articles' : lang === 'es' ? 'Últimos Artículos' : 'Derniers Articles'}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Les dernières nouvelles et podcasts de la scène musicale.
-            </p>
+            <Link to="/articles" className="text-red-500 font-semibold hover:underline">
+              {t.home?.viewAll || 'Voir tout'} →
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Featured Article */}
-            {latestBlogs.length > 0 && (
-              <div className="lg:col-span-2">
-                <Link to={`/article/${latestBlogs[0].slug}`} className="group block">
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                    <img
-                      src={latestBlogs[0].featured_image || latestBlogs[0].cover_url}
-                      alt={latestBlogs[0].title}
-                      className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-8">
-                      {/* Author info */}
-                      <div className="flex items-center gap-3 mb-4">
-                        {latestBlogs[0].author_avatar && (
-                          <img
-                            src={latestBlogs[0].author_avatar}
-                            alt={latestBlogs[0].author_name || 'Author'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
-                          />
-                        )}
-                        <div className="text-sm">
-                          <div className="font-semibold text-white">
-                            {latestBlogs[0].author_name || 'Auteur'}
-                          </div>
-                        </div>
-                      </div>
-
-                      <h3 className="text-3xl font-black text-white leading-tight drop-shadow-lg">
-                        {latestBlogs[0].title}
-                      </h3>
-                      <p className="text-gray-300 mt-2 line-clamp-2">
-                        {latestBlogs[0].excerpt}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
-
-            {/* Podcasts & Feed Column */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Podcasts */}
-              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Podcasts en vedette</h3>
-                <div className="space-y-3">
-                  {latestPodcasts.slice(0, 3).map((podcast) => (
-                    <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group flex items-center gap-3 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-                      <img
-                        src={podcast.image_url}
-                        alt={podcast.title}
-                        className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-red-500 line-clamp-2">
-                          {podcast.title}
-                        </h4>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <Link to="/podcasts" className="mt-4 block text-center w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
-                  {t.home?.viewAll || 'Voir tout'}
-                </Link>
-              </div>
-
-              {/* Feed */}
-              <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.feed?.title || 'Feed'}</h3>
-                <div className="space-y-3">
-                  {latestPosts.slice(0, 5).map((post) => {
-                    const author = post.author;
-                    const profileLink = author?.artist_slug
-                      ? `/profile/${author.artist_slug}`
-                      : `/profile/${post.user_id}`;
-
-                    // Format relative time
-                    const getRelativeTime = (dateString) => {
-                      const date = new Date(dateString);
-                      const now = new Date();
-                      const diff = now - date;
-                      const minutes = Math.floor(diff / 60000);
-                      const hours = Math.floor(diff / 3600000);
-                      const days = Math.floor(diff / 86400000);
-                      if (minutes < 60) return `${minutes}m`;
-                      if (hours < 24) return `${hours}h`;
-                      return `${days}d`;
-                    };
-
-                    return (
-                      <div key={post.id} className="group p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <Link to={profileLink} className="shrink-0">
-                            {author?.avatar_url ? (
-                              <img
-                                src={author.avatar_url}
-                                alt={author.username}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
-                                {author?.username?.[0]?.toUpperCase() || '?'}
-                              </div>
-                            )}
-                          </Link>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <Link to={profileLink} className="font-semibold text-sm text-gray-900 dark:text-white hover:underline truncate">
-                                {author?.username || 'User'}
-                              </Link>
-                              <span className="text-xs text-gray-400">·</span>
-                              <span className="text-xs text-gray-400">{getRelativeTime(post.created_at)}</span>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">
-                              {post.content}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {latestPosts.length === 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                      {t.feed?.noPosts || 'Aucun post'}
-                    </p>
-                  )}
-                </div>
-                <Link to="/feed" className="mt-4 block text-center w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
-                  {t.home?.viewAll || 'Voir tout'}
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Other articles */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            {latestBlogs.slice(1, 4).map((article) => (
-              <Link key={article.id} to={`/article/${article.slug}`} className="group block">
-                <div className="relative rounded-xl overflow-hidden shadow-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {latestBlogs.slice(0, 4).map((article, idx) => (
+              <Link key={article.id} to={`/article/${article.slug}`} className={`group block ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
+                <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
                   <img
                     src={article.featured_image || article.cover_url}
                     alt={article.title}
-                    className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 absolute inset-0"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-4">
-                    {/* Author info */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
                     {article.author_name && (
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-2">
                         {article.author_avatar && (
-                          <img
-                            src={article.author_avatar}
-                            alt={article.author_name}
-                            className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
-                          />
+                          <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
                         )}
-                        <div className="text-xs font-semibold text-white">
-                          {article.author_name}
-                        </div>
+                        <span className="text-xs text-white/80">{article.author_name}</span>
                       </div>
                     )}
-                    <h4 className="font-bold text-white leading-tight drop-shadow-md">
+                    <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
                       {article.title}
-                    </h4>
+                    </h3>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
-           <div className="mt-12 text-center">
-              <Link
-              to="/articles"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-800 text-white rounded-full font-bold text-lg hover:bg-black transition-all"
-              >
-              {t.home?.viewAll || 'Voir tous les articles'}
+        </div>
+      </section>
+
+      {/* Section Podcasts */}
+      <section className="w-full py-16 px-4 md:px-8 bg-gray-100 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+              {lang === 'en' ? 'Featured Podcasts' : lang === 'es' ? 'Podcasts Destacados' : 'Podcasts en Vedette'}
+            </h2>
+            <Link to="/podcasts" className="text-red-500 font-semibold hover:underline">
+              {t.home?.viewAll || 'Voir tout'} →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {latestPodcasts.slice(0, 3).map((podcast) => (
+              <Link key={podcast.id} to={`/podcast/${podcast.id}`} className="group block bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={podcast.image_url}
+                    alt={podcast.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-red-500 transition-colors line-clamp-2">
+                    {podcast.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                    {podcast.description}
+                  </p>
+                </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section Feed */}
+      <section className="w-full py-16 px-4 md:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+              {t.feed?.title || 'Feed'}
+            </h2>
+            <Link to="/feed" className="text-red-500 font-semibold hover:underline">
+              {t.home?.viewAll || 'Voir tout'} →
+            </Link>
+          </div>
+
+          <div className="space-y-4">
+            {latestPosts.slice(0, 5).map((post) => {
+              const author = post.author;
+              const profileLink = author?.artist_slug ? `/profile/${author.artist_slug}` : `/profile/${post.user_id}`;
+              const getRelativeTime = (dateString) => {
+                const diff = Date.now() - new Date(dateString).getTime();
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                if (minutes < 60) return `${minutes}m`;
+                if (hours < 24) return `${hours}h`;
+                return `${days}d`;
+              };
+
+              return (
+                <div key={post.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3">
+                    <Link to={profileLink} className="shrink-0">
+                      {author?.avatar_url ? (
+                        <img src={author.avatar_url} alt={author.username} className="w-12 h-12 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                          {author?.username?.[0]?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link to={profileLink} className="font-semibold text-gray-900 dark:text-white hover:underline">
+                          {author?.username || 'User'}
+                        </Link>
+                        <span className="text-gray-400">·</span>
+                        <span className="text-sm text-gray-400">{getRelativeTime(post.created_at)}</span>
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 line-clamp-3">
+                        {post.content}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {latestPosts.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                {t.feed?.noPosts || 'Aucun post'}
+              </p>
+            )}
           </div>
         </div>
       </section>
