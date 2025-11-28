@@ -126,15 +126,24 @@ export default function ChannelCarousel({ channels }) {
     animateMomentum();
   };
 
-  const onWheel = (e) => {
+  // Utiliser useEffect pour attacher wheel avec passive: false
+  useEffect(() => {
     if (isMobile) return;
-    e.preventDefault();
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    st.current.v = delta * 5;
-    st.current.tx = clamp(st.current.tx - delta * 1.5, st.current.min - 200, st.current.max + 200);
-    applyTx(st.current.tx);
-    animateMomentum();
-  };
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      st.current.v = delta * 5;
+      st.current.tx = clamp(st.current.tx - delta * 1.5, st.current.min - 200, st.current.max + 200);
+      applyTx(st.current.tx);
+      animateMomentum();
+    };
+
+    viewport.addEventListener('wheel', handleWheel, { passive: false });
+    return () => viewport.removeEventListener('wheel', handleWheel);
+  }, [isMobile]);
 
   // Mobile: utilise scroll natif avec -webkit-overflow-scrolling
   if (isMobile) {
@@ -174,7 +183,6 @@ export default function ChannelCarousel({ channels }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onWheel={onWheel}
       >
         <div
           ref={rowRef}

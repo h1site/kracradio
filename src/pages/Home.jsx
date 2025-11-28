@@ -12,7 +12,7 @@ import PodcastCarousel from '../components/PodcastCarousel';
 import GoogleAd from '../components/ads/GoogleAd';
 import daily from '../data/daily-schedule.json';
 import { useAudio } from '../context/AudioPlayerContext';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 
 const KRAC_KEY = 'kracradio';
 
@@ -59,6 +59,7 @@ export default function Home() {
   const [latestBlogs, setLatestBlogs] = useState([]);
   const [latestPodcasts, setLatestPodcasts] = useState([]);
   const [latestPosts, setLatestPosts] = useState([]);
+  const [storeProducts, setStoreProducts] = useState([]);
   const [showApkBanner, setShowApkBanner] = useState(true);
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
@@ -211,6 +212,34 @@ export default function Home() {
     };
 
     loadLatestPosts();
+  }, []);
+
+  // Charger 5 produits random de la boutique Shopify
+  useEffect(() => {
+    const loadStoreProducts = async () => {
+      if (!SUPABASE_FUNCTIONS_URL) return;
+      try {
+        const response = await fetch(
+          `${SUPABASE_FUNCTIONS_URL}/shopify-get-products?limit=5`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.products && data.products.length > 0) {
+            setStoreProducts(data.products);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading store products:', error);
+      }
+    };
+    loadStoreProducts();
   }, []);
 
   const segments = useMemo(() => {
@@ -623,14 +652,73 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Publicité Google Ads - Background #1E1E1E */}
-      <div className="py-10" style={{ backgroundColor: '#1E1E1E' }}>
-        <div className="px-5">
-          <GoogleAd slot="3411355648" className="mx-auto max-w-5xl" />
-        </div>
-      </div>
+      {/* Section Boutique - Background #1E1E1E */}
+      {storeProducts.length > 0 && (
+        <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl md:text-4xl font-black text-white">
+                {lang === 'en' ? 'Store' : lang === 'es' ? 'Tienda' : 'Boutique'}
+              </h2>
+              <a
+                href="https://store.kracradio.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-red-400 font-semibold hover:underline"
+              >
+                {lang === 'en' ? 'Visit Store' : lang === 'es' ? 'Visitar Tienda' : 'Visiter la boutique'} →
+              </a>
+            </div>
 
-      {/* Sponsors Section - Background #1E1E1E (continuation) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              {storeProducts.slice(0, 5).map((product, index) => (
+                <a
+                  key={product.id}
+                  href={`https://store.kracradio.com/products/${product.handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`group block bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all hover:border-white/20 ${index === 4 ? 'hidden sm:block' : ''}`}
+                >
+                  <div className="aspect-square overflow-hidden">
+                    <img
+                      src={product.image_url || '/images/default-cover.jpg'}
+                      alt={product.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
+                      {product.title}
+                    </h3>
+                    <p className="text-xs text-gray-400 line-clamp-1 mt-1">
+                      {product.vendor}
+                    </p>
+                    <p className="text-sm font-bold text-red-400 mt-2">
+                      ${parseFloat(product.price || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <a
+                href="https://store.kracradio.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                {lang === 'en' ? 'Go to Store' : lang === 'es' ? 'Ir a la Tienda' : 'Aller à la boutique'}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Sponsors Section - Background #1E1E1E */}
       <section className="py-16" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-4xl mx-auto px-5">
           <div className="text-center mb-10">
@@ -708,6 +796,11 @@ export default function Home() {
                 </svg>
               </Link>
             </div>
+          </div>
+
+          {/* Google Ads */}
+          <div className="mt-10">
+            <GoogleAd slot="3411355648" className="mx-auto" />
           </div>
         </div>
       </section>
