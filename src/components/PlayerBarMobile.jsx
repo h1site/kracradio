@@ -60,15 +60,34 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
   const [duration, setDuration] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showChannelPicker, setShowChannelPicker] = useState(false);
+  const [showChannelBanner, setShowChannelBanner] = useState(false);
+  const [bannerChannel, setBannerChannel] = useState(null);
   const tickRef = useRef(null);
   const menuRef = useRef(null);
   const channelPickerRef = useRef(null);
+  const bannerTimeoutRef = useRef(null);
 
   // Get current channel index
   const currentChannelIndex = useMemo(() => {
     if (!current?.key) return -1;
     return channels.findIndex(c => c.key === current.key);
   }, [current?.key]);
+
+  // Show channel banner when channel changes
+  const showBanner = useCallback((channel) => {
+    // Clear any existing timeout
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+    }
+
+    setBannerChannel(channel);
+    setShowChannelBanner(true);
+
+    // Hide banner after 2.5 seconds
+    bannerTimeoutRef.current = setTimeout(() => {
+      setShowChannelBanner(false);
+    }, 2500);
+  }, []);
 
   // Switch to next/previous channel
   const switchChannel = useCallback((direction) => {
@@ -84,8 +103,18 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
     const newChannel = channels[newIndex];
     if (newChannel) {
       playChannel(newChannel.key);
+      showBanner(newChannel);
     }
-  }, [currentType, currentChannelIndex, playChannel]);
+  }, [currentType, currentChannelIndex, playChannel, showBanner]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (bannerTimeoutRef.current) {
+        clearTimeout(bannerTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 1) Poll AzuraCast toutes les 15s (titre / artiste / pochette + elapsed/duration si dispo)
   useEffect(() => {
@@ -182,7 +211,33 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
 
   return (
     // ⚠️ Ce composant est pensé pour être inclus dans un conteneur fixe (PlayerBar) — pas de position fixed ici.
-    <div className="md:hidden h-16 px-3 flex items-center gap-2">
+    <div className="md:hidden h-16 px-3 flex items-center gap-2 relative">
+      {/* Channel Banner - appears when switching channels */}
+      {showChannelBanner && bannerChannel && (
+        <div
+          className={`absolute left-0 right-0 bottom-full mb-1 mx-3 bg-black/95 backdrop-blur-sm rounded-lg border border-white/20 shadow-2xl overflow-hidden z-50 transition-all duration-300 ${
+            showChannelBanner ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+          }`}
+        >
+          <div className="flex items-center gap-3 p-3">
+            <img
+              src={bannerChannel.image || '/channels/default.webp'}
+              alt={bannerChannel.name}
+              className="w-14 h-14 rounded-lg object-cover border border-white/10"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-white/60 uppercase tracking-wider font-medium mb-1">
+                Chaîne
+              </div>
+              <div className="text-white font-bold text-lg truncate">
+                {bannerChannel.name}
+              </div>
+            </div>
+            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+          </div>
+        </div>
+      )}
+
       {/* Channel switcher area */}
       <div className="relative flex items-center gap-1 shrink-0" ref={channelPickerRef}>
         {/* Prev Channel Button */}
