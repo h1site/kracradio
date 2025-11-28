@@ -240,7 +240,7 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
 
       {/* Channel switcher area */}
       <div className="relative flex items-center gap-1 shrink-0" ref={channelPickerRef}>
-        {/* Prev Channel Button */}
+        {/* Prev Channel Button - only in radio mode */}
         {isRadioMode && (
           <button
             type="button"
@@ -254,21 +254,36 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
           </button>
         )}
 
-        {/* Jaquette - clickable pour ouvrir le picker */}
-        <button
-          type="button"
-          onClick={() => isRadioMode && setShowChannelPicker(!showChannelPicker)}
-          className={`w-12 h-12 rounded border border-white/10 overflow-hidden shrink-0 ${isRadioMode ? 'cursor-pointer hover:border-white/30 transition-colors' : ''}`}
-        >
-          <img
-            src={art}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-cover"
-          />
-        </button>
+        {/* Jaquette ou bouton Radio selon le mode */}
+        {isLikedSong ? (
+          // En mode liked song/podcast: bouton pour lancer une chaîne radio
+          <button
+            type="button"
+            onClick={() => setShowChannelPicker(!showChannelPicker)}
+            className="w-12 h-12 rounded border-2 border-dashed border-red-500/50 bg-red-500/10 flex items-center justify-center shrink-0 cursor-pointer hover:border-red-500 hover:bg-red-500/20 transition-all group"
+            aria-label="Écouter la radio"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform" fill="currentColor">
+              <path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12c0 1.1.89 2 2 2h16c1.11 0 2-.9 2-2V8c0-1.11-.89-2-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15zM7 20c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-8h-2v-2h-2v2H4V8h16v4z"/>
+            </svg>
+          </button>
+        ) : (
+          // En mode radio: jaquette clickable pour ouvrir le picker
+          <button
+            type="button"
+            onClick={() => setShowChannelPicker(!showChannelPicker)}
+            className="w-12 h-12 rounded border border-white/10 overflow-hidden shrink-0 cursor-pointer hover:border-white/30 transition-colors"
+          >
+            <img
+              src={art}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+          </button>
+        )}
 
-        {/* Next Channel Button */}
+        {/* Next Channel Button - only in radio mode */}
         {isRadioMode && (
           <button
             type="button"
@@ -282,8 +297,8 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
           </button>
         )}
 
-        {/* Channel Picker Popup */}
-        {showChannelPicker && isRadioMode && (
+        {/* Channel Picker Popup - available in all modes now */}
+        {showChannelPicker && (
           <div className="absolute bottom-full left-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden w-[280px] max-h-[300px] overflow-y-auto z-50">
             <div className="px-3 py-2 border-b border-white/10 sticky top-0 bg-[#1a1a1a]">
               <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
@@ -464,7 +479,7 @@ export default function PlayerBarMobile({ isLiked, onLikeClick, likeLabel }) {
                 if (navigator.share) {
                   navigator.share({
                     title: 'KracRadio',
-                    text: `${title} - ${artist}`,
+                    text: `${songTitle} - ${artist}`,
                     url: window.location.origin,
                   });
                 }
