@@ -1,0 +1,28 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+
+  <!-- Subtle pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#222" stroke-width="1"/>
+  </pattern>
+  <rect width="1280" height="720" fill="url(#grid)" opacity="0.3"/>
+
+  <!-- KracRadio Logo Text -->
+  <text x="640" y="320" font-family="Arial Black, sans-serif" font-size="72" font-weight="900" fill="#dc2626" text-anchor="middle">
+    KRAC
+  </text>
+  <text x="640" y="400" font-family="Arial, sans-serif" font-size="48" font-weight="400" fill="#ffffff" text-anchor="middle">
+    RADIO
+  </text>
+
+  <!-- Play icon circle -->
+  <circle cx="640" cy="500" r="40" fill="#dc2626" opacity="0.8"/>
+  <path d="M628 480 L660 500 L628 520 Z" fill="white"/>
+</svg>

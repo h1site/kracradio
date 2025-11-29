@@ -80,6 +80,18 @@ const STRINGS = {
     youtubeUrl: 'URL YouTube',
     artistName: 'Nom artiste',
     submittedBy: 'Soumis par',
+    importVideo: 'Importer une vidéo',
+    importPlaylist: 'Importer une playlist',
+    videoUrl: 'URL de la vidéo YouTube',
+    playlistUrl: 'URL de la playlist YouTube',
+    importSingleVideo: 'Importer',
+    importPlaylistBtn: 'Importer la playlist',
+    importingVideo: 'Import en cours...',
+    importingPlaylist: 'Import de la playlist...',
+    videoImported: 'Vidéo importée avec succès',
+    playlistImported: 'Playlist importée: {count} vidéos',
+    invalidYoutubeUrl: 'URL YouTube invalide',
+    fetchingVideoInfo: 'Récupération des infos...',
   },
   en: {
     title: 'Admin Panel',
@@ -153,6 +165,18 @@ const STRINGS = {
     youtubeUrl: 'YouTube URL',
     artistName: 'Artist name',
     submittedBy: 'Submitted by',
+    importVideo: 'Import a video',
+    importPlaylist: 'Import a playlist',
+    videoUrl: 'YouTube video URL',
+    playlistUrl: 'YouTube playlist URL',
+    importSingleVideo: 'Import',
+    importPlaylistBtn: 'Import playlist',
+    importingVideo: 'Importing...',
+    importingPlaylist: 'Importing playlist...',
+    videoImported: 'Video imported successfully',
+    playlistImported: 'Playlist imported: {count} videos',
+    invalidYoutubeUrl: 'Invalid YouTube URL',
+    fetchingVideoInfo: 'Fetching info...',
   },
   es: {
     title: 'Panel de Administración',
@@ -226,6 +250,18 @@ const STRINGS = {
     youtubeUrl: 'URL de YouTube',
     artistName: 'Nombre del artista',
     submittedBy: 'Enviado por',
+    importVideo: 'Importar un video',
+    importPlaylist: 'Importar una playlist',
+    videoUrl: 'URL del video de YouTube',
+    playlistUrl: 'URL de la playlist de YouTube',
+    importSingleVideo: 'Importar',
+    importPlaylistBtn: 'Importar playlist',
+    importingVideo: 'Importando...',
+    importingPlaylist: 'Importando playlist...',
+    videoImported: 'Video importado con éxito',
+    playlistImported: 'Playlist importada: {count} videos',
+    invalidYoutubeUrl: 'URL de YouTube inválida',
+    fetchingVideoInfo: 'Obteniendo información...',
   },
 };
 
@@ -253,6 +289,12 @@ export default function AdminPanel() {
   const [artistFilter, setArtistFilter] = useState('');
   const [videoFilter, setVideoFilter] = useState('');
   const [previewVideo, setPreviewVideo] = useState(null);
+
+  // Video import states
+  const [singleVideoUrl, setSingleVideoUrl] = useState('');
+  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [importingVideo, setImportingVideo] = useState(false);
+  const [importingPlaylist, setImportingPlaylist] = useState(false);
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -696,6 +738,175 @@ export default function AdminPanel() {
     } catch (error) {
       console.error('Error deleting video:', error);
       setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  // Extract YouTube video ID from various URL formats
+  const extractYoutubeVideoId = (url) => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  // Extract YouTube playlist ID from URL
+  const extractPlaylistId = (url) => {
+    const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : null;
+  };
+
+  // Default thumbnail when YouTube doesn't have one
+  const DEFAULT_THUMBNAIL = '/images/video-thumbnail-default.svg';
+
+  // Check if YouTube thumbnail exists
+  const checkThumbnailExists = async (videoId) => {
+    try {
+      // Try maxresdefault first
+      const maxRes = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const response = await fetch(maxRes, { method: 'HEAD' });
+      if (response.ok) return maxRes;
+
+      // Fallback to hqdefault
+      const hq = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      const hqResponse = await fetch(hq, { method: 'HEAD' });
+      if (hqResponse.ok) return hq;
+
+      // No thumbnail available
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Fetch video info using oEmbed (no API key needed)
+  const fetchVideoInfo = async (videoId) => {
+    try {
+      const response = await fetch(
+        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+      );
+      if (!response.ok) throw new Error('Video not found');
+      const data = await response.json();
+
+      // Check if thumbnail exists, otherwise use default
+      const thumbnailUrl = await checkThumbnailExists(videoId) || DEFAULT_THUMBNAIL;
+
+      return {
+        title: data.title,
+        thumbnail_url: thumbnailUrl,
+        artist_name: data.author_name
+      };
+    } catch (error) {
+      console.error('Error fetching video info:', error);
+      return null;
+    }
+  };
+
+  // Import single video
+  const handleImportSingleVideo = async () => {
+    if (!singleVideoUrl.trim()) return;
+
+    const videoId = extractYoutubeVideoId(singleVideoUrl.trim());
+    if (!videoId) {
+      setMessage({ type: 'error', text: L.invalidYoutubeUrl });
+      return;
+    }
+
+    // Check if video already exists
+    const existing = videos.find(v => v.youtube_id === videoId);
+    if (existing) {
+      setMessage({ type: 'error', text: `Video already exists: ${existing.title}` });
+      return;
+    }
+
+    setImportingVideo(true);
+    setMessage(null);
+
+    try {
+      // Fetch video info
+      const videoInfo = await fetchVideoInfo(videoId);
+      if (!videoInfo) {
+        throw new Error('Could not fetch video info');
+      }
+
+      // Insert video with admin as owner
+      const { data, error } = await supabase
+        .from('videos')
+        .insert({
+          user_id: user.id,
+          youtube_url: `https://www.youtube.com/watch?v=${videoId}`,
+          youtube_id: videoId,
+          title: videoInfo.title,
+          thumbnail_url: videoInfo.thumbnail_url,
+          artist_name: videoInfo.artist_name,
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setVideos([data, ...videos]);
+      setSingleVideoUrl('');
+      setMessage({ type: 'success', text: `${L.videoImported}: ${videoInfo.title}` });
+    } catch (error) {
+      console.error('Error importing video:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setImportingVideo(false);
+    }
+  };
+
+  // Import playlist using YouTube Data API through a simple fetch approach
+  const handleImportPlaylist = async () => {
+    if (!playlistUrl.trim()) return;
+
+    const playlistId = extractPlaylistId(playlistUrl.trim());
+    if (!playlistId) {
+      setMessage({ type: 'error', text: L.invalidYoutubeUrl });
+      return;
+    }
+
+    setImportingPlaylist(true);
+    setMessage(null);
+
+    try {
+      // We'll use a workaround - fetch playlist page and extract video IDs
+      // Since we don't have API key, we'll use oEmbed for each video
+      // First, let's try to get playlist info from YouTube
+
+      // For playlists, we need to use a different approach
+      // We'll call a Supabase Edge Function to handle the ytpl import
+      const { data: result, error } = await supabase.functions.invoke('import-youtube-playlist', {
+        body: { playlistUrl: playlistUrl.trim(), adminUserId: user.id }
+      });
+
+      if (error) throw error;
+
+      // Reload videos
+      const { data: newVideos } = await supabase
+        .from('videos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (newVideos) setVideos(newVideos);
+
+      setPlaylistUrl('');
+      setMessage({
+        type: 'success',
+        text: L.playlistImported.replace('{count}', result?.imported || 0)
+      });
+    } catch (error) {
+      console.error('Error importing playlist:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setImportingPlaylist(false);
     }
   };
 
@@ -1232,16 +1443,93 @@ export default function AdminPanel() {
 
       {/* Videos Table */}
       {activeTab === 'videos' && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
-          <div className="p-4">
-            <input
-              type="text"
-              placeholder={L.filter}
-              value={videoFilter}
-              onChange={(e) => setVideoFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-            />
+        <div className="space-y-4">
+          {/* Import Section */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+              📥 {L.importVideo} / {L.importPlaylist}
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Single Video Import */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {L.videoUrl}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={singleVideoUrl}
+                    onChange={(e) => setSingleVideoUrl(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
+                    disabled={importingVideo}
+                  />
+                  <button
+                    onClick={handleImportSingleVideo}
+                    disabled={importingVideo || !singleVideoUrl.trim()}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {importingVideo ? (
+                      <>
+                        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        {L.importingVideo}
+                      </>
+                    ) : (
+                      <>🎬 {L.importSingleVideo}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Playlist Import */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {L.playlistUrl}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/playlist?list=..."
+                    value={playlistUrl}
+                    onChange={(e) => setPlaylistUrl(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
+                    disabled={importingPlaylist}
+                  />
+                  <button
+                    onClick={handleImportPlaylist}
+                    disabled={importingPlaylist || !playlistUrl.trim()}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {importingPlaylist ? (
+                      <>
+                        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        {L.importingPlaylist}
+                      </>
+                    ) : (
+                      <>📋 {L.importPlaylistBtn}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              {lang === 'fr' ? 'Les vidéos importées seront automatiquement approuvées et appartiennent à KracRadio.' :
+               lang === 'en' ? 'Imported videos will be automatically approved and owned by KracRadio.' :
+               'Los videos importados serán aprobados automáticamente y pertenecerán a KracRadio.'}
+            </p>
           </div>
+
+          {/* Videos List */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <div className="p-4">
+              <input
+                type="text"
+                placeholder={L.filter}
+                value={videoFilter}
+                onChange={(e) => setVideoFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              />
+            </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900">
@@ -1349,6 +1637,7 @@ export default function AdminPanel() {
             ).length === 0 && (
               <p className="p-8 text-center text-gray-500">{L.noVideos}</p>
             )}
+          </div>
           </div>
         </div>
       )}

@@ -255,17 +255,31 @@ export default function VideoPlayer({
     }
   };
 
-  // Fullscreen change listener
+  // Fullscreen change listener (with webkit support for iOS/Safari)
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const fs = !!document.fullscreenElement;
+      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
       setIsFullscreen(fs);
       isFullscreenRef.current = fs;
+
+      // Lock to landscape on mobile when entering fullscreen
+      if (fs && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {
+          // Silently fail - not all devices support orientation lock
+        });
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
@@ -340,12 +354,40 @@ export default function VideoPlayer({
 
   const toggleFullscreen = () => {
     if (!videoContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      videoContainerRef.current.requestFullscreen().catch(err => {
-        console.error('Error attempting to enable fullscreen:', err);
-      });
+
+    const elem = videoContainerRef.current;
+    const isCurrentlyFullscreen = document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+
+    if (!isCurrentlyFullscreen) {
+      // Enter fullscreen with browser-specific methods
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      } else if (elem.webkitRequestFullscreen) {
+        // Safari/iOS
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        // Firefox
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        // IE/Edge
+        elem.msRequestFullscreen();
+      }
     } else {
-      document.exitFullscreen();
+      // Exit fullscreen with browser-specific methods
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
     }
   };
 

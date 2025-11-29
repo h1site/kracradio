@@ -643,11 +643,15 @@ export default function PublicProfile() {
                       >
                         <div className="aspect-video w-full relative">
                           <img
-                            src={`https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`}
+                            src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`}
                             alt={video.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
-                              e.target.src = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
+                              if (e.target.src.includes('maxresdefault')) {
+                                e.target.src = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
+                              } else if (!e.target.src.includes('video-thumbnail-default')) {
+                                e.target.src = '/images/video-thumbnail-default.svg';
+                              }
                             }}
                           />
                           {/* Play button overlay */}
