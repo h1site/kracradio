@@ -371,13 +371,21 @@ export default function About() {
       <FaviconLinks />
 
       {/* Hero avec image de fond */}
-      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden">
+      <header className="relative -mx-8 -mt-8 mb-8 overflow-hidden bg-gray-900">
         <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&h=400&fit=crop&auto=format&q=80"
-            alt="About KracRadio"
-            className="w-full h-full object-cover"
-          />
+          <picture>
+            <source
+              media="(max-width: 640px)"
+              srcSet="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=300&fit=crop&auto=format&q=50"
+            />
+            <img
+              src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1000&h=400&fit=crop&auto=format&q=60"
+              alt="About KracRadio"
+              className="w-full h-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
         </div>
         <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
