@@ -46,6 +46,7 @@ export default function VideoPlayer({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
 
   const videoContainerRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -119,6 +120,8 @@ export default function VideoPlayer({
       if (hideTopBarTimeoutRef.current) {
         clearTimeout(hideTopBarTimeoutRef.current);
       }
+      // Reset body overflow on unmount
+      document.body.style.overflow = '';
     };
   }, [player]);
 
@@ -369,24 +372,49 @@ export default function VideoPlayer({
       document.mozFullScreenElement ||
       document.msFullscreenElement;
 
+    // Check if we're on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // On mobile, use CSS-based fullscreen simulation
+    if (isMobile) {
+      if (isMobileFullscreen) {
+        // Exit mobile fullscreen
+        setIsMobileFullscreen(false);
+        setIsFullscreen(false);
+        isFullscreenRef.current = false;
+        document.body.style.overflow = '';
+        // Unlock orientation
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } else {
+        // Enter mobile fullscreen
+        setIsMobileFullscreen(true);
+        setIsFullscreen(true);
+        isFullscreenRef.current = true;
+        document.body.style.overflow = 'hidden';
+        // Lock to landscape
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      }
+      return;
+    }
+
+    // Desktop fullscreen
     if (!isCurrentlyFullscreen) {
-      // Enter fullscreen with browser-specific methods
       if (elem.requestFullscreen) {
         elem.requestFullscreen().catch(err => {
           console.error('Error attempting to enable fullscreen:', err);
         });
       } else if (elem.webkitRequestFullscreen) {
-        // Safari/iOS
         elem.webkitRequestFullscreen();
       } else if (elem.mozRequestFullScreen) {
-        // Firefox
         elem.mozRequestFullScreen();
       } else if (elem.msRequestFullscreen) {
-        // IE/Edge
         elem.msRequestFullscreen();
       }
     } else {
-      // Exit fullscreen with browser-specific methods
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if (document.webkitExitFullscreen) {
@@ -450,8 +478,14 @@ export default function VideoPlayer({
   return (
     <div
       ref={videoContainerRef}
-      className="relative w-full bg-black aspect-video"
+      className={`relative w-full bg-black ${
+        isMobileFullscreen
+          ? 'fixed inset-0 z-[9999] aspect-auto'
+          : 'aspect-video'
+      }`}
+      style={isMobileFullscreen ? { width: '100vw', height: '100vh' } : {}}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleMouseMove}
     >
       <div id={playerId} className="w-full h-full"></div>
 
