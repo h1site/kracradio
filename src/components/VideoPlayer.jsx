@@ -48,7 +48,6 @@ export default function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
   const [isMobile] = useState(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-  const [isIOS] = useState(() => /iPhone|iPad|iPod/i.test(navigator.userAgent));
 
   const videoContainerRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -207,27 +206,22 @@ export default function VideoPlayer({
 
       playerElement.setAttribute('data-player-initialized', 'true');
 
-      // Check if mobile/iOS for different player config
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
       try {
         const newPlayer = new window.YT.Player(playerId, {
           videoId: videoId,
           playerVars: {
             autoplay: autoplay ? 1 : 0,
-            // On iOS, use YouTube controls for native fullscreen. On desktop, use custom controls.
-            controls: isIOS ? 1 : 0,
+            // Use custom controls on all devices (same behavior mobile & desktop)
+            controls: 0,
             modestbranding: 1,
             rel: 0,
             showinfo: 0,
             iv_load_policy: 3,
-            disablekb: isIOS ? 0 : 1,
+            disablekb: 1,
             // Enable fullscreen button
             fs: 1,
-            // iOS: playsinline=0 forces native iOS video player with TRUE fullscreen
-            // Desktop/Android: playsinline=1 keeps video inline
-            playsinline: isIOS ? 0 : 1,
+            // playsinline=1 keeps video inline on all devices
+            playsinline: 1,
             autohide: 1,
             cc_load_policy: 0,
             enablejsapi: 1,
@@ -760,40 +754,34 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Hide YouTube endscreen suggestions - Not on iOS (YouTube handles it) */}
-      {!isIOS && (
-        <div
-          className={`absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-black via-black to-transparent pointer-events-none z-15 transition-opacity duration-200 ${
-            showOverlay ? 'opacity-100' : 'opacity-0'
-          }`}
-        ></div>
-      )}
+      {/* Hide YouTube endscreen suggestions */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-black via-black to-transparent pointer-events-none z-15 transition-opacity duration-200 ${
+          showOverlay ? 'opacity-100' : 'opacity-0'
+        }`}
+      ></div>
 
-      {/* KracRadio Logo - Not on iOS */}
-      {!isIOS && (
-        <div
-          className={`absolute bottom-0 left-0 right-0 flex items-end justify-center pb-20 pointer-events-none z-25 transition-all duration-500 ${
-            !isPlaying ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-          }`}
-        >
-          <img
-            src="/logo-white.png"
-            alt="KracRadio"
-            className="h-16 object-contain drop-shadow-2xl"
-          />
-        </div>
-      )}
+      {/* KracRadio Logo */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 flex items-end justify-center pb-20 pointer-events-none z-25 transition-all duration-500 ${
+          !isPlaying ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+        }`}
+      >
+        <img
+          src="/logo-white.png"
+          alt="KracRadio"
+          className="h-16 object-contain drop-shadow-2xl"
+        />
+      </div>
 
-      {/* Invisible overlay to toggle play/pause - Not on iOS (YouTube handles it) */}
-      {!isIOS && (
-        <div
-          className="absolute inset-0 cursor-pointer z-20"
-          onClick={togglePlay}
-        ></div>
-      )}
+      {/* Invisible overlay to toggle play/pause */}
+      <div
+        className="absolute inset-0 cursor-pointer z-20"
+        onClick={togglePlay}
+      ></div>
 
-      {/* Custom Controls Overlay - Hidden on iOS (YouTube has native controls) */}
-      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${isIOS ? 'hidden' : ''} ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Custom Controls Overlay */}
+      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-auto z-40">
           {/* Progress Bar */}
