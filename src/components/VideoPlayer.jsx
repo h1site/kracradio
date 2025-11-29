@@ -63,7 +63,7 @@ export default function VideoPlayer({
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-      // Add CSS to hide YouTube UI elements
+      // Add CSS to hide YouTube UI elements and mobile fullscreen styles
       if (!document.getElementById('hide-youtube-ui-style')) {
         const style = document.createElement('style');
         style.id = 'hide-youtube-ui-style';
@@ -79,6 +79,40 @@ export default function VideoPlayer({
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+          }
+
+          /* Mobile fullscreen - hide everything except video */
+          html.mobile-fullscreen-active,
+          html.mobile-fullscreen-active body {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+          }
+
+          html.mobile-fullscreen-active header,
+          html.mobile-fullscreen-active footer,
+          html.mobile-fullscreen-active nav,
+          html.mobile-fullscreen-active .sidebar,
+          html.mobile-fullscreen-active .mobile-nav,
+          html.mobile-fullscreen-active .bottom-nav,
+          html.mobile-fullscreen-active [data-hide-on-fullscreen] {
+            display: none !important;
+          }
+
+          /* Force landscape orientation visually when in portrait */
+          @media screen and (orientation: portrait) {
+            html.mobile-fullscreen-active .mobile-fullscreen-container {
+              transform: rotate(90deg);
+              transform-origin: center center;
+              width: 100vh !important;
+              height: 100vw !important;
+              position: fixed !important;
+              top: 50% !important;
+              left: 50% !important;
+              margin-top: -50vw !important;
+              margin-left: -50vh !important;
+            }
           }
         `;
         document.head.appendChild(style);
@@ -122,6 +156,8 @@ export default function VideoPlayer({
       }
       // Reset body overflow on unmount
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.classList.remove('mobile-fullscreen-active');
     };
   }, [player]);
 
@@ -383,6 +419,9 @@ export default function VideoPlayer({
         setIsFullscreen(false);
         isFullscreenRef.current = false;
         document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        // Remove fullscreen class from html
+        document.documentElement.classList.remove('mobile-fullscreen-active');
         // Unlock orientation
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
@@ -393,10 +432,15 @@ export default function VideoPlayer({
         setIsFullscreen(true);
         isFullscreenRef.current = true;
         document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        // Add fullscreen class to html for additional hiding
+        document.documentElement.classList.add('mobile-fullscreen-active');
         // Lock to landscape
         if (screen.orientation && screen.orientation.lock) {
           screen.orientation.lock('landscape').catch(() => {});
         }
+        // Scroll to top to hide address bar
+        window.scrollTo(0, 1);
       }
       return;
     }
@@ -480,7 +524,7 @@ export default function VideoPlayer({
       ref={videoContainerRef}
       className={`relative w-full bg-black ${
         isMobileFullscreen
-          ? 'fixed inset-0 z-[9999] aspect-auto'
+          ? 'fixed inset-0 z-[9999] aspect-auto mobile-fullscreen-container'
           : 'aspect-video'
       }`}
       style={isMobileFullscreen ? { width: '100vw', height: '100vh' } : {}}
