@@ -264,9 +264,7 @@ export default function VideoDetail() {
                 <div className="flex items-center gap-3">
                   {isAdminSubmission ? (
                     <>
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
-                        <img src="/images/logos/krac_short_white_white.png" alt="KracRadio" className="w-6 h-6 object-contain" />
-                      </div>
+                      <img src="/images/logos/krac_short_white_white.png" alt="KracRadio" className="h-10 w-auto object-contain" />
                       <div>
                         <div className="font-medium text-white">KracRadio</div>
                         {video.artist_name && (
