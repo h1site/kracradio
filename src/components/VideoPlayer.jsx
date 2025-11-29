@@ -126,12 +126,12 @@ export default function VideoPlayer({
             html.mobile-fullscreen-active .mobile-fullscreen-container {
               position: fixed !important;
               top: 0 !important;
-              left: 100vw !important;
+              left: 0 !important;
               /* After 90deg rotation: width becomes visual height, height becomes visual width */
               width: 100vh !important;
               height: 100vw !important;
               transform-origin: top left !important;
-              transform: rotate(90deg) !important;
+              transform: rotate(90deg) translateY(-100%) !important;
               z-index: 99999 !important;
               background: black !important;
             }
