@@ -783,7 +783,7 @@ export default function VideoPlayer({
       {/* Custom Controls Overlay */}
       <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-auto z-40">
+        <div className={`absolute bottom-0 left-0 right-0 pointer-events-auto z-40 ${isMobileFullscreen ? 'p-6 pb-10' : 'p-4'}`} style={isMobileFullscreen ? { paddingBottom: 'max(40px, env(safe-area-inset-bottom))' } : {}}>
           {/* Progress Bar */}
           <div className="mb-3">
             <div
@@ -807,14 +807,14 @@ export default function VideoPlayer({
               {/* Play/Pause */}
               <button
                 onClick={togglePlay}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors"
+                className={`flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors ${isMobileFullscreen ? 'w-14 h-14' : 'w-10 h-10'}`}
               >
                 {isPlaying ? (
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className={isMobileFullscreen ? "w-8 h-8" : "w-6 h-6"} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
                   </svg>
                 ) : (
-                  <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className={`ml-0.5 ${isMobileFullscreen ? "w-8 h-8" : "w-6 h-6"}`} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z"/>
                   </svg>
                 )}
@@ -916,14 +916,14 @@ export default function VideoPlayer({
               {/* Fullscreen */}
               <button
                 onClick={toggleFullscreen}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors"
+                className={`flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors ${isMobileFullscreen ? 'w-14 h-14' : 'w-10 h-10'}`}
               >
                 {isFullscreen ? (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className={isMobileFullscreen ? "w-7 h-7" : "w-5 h-5"} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className={isMobileFullscreen ? "w-7 h-7" : "w-5 h-5"} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                   </svg>
                 )}
