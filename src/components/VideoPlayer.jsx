@@ -411,37 +411,72 @@ export default function VideoPlayer({
     // Check if we're on mobile
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // On mobile, use CSS-based fullscreen simulation
+    // On mobile, use CSS-based fullscreen with native fullscreen attempt
     if (isMobile) {
-      if (isMobileFullscreen) {
-        // Exit mobile fullscreen
+      const iframe = elem.querySelector('iframe');
+      const isInNativeFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+      // If currently in any fullscreen mode, exit
+      if (isMobileFullscreen || isInNativeFullscreen) {
+        // Exit native fullscreen if active
+        if (isInNativeFullscreen) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+        // Exit CSS fullscreen
         setIsMobileFullscreen(false);
         setIsFullscreen(false);
         isFullscreenRef.current = false;
         document.body.style.overflow = '';
         document.documentElement.style.overflow = '';
-        // Remove fullscreen class from html
         document.documentElement.classList.remove('mobile-fullscreen-active');
-        // Unlock orientation
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
         }
-      } else {
-        // Enter mobile fullscreen
-        setIsMobileFullscreen(true);
-        setIsFullscreen(true);
-        isFullscreenRef.current = true;
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
-        // Add fullscreen class to html for additional hiding
-        document.documentElement.classList.add('mobile-fullscreen-active');
-        // Lock to landscape
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(() => {});
-        }
-        // Scroll to top to hide address bar
-        window.scrollTo(0, 1);
+        return;
       }
+
+      // Try native fullscreen on container first (better than iframe for controls)
+      const tryNativeFullscreen = async () => {
+        const requestFs = elem.requestFullscreen || elem.webkitRequestFullscreen;
+        if (requestFs) {
+          try {
+            await requestFs.call(elem);
+            setIsMobileFullscreen(true);
+            setIsFullscreen(true);
+            isFullscreenRef.current = true;
+            if (screen.orientation && screen.orientation.lock) {
+              screen.orientation.lock('landscape').catch(() => {});
+            }
+            return true;
+          } catch (e) {
+            // Native fullscreen failed, use CSS fallback
+            return false;
+          }
+        }
+        return false;
+      };
+
+      // Try native fullscreen, fallback to CSS
+      tryNativeFullscreen().then((success) => {
+        if (!success) {
+          // CSS-based fullscreen simulation
+          setIsMobileFullscreen(true);
+          setIsFullscreen(true);
+          isFullscreenRef.current = true;
+          document.body.style.overflow = 'hidden';
+          document.documentElement.style.overflow = 'hidden';
+          document.documentElement.classList.add('mobile-fullscreen-active');
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+          }
+          // Try to minimize address bar on iOS
+          window.scrollTo(0, 1);
+        }
+      });
       return;
     }
 
