@@ -100,31 +100,28 @@ export default function VideoPlayer({
             display: none !important;
           }
 
-          /* Force landscape orientation visually when in portrait */
-          @media screen and (orientation: portrait) {
-            html.mobile-fullscreen-active .mobile-fullscreen-container {
-              /* Use viewport height as width (since rotated) and calculate height to maintain 16:9 aspect ratio */
-              width: 100vh !important;
-              height: calc(100vh * 9 / 16) !important;
-              max-height: 100vw !important;
-              position: fixed !important;
-              top: 50% !important;
-              left: 50% !important;
-              transform: rotate(90deg) translateX(-50%) translateY(-50%);
-              transform-origin: top left;
-              background: black !important;
-            }
+          /* Mobile fullscreen container - fill screen without rotation */
+          html.mobile-fullscreen-active .mobile-fullscreen-container {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99999 !important;
+            background: black !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
 
-          /* When already in landscape, just fill the screen */
-          @media screen and (orientation: landscape) {
-            html.mobile-fullscreen-active .mobile-fullscreen-container {
-              width: 100vw !important;
-              height: 100vh !important;
-              position: fixed !important;
-              top: 0 !important;
-              left: 0 !important;
-            }
+          /* Make the iframe/video fit within the container maintaining aspect ratio */
+          html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
+          html.mobile-fullscreen-active .mobile-fullscreen-container > div {
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
           }
         `;
         document.head.appendChild(style);
