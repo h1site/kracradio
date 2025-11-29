@@ -100,28 +100,33 @@ export default function VideoPlayer({
             display: none !important;
           }
 
-          /* Mobile fullscreen container - fill screen without rotation */
-          html.mobile-fullscreen-active .mobile-fullscreen-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 99999 !important;
-            background: black !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+          /* Mobile fullscreen - landscape with rotation in portrait mode */
+          @media screen and (orientation: portrait) {
+            html.mobile-fullscreen-active .mobile-fullscreen-container {
+              position: fixed !important;
+              /* Swap width and height for rotation */
+              width: 100vh !important;
+              height: 100vw !important;
+              /* Center and rotate */
+              top: 50% !important;
+              left: 50% !important;
+              transform: translate(-50%, -50%) rotate(90deg) !important;
+              z-index: 99999 !important;
+              background: black !important;
+            }
           }
 
-          /* Make the iframe/video fit within the container maintaining aspect ratio */
-          html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
-          html.mobile-fullscreen-active .mobile-fullscreen-container > div {
-            max-width: 100% !important;
-            max-height: 100% !important;
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: contain !important;
+          /* Landscape mode - just fill the screen normally */
+          @media screen and (orientation: landscape) {
+            html.mobile-fullscreen-active .mobile-fullscreen-container {
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              z-index: 99999 !important;
+              background: black !important;
+            }
           }
         `;
         document.head.appendChild(style);
