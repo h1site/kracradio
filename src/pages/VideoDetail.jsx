@@ -85,6 +85,7 @@ export default function VideoDetail() {
   const sessionId = useMemo(() => getSessionId(), []);
 
   const [video, setVideo] = useState(null);
+  const [allVideos, setAllVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -108,6 +109,7 @@ export default function VideoDetail() {
 
       try {
         const videos = await getApprovedVideos();
+        setAllVideos(videos);
 
         // Helper function to normalize slugs
         const normalizeSlug = (str) => {
@@ -142,6 +144,23 @@ export default function VideoDetail() {
 
     loadVideo();
   }, [slug, user?.id, sessionId]);
+
+  // Handle video end - play random video
+  const handleVideoEnd = () => {
+    if (allVideos.length <= 1) return;
+
+    // Filter out current video and pick a random one
+    const otherVideos = allVideos.filter(v => v.id !== video?.id);
+    const randomVideo = otherVideos[Math.floor(Math.random() * otherVideos.length)];
+
+    if (randomVideo) {
+      const randomSlug = randomVideo.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      navigate(`/videos/${randomSlug}`);
+    }
+  };
 
   const handleLike = async () => {
     if (loadingLike || !video) return;
@@ -241,6 +260,7 @@ export default function VideoDetail() {
               playerId={playerId}
               autoplay={false}
               showTopBar={true}
+              onVideoEnd={handleVideoEnd}
             />
           </div>
         </div>
