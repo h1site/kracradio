@@ -344,27 +344,16 @@ export default function VideoPlayer({
 
   // Fullscreen change listener (with webkit support for iOS/Safari)
   useEffect(() => {
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
     const handleFullscreenChange = () => {
-      const isFullscreenNow = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-      setIsFullscreen(isFullscreenNow);
-      isFullscreenRef.current = isFullscreenNow;
+      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      setIsFullscreen(fs);
+      isFullscreenRef.current = fs;
 
-      if (isMobileDevice) {
-        if (isFullscreenNow) {
-          // Attempt to lock to landscape when entering fullscreen on mobile
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(err => {
-              console.warn("Could not lock screen to landscape:", err);
-            });
-          }
-        } else {
-          // Attempt to unlock orientation when exiting fullscreen on mobile
-          if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-          }
-        }
+      // Lock to landscape on mobile when entering fullscreen
+      if (fs && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {
+          // Silently fail - not all devices support orientation lock
+        });
       }
     };
 
