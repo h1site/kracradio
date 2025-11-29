@@ -125,13 +125,14 @@ export default function VideoPlayer({
           @media screen and (orientation: portrait) {
             html.mobile-fullscreen-active .mobile-fullscreen-container {
               position: fixed !important;
-              top: 0 !important;
-              left: 100% !important;
+              /* Position at bottom-left, then rotate around that point */
+              top: 100dvh !important;
+              left: 0 !important;
               /* After 90deg rotation: width becomes visual height, height becomes visual width */
-              width: 100vh !important;
-              height: 100vw !important;
+              width: 100dvh !important;
+              height: 100dvw !important;
               transform-origin: top left !important;
-              transform: rotate(90deg) !important;
+              transform: rotate(-90deg) !important;
               z-index: 99999 !important;
               background: black !important;
             }
