@@ -279,13 +279,48 @@ export default function VideoDetail() {
     );
   }
 
+  // Generate meta description from video info
+  const metaDescription = video.description
+    || (video.artist_name
+      ? `${lang === 'fr' ? 'Regardez' : lang === 'es' ? 'Mira' : 'Watch'} "${video.title}" ${lang === 'fr' ? 'par' : lang === 'es' ? 'por' : 'by'} ${video.artist_name} ${lang === 'fr' ? 'sur' : lang === 'es' ? 'en' : 'on'} KracRadio`
+      : `${lang === 'fr' ? 'Regardez' : lang === 'es' ? 'Mira' : 'Watch'} "${video.title}" ${lang === 'fr' ? 'sur' : lang === 'es' ? 'en' : 'on'} KracRadio`);
+
+  // VideoObject schema for SEO
+  const videoSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: video.title,
+    description: metaDescription,
+    thumbnailUrl: video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`,
+    uploadDate: video.created_at,
+    contentUrl: `https://www.youtube.com/watch?v=${video.youtube_id}`,
+    embedUrl: `https://www.youtube.com/embed/${video.youtube_id}`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'KracRadio',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://kracradio.com/images/logos/krac_short_white_white.png'
+      }
+    },
+    ...(video.artist_name && { author: { '@type': 'Person', name: video.artist_name } }),
+    interactionStatistic: {
+      '@type': 'InteractionCounter',
+      interactionType: { '@type': 'LikeAction' },
+      userInteractionCount: likeCount
+    }
+  };
+
   return (
     <>
       <Seo
         lang={lang}
-        title={`${video.title} - ${video.artist_name || ''} - KracRadio`}
-        description={video.description || L.metaDesc}
+        title={`${video.title}${video.artist_name ? ` - ${video.artist_name}` : ''}`}
+        description={metaDescription}
         path={`/videos/${slug}`}
+        image={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`}
+        type="video.other"
+        jsonLd={videoSchema}
       />
 
       <div className="min-h-screen bg-[#0f0f0f]">
