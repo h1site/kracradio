@@ -47,6 +47,8 @@ export default function VideoPlayer({
   const [copySuccess, setCopySuccess] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
+  const [isMobile] = useState(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  const [isIOS] = useState(() => /iPhone|iPad|iPod/i.test(navigator.userAgent));
 
   const videoContainerRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -106,14 +108,17 @@ export default function VideoPlayer({
               position: fixed !important;
               top: 0 !important;
               left: 0 !important;
-              width: 100vw !important;
-              height: 100vh !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
               z-index: 99999 !important;
               background: black !important;
             }
-            html.mobile-fullscreen-active .mobile-fullscreen-container iframe {
-              width: 100vw !important;
-              height: 100vh !important;
+            html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
+            html.mobile-fullscreen-active .mobile-fullscreen-container > div {
+              width: 100% !important;
+              height: 100% !important;
             }
           }
 
@@ -121,18 +126,22 @@ export default function VideoPlayer({
           @media screen and (orientation: portrait) {
             html.mobile-fullscreen-active .mobile-fullscreen-container {
               position: fixed !important;
-              /* Position at center of screen */
-              top: 50% !important;
-              left: 50% !important;
-              /* After rotation: container width = screen height, container height = screen width */
+              /* Position at top-left corner */
+              top: 0 !important;
+              left: 100vw !important;
+              /* IMPORTANT: Set dimensions for AFTER rotation */
+              /* Width becomes height (screen width), Height becomes width (screen height) */
               width: 100vh !important;
               height: 100vw !important;
-              /* Center then rotate */
-              transform: translate(-50%, -50%) rotate(90deg) !important;
+              /* Rotate 90deg clockwise around top-left */
+              transform-origin: top left !important;
+              transform: rotate(90deg) !important;
               z-index: 99999 !important;
               background: black !important;
             }
-            html.mobile-fullscreen-active .mobile-fullscreen-container iframe {
+            html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
+            html.mobile-fullscreen-active .mobile-fullscreen-container > div {
+              /* Fill the rotated container */
               width: 100% !important;
               height: 100% !important;
             }
@@ -198,19 +207,27 @@ export default function VideoPlayer({
 
       playerElement.setAttribute('data-player-initialized', 'true');
 
+      // Check if mobile/iOS for different player config
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
       try {
         const newPlayer = new window.YT.Player(playerId, {
           videoId: videoId,
           playerVars: {
             autoplay: autoplay ? 1 : 0,
-            controls: 0,
+            // On iOS, use YouTube controls for native fullscreen. On desktop, use custom controls.
+            controls: isIOS ? 1 : 0,
             modestbranding: 1,
             rel: 0,
             showinfo: 0,
             iv_load_policy: 3,
-            disablekb: 1,
-            fs: 0,
-            playsinline: 1,
+            disablekb: isIOS ? 0 : 1,
+            // Enable fullscreen button
+            fs: 1,
+            // iOS: playsinline=0 forces native iOS video player with TRUE fullscreen
+            // Desktop/Android: playsinline=1 keeps video inline
+            playsinline: isIOS ? 0 : 1,
             autohide: 1,
             cc_load_policy: 0,
             enablejsapi: 1,
@@ -327,16 +344,27 @@ export default function VideoPlayer({
 
   // Fullscreen change listener (with webkit support for iOS/Safari)
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-      setIsFullscreen(fs);
-      isFullscreenRef.current = fs;
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-      // Lock to landscape on mobile when entering fullscreen
-      if (fs && screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(() => {
-          // Silently fail - not all devices support orientation lock
-        });
+    const handleFullscreenChange = () => {
+      const isFullscreenNow = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      setIsFullscreen(isFullscreenNow);
+      isFullscreenRef.current = isFullscreenNow;
+
+      if (isMobileDevice) {
+        if (isFullscreenNow) {
+          // Attempt to lock to landscape when entering fullscreen on mobile
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => {
+              console.warn("Could not lock screen to landscape:", err);
+            });
+          }
+        } else {
+          // Attempt to unlock orientation when exiting fullscreen on mobile
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        }
       }
     };
 
@@ -426,99 +454,21 @@ export default function VideoPlayer({
     if (!videoContainerRef.current) return;
 
     const elem = videoContainerRef.current;
+    const iframe = elem.querySelector('iframe');
     const isCurrentlyFullscreen = document.fullscreenElement ||
       document.webkitFullscreenElement ||
       document.mozFullScreenElement ||
       document.msFullscreenElement;
 
-    // Check if we're on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Check device type
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isMobileDevice = isIOS || isAndroid || /webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // On mobile, use CSS-based fullscreen with native fullscreen attempt
-    if (isMobile) {
-      const iframe = elem.querySelector('iframe');
-      const isInNativeFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-
-      // If currently in any fullscreen mode, exit
-      if (isMobileFullscreen || isInNativeFullscreen) {
-        // Exit native fullscreen if active
-        if (isInNativeFullscreen) {
-          if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          }
-        }
-        // Exit CSS fullscreen
-        setIsMobileFullscreen(false);
-        setIsFullscreen(false);
-        isFullscreenRef.current = false;
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        document.documentElement.classList.remove('mobile-fullscreen-active');
-        if (screen.orientation && screen.orientation.unlock) {
-          screen.orientation.unlock();
-        }
-        return;
-      }
-
-      // Try native fullscreen on container first (better than iframe for controls)
-      const tryNativeFullscreen = async () => {
-        const requestFs = elem.requestFullscreen || elem.webkitRequestFullscreen;
-        if (requestFs) {
-          try {
-            await requestFs.call(elem);
-            setIsMobileFullscreen(true);
-            setIsFullscreen(true);
-            isFullscreenRef.current = true;
-            if (screen.orientation && screen.orientation.lock) {
-              screen.orientation.lock('landscape').catch(() => {});
-            }
-            return true;
-          } catch (e) {
-            // Native fullscreen failed, use CSS fallback
-            return false;
-          }
-        }
-        return false;
-      };
-
-      // Try native fullscreen, fallback to CSS
-      tryNativeFullscreen().then((success) => {
-        if (!success) {
-          // CSS-based fullscreen simulation
-          setIsMobileFullscreen(true);
-          setIsFullscreen(true);
-          isFullscreenRef.current = true;
-          document.body.style.overflow = 'hidden';
-          document.documentElement.style.overflow = 'hidden';
-          document.documentElement.classList.add('mobile-fullscreen-active');
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-          }
-          // Try to minimize address bar on iOS
-          window.scrollTo(0, 1);
-        }
-      });
-      return;
-    }
-
-    // Desktop fullscreen
-    if (!isCurrentlyFullscreen) {
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(err => {
-          console.error('Error attempting to enable fullscreen:', err);
-        });
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-      }
-    } else {
+    // If currently in fullscreen, exit
+    if (isCurrentlyFullscreen || isMobileFullscreen) {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
       } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
       } else if (document.mozCancelFullScreen) {
@@ -526,7 +476,92 @@ export default function VideoPlayer({
       } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
+      // Reset CSS fullscreen state
+      setIsMobileFullscreen(false);
+      setIsFullscreen(false);
+      isFullscreenRef.current = false;
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.classList.remove('mobile-fullscreen-active');
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+      return;
     }
+
+    // On iOS, try to use the native video fullscreen (webkitEnterFullscreen)
+    // This gives TRUE fullscreen without browser chrome
+    if (isIOS && iframe) {
+      try {
+        // Try to access the video element inside the iframe
+        // Note: This only works if the iframe allows it (same-origin or allowfullscreen)
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        const video = iframeDoc?.querySelector('video');
+        if (video && video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen();
+          setIsFullscreen(true);
+          isFullscreenRef.current = true;
+          return;
+        }
+      } catch (e) {
+        // Cross-origin iframe, can't access video element directly
+        console.log('Cannot access iframe video element, trying alternative methods');
+      }
+
+      // Alternative: Try iframe webkitRequestFullscreen
+      if (iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen();
+        setIsFullscreen(true);
+        isFullscreenRef.current = true;
+        return;
+      }
+    }
+
+    // On Android, try container fullscreen (usually works well)
+    if (isAndroid) {
+      const requestFs = elem.requestFullscreen || elem.webkitRequestFullscreen;
+      if (requestFs) {
+        requestFs.call(elem).then(() => {
+          setIsFullscreen(true);
+          isFullscreenRef.current = true;
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+          }
+        }).catch(() => {
+          // Fallback to CSS
+          activateCSSFullscreen();
+        });
+        return;
+      }
+    }
+
+    // Desktop or fallback
+    const requestFs = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.mozRequestFullScreen || elem.msRequestFullscreen;
+    if (requestFs) {
+      requestFs.call(elem).then(() => {
+        setIsFullscreen(true);
+        isFullscreenRef.current = true;
+      }).catch(() => {
+        if (isMobileDevice) {
+          activateCSSFullscreen();
+        }
+      });
+    } else if (isMobileDevice) {
+      activateCSSFullscreen();
+    }
+  };
+
+  const activateCSSFullscreen = () => {
+    setIsMobileFullscreen(true);
+    setIsFullscreen(true);
+    isFullscreenRef.current = true;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.classList.add('mobile-fullscreen-active');
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+    window.scrollTo(0, 1);
   };
 
   const handleSeek = (e) => {
@@ -736,34 +771,40 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Hide YouTube endscreen suggestions */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-black via-black to-transparent pointer-events-none z-15 transition-opacity duration-200 ${
-          showOverlay ? 'opacity-100' : 'opacity-0'
-        }`}
-      ></div>
+      {/* Hide YouTube endscreen suggestions - Not on iOS (YouTube handles it) */}
+      {!isIOS && (
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-black via-black to-transparent pointer-events-none z-15 transition-opacity duration-200 ${
+            showOverlay ? 'opacity-100' : 'opacity-0'
+          }`}
+        ></div>
+      )}
 
-      {/* KracRadio Logo */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 flex items-end justify-center pb-20 pointer-events-none z-25 transition-all duration-500 ${
-          !isPlaying ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-        }`}
-      >
-        <img
-          src="/logo-white.png"
-          alt="KracRadio"
-          className="h-16 object-contain drop-shadow-2xl"
-        />
-      </div>
+      {/* KracRadio Logo - Not on iOS */}
+      {!isIOS && (
+        <div
+          className={`absolute bottom-0 left-0 right-0 flex items-end justify-center pb-20 pointer-events-none z-25 transition-all duration-500 ${
+            !isPlaying ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+          }`}
+        >
+          <img
+            src="/logo-white.png"
+            alt="KracRadio"
+            className="h-16 object-contain drop-shadow-2xl"
+          />
+        </div>
+      )}
 
-      {/* Invisible overlay to toggle play/pause */}
-      <div
-        className="absolute inset-0 cursor-pointer z-20"
-        onClick={togglePlay}
-      ></div>
+      {/* Invisible overlay to toggle play/pause - Not on iOS (YouTube handles it) */}
+      {!isIOS && (
+        <div
+          className="absolute inset-0 cursor-pointer z-20"
+          onClick={togglePlay}
+        ></div>
+      )}
 
-      {/* Custom Controls Overlay */}
-      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Custom Controls Overlay - Hidden on iOS (YouTube has native controls) */}
+      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${isIOS ? 'hidden' : ''} ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-auto z-40">
           {/* Progress Bar */}
