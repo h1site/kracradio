@@ -95,6 +95,11 @@ export default function VideoDetail() {
   const playerId = `youtube-player-${slug}`;
   const isAdminSubmission = video?.submitter?.role === 'admin';
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   // Load video by slug
   useEffect(() => {
     const loadVideo = async () => {
