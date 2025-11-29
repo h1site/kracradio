@@ -144,9 +144,10 @@ export default function VideoPlayer({
               width: 100% !important;
               height: 100% !important;
             }
-            /* Controls need extra padding in rotated mode */
+            /* Controls need extra padding in rotated mode - right side gets cut */
             html.mobile-fullscreen-active .mobile-fullscreen-container .video-controls-wrapper {
               padding-bottom: 60px !important;
+              padding-right: 80px !important;
             }
           }
         `;
