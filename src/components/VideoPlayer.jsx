@@ -139,10 +139,14 @@ export default function VideoPlayer({
               background: black !important;
             }
             html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
-            html.mobile-fullscreen-active .mobile-fullscreen-container > div {
+            html.mobile-fullscreen-active .mobile-fullscreen-container > div:first-child {
               /* Fill the rotated container */
               width: 100% !important;
               height: 100% !important;
+            }
+            /* Controls need extra padding in rotated mode */
+            html.mobile-fullscreen-active .mobile-fullscreen-container .video-controls-wrapper {
+              padding-bottom: 60px !important;
             }
           }
         `;
@@ -783,7 +787,7 @@ export default function VideoPlayer({
       {/* Custom Controls Overlay */}
       <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className={`absolute bottom-0 left-0 right-0 pointer-events-auto z-40 ${isMobileFullscreen ? 'p-6 pb-10' : 'p-4'}`} style={isMobileFullscreen ? { paddingBottom: 'max(40px, env(safe-area-inset-bottom))' } : {}}>
+        <div className={`video-controls-wrapper absolute bottom-0 left-0 right-0 pointer-events-auto z-40 ${isMobileFullscreen ? 'p-6 pb-16' : 'p-4'}`}>
           {/* Progress Bar */}
           <div className="mb-3">
             <div
