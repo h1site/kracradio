@@ -146,7 +146,7 @@ export default function VideoPlayer({
             }
             /* Controls need extra padding in rotated mode - right side gets cut */
             html.mobile-fullscreen-active .mobile-fullscreen-container .video-controls-wrapper {
-              padding-bottom: 60px !important;
+              padding-bottom: 20px !important;
               padding-right: 120px !important;
             }
           }
@@ -408,8 +408,16 @@ export default function VideoPlayer({
     if (!player || typeof player.playVideo !== 'function') return;
     if (isPlaying) {
       player.pauseVideo();
+      setShowControls(true); // Show controls when pausing
     } else {
       player.playVideo();
+      // Start hiding controls immediately when pressing play
+      if (hideControlsTimeoutRef.current) {
+        clearTimeout(hideControlsTimeoutRef.current);
+      }
+      hideControlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2000); // Slightly shorter delay when pressing play
     }
   };
 
@@ -786,7 +794,7 @@ export default function VideoPlayer({
       ></div>
 
       {/* Custom Controls Overlay */}
-      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 transition-opacity duration-300 pointer-events-none z-30 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         <div className={`video-controls-wrapper absolute bottom-0 left-0 right-0 pointer-events-auto z-40 ${isMobileFullscreen ? 'p-6 pb-16' : 'p-4'}`}>
           {/* Progress Bar */}
