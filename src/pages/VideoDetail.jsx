@@ -1,6 +1,6 @@
 // src/pages/VideoDetail.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import Seo from '../seo/Seo';
@@ -78,11 +78,16 @@ function getSessionId() {
 export default function VideoDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { lang } = useI18n();
   const { user } = useAuth();
   const { showNotification } = useNotification();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
   const sessionId = useMemo(() => getSessionId(), []);
+
+  // Check if we should autoplay (coming from ended video)
+  const shouldAutoplay = location.state?.autoplay === true;
+  const videoContainerRef = React.useRef(null);
 
   const [video, setVideo] = useState(null);
   const [allVideos, setAllVideos] = useState([]);
@@ -93,7 +98,6 @@ export default function VideoDetail() {
   const [newComment, setNewComment] = useState('');
   const [loadingLike, setLoadingLike] = useState(false);
 
-  const playerId = `youtube-player-${slug}`;
   const isAdminSubmission = video?.submitter?.role === 'admin';
 
   // Scroll to top on mount
@@ -145,8 +149,8 @@ export default function VideoDetail() {
     loadVideo();
   }, [slug, user?.id, sessionId]);
 
-  // Handle video end - play random video
-  const handleVideoEnd = () => {
+  // Switch to a random video (without full navigation to preserve fullscreen)
+  const switchToRandomVideo = async (isFullscreen = false) => {
     if (allVideos.length <= 1) return;
 
     // Filter out current video and pick a random one
@@ -158,8 +162,42 @@ export default function VideoDetail() {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-      navigate(`/videos/${randomSlug}`);
+
+      if (isFullscreen) {
+        // Stay on the same page, just update state and URL
+        // This preserves fullscreen mode
+        window.history.replaceState(null, '', `/videos/${randomSlug}`);
+
+        // Update video state directly
+        setVideo(randomVideo);
+        setLiked(false);
+        setLikeCount(0);
+        setComments([]);
+
+        // Load new video data
+        const [count, hasLiked, commentsData] = await Promise.all([
+          getVideoLikeCount(randomVideo.id),
+          hasLikedVideo(randomVideo.id, user?.id, sessionId),
+          getVideoComments(randomVideo.id)
+        ]);
+        setLikeCount(count);
+        setLiked(hasLiked);
+        setComments(commentsData || []);
+      } else {
+        // Normal navigation when not in fullscreen
+        navigate(`/videos/${randomSlug}`, { state: { autoplay: true } });
+      }
     }
+  };
+
+  // Handle video end - play random video
+  const handleVideoEnd = (wasFullscreen) => {
+    switchToRandomVideo(wasFullscreen);
+  };
+
+  // Handle skip button
+  const handleSkip = (isFullscreen) => {
+    switchToRandomVideo(isFullscreen);
   };
 
   const handleLike = async () => {
@@ -253,14 +291,15 @@ export default function VideoDetail() {
       <div className="min-h-screen bg-[#0f0f0f]">
         {/* Video player - Max width container like YouTube */}
         <div className="bg-black">
-          <div className="max-w-[1920px] mx-auto">
+          <div ref={videoContainerRef} className="max-w-[1920px] mx-auto">
             <VideoPlayer
               videoId={video.youtube_id}
               videoTitle={video.title}
-              playerId={playerId}
-              autoplay={false}
+              playerId="krac-video-player"
+              autoplay={shouldAutoplay || document.fullscreenElement !== null}
               showTopBar={true}
               onVideoEnd={handleVideoEnd}
+              onSkip={handleSkip}
             />
           </div>
         </div>

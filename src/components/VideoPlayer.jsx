@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef } from 'react';
  * @param {string} props.videoId - YouTube video ID
  * @param {string} props.videoTitle - Video title for display
  * @param {Function} props.onVideoEnd - Callback when video ends (optional)
+ * @param {Function} props.onSkip - Callback when skip button is clicked (optional)
  * @param {boolean} props.autoplay - Whether to autoplay (default: false)
  * @param {string} props.playerId - Unique player ID (required for multiple players)
  * @param {boolean} props.showTopBar - Whether to show top bar with logo/title/share (default: true)
@@ -17,6 +18,7 @@ export default function VideoPlayer({
   videoId,
   videoTitle,
   onVideoEnd,
+  onSkip,
   autoplay = false,
   playerId,
   showTopBar = true,
@@ -42,6 +44,7 @@ export default function VideoPlayer({
   const hideControlsTimeoutRef = useRef(null);
   const overlayTimeoutRef = useRef(null);
   const hideTopBarTimeoutRef = useRef(null);
+  const isFullscreenRef = useRef(false);
 
   // Load YouTube API
   useEffect(() => {
@@ -194,7 +197,7 @@ export default function VideoPlayer({
 
               // Check if video ended
               if (event.data === window.YT.PlayerState.ENDED && onVideoEnd) {
-                onVideoEnd();
+                onVideoEnd(isFullscreenRef.current);
               }
             }
           }
@@ -210,7 +213,34 @@ export default function VideoPlayer({
         clearTimeout(timer);
       }
     };
-  }, [apiReady, videoId, playerId, autoplay, showTopBar, onVideoEnd, onPlayerReady]);
+  }, [apiReady, playerId, showTopBar, onPlayerReady]);
+
+  // Handle video change - use loadVideoById to preserve fullscreen
+  useEffect(() => {
+    if (player && videoId && typeof player.loadVideoById === 'function') {
+      // Check if this is a different video than currently playing
+      const currentVideoUrl = player.getVideoUrl?.() || '';
+      const currentVideoId = currentVideoUrl.match(/[?&]v=([^&]+)/)?.[1];
+
+      if (currentVideoId !== videoId) {
+        // Reset states for new video
+        setCurrentTime(0);
+        setDuration(0);
+        setIsPlaying(false);
+        setShowOverlay(true);
+
+        // Load the new video (autoplay since we're switching)
+        player.loadVideoById(videoId);
+
+        // Get duration after a short delay
+        setTimeout(() => {
+          if (player.getDuration) {
+            setDuration(player.getDuration());
+          }
+        }, 1000);
+      }
+    }
+  }, [player, videoId]);
 
   // Handle mouse movement for controls
   const handleMouseMove = () => {
@@ -228,7 +258,9 @@ export default function VideoPlayer({
   // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const fs = !!document.fullscreenElement;
+      setIsFullscreen(fs);
+      isFullscreenRef.current = fs;
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -637,21 +669,40 @@ export default function VideoPlayer({
               </span>
             </div>
 
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors"
-            >
-              {isFullscreen ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                </svg>
+            <div className="flex items-center gap-1">
+              {/* Skip Button */}
+              {onSkip && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSkip(isFullscreen);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Skip"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                  </svg>
+                  <span className="text-sm font-medium hidden sm:inline">Skip</span>
+                </button>
               )}
-            </button>
+
+              {/* Fullscreen */}
+              <button
+                onClick={toggleFullscreen}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors"
+              >
+                {isFullscreen ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
