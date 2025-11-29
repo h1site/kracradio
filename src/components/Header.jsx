@@ -52,111 +52,116 @@ export default function Header() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {/* Notre Boutique */}
             <a
               href="https://store.kracradio.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+              title={t?.site?.store ?? 'Boutique'}
             >
-              {t?.site?.store ?? 'Boutique'}
+              <span className="hidden xl:inline">{t?.site?.store ?? 'Boutique'}</span>
+              <span className="xl:hidden">🛒</span>
             </a>
             {/* Donation */}
-            <a
-              href="https://www.paypal.com/donate/?hosted_button_id=GUPL4K5WR3ZG4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+            <Link
+              to="/donation"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+              title={t?.site?.donation ?? 'Donation'}
             >
-              {t?.site?.donation ?? 'Donation'}
-            </a>
+              <span className="hidden xl:inline">{t?.site?.donation ?? 'Donation'}</span>
+              <span className="xl:hidden">❤️</span>
+            </Link>
             {/* KEMP3.app */}
             <a
               href="https://kemp3.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20"
+              title="KEMP3"
             >
               KEMP3
             </a>
-            {/* Android APP */}
+            {/* Android APP - hidden on smaller screens, icon only on medium */}
             <a
               href="/kracradio.apk"
               download
-              className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20 flex items-center gap-1.5"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20 flex items-center gap-1"
               title={lang === 'fr' ? 'Télécharger l\'application Android' : lang === 'es' ? 'Descargar aplicación Android' : 'Download Android App'}
             >
-              📱 {lang === 'fr' ? 'Android APP' : lang === 'es' ? 'Android APP' : 'Android APP'}
+              📱<span className="hidden xl:inline">Android</span>
             </a>
 
-            {/* Submit Music - Only for authenticated users */}
-            {user && (
-              <Link
-                to="/submit-music"
-                className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20 flex items-center gap-1.5"
-              >
-                🎵 {lang === 'fr' ? 'Soumission Musique' : lang === 'es' ? 'Enviar Música' : 'Submit Music'}
-              </Link>
-            )}
+            {/* Submit Music - visible pour tous */}
+            <Link
+              to="/submit-music"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20 flex items-center gap-1"
+              title={lang === 'fr' ? 'Soumission Musique' : lang === 'es' ? 'Enviar Música' : 'Submit Music'}
+            >
+              🎵<span className="hidden xl:inline">{lang === 'fr' ? 'Soumettre' : lang === 'es' ? 'Enviar' : 'Submit'}</span>
+            </Link>
 
             {/* Divider */}
-            <div className="h-4 w-px bg-white/10 mx-1"></div>
+            <div className="h-4 w-px bg-white/10 mx-0.5"></div>
 
             {/* Auth */}
             {!user ? (
               <>
                 <Link
                   to="/login"
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
                 >
                   {t?.auth?.login ?? 'Connexion'}
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1.5 text-xs bg-white text-black hover:bg-gray-200 transition-colors rounded font-medium"
+                  className="px-2 py-1 text-[11px] bg-white text-black hover:bg-gray-200 transition-colors rounded font-medium"
                 >
                   {t?.auth?.register ?? 'Inscription'}
                 </Link>
               </>
             ) : (
               <>
-                {/* Dashboard */}
+                {/* Dashboard - text on xl, icon on smaller */}
                 <Link
                   to="/dashboard"
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
+                  title={t?.nav?.dashboard ?? 'Dashboard'}
                 >
-                  {t?.nav?.dashboard ?? 'Dashboard'}
+                  <span className="hidden xl:inline">{t?.nav?.dashboard ?? 'Dashboard'}</span>
+                  <span className="xl:hidden">📊</span>
                 </Link>
                 {/* Profile */}
                 <Link
                   to={artistProfileLink}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
+                  title={t?.nav?.profile ?? 'Profil'}
                 >
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
                       alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border border-white/20"
+                      className="w-5 h-5 rounded-full object-cover border border-white/20"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs">
+                    <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px]">
                       👤
                     </div>
                   )}
-                  {t?.nav?.profile ?? 'Profile'}
+                  <span className="hidden xl:inline">{t?.nav?.profile ?? 'Profil'}</span>
                 </Link>
                 {/* Messages */}
                 <Link
                   to="/messages"
-                  className="relative px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="relative px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
                   title={t?.nav?.messages ?? 'Messages'}
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                     <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                   </svg>
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-0.5 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-0.5 min-w-[14px] h-3.5 px-0.5 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -165,7 +170,7 @@ export default function Header() {
                 <div className="relative">
                   <button
                     onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
-                    className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                    className="px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
                     title="Playlists"
                   >
                     <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
@@ -208,7 +213,7 @@ export default function Header() {
                 {/* Settings */}
                 <Link
                   to="/settings"
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+                  className="px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors"
                   title={t?.nav?.settings ?? 'Settings'}
                 >
                   <img src="/icons/dark/settings.svg" alt="Settings" className="w-4 h-4" />
@@ -227,9 +232,11 @@ export default function Header() {
                       window.location.href = '/';
                     }
                   }}
-                  className="px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+                  className="px-2 py-1 text-[11px] text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+                  title={t?.auth?.logout ?? 'Déconnexion'}
                 >
-                  {loggingOut ? '...' : (t?.auth?.logout ?? 'Déconnexion')}
+                  <span className="hidden xl:inline">{loggingOut ? '...' : (t?.auth?.logout ?? 'Déconnexion')}</span>
+                  <span className="xl:hidden">{loggingOut ? '...' : '🚪'}</span>
                 </button>
               </>
             )}
@@ -238,7 +245,7 @@ export default function Header() {
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="bg-transparent text-gray-300 hover:text-white text-xs cursor-pointer transition-colors border-none outline-none"
+              className="bg-transparent text-gray-300 hover:text-white text-[11px] cursor-pointer transition-colors border-none outline-none"
               aria-label="Sélecteur de langue"
             >
               <option value="fr" className="bg-black">FR</option>
@@ -246,24 +253,24 @@ export default function Header() {
               <option value="es" className="bg-black">ES</option>
             </select>
 
-            {/* Switch thème */}
+            {/* Switch thème - compact */}
             <button
               type="button"
               onClick={toggleTheme}
               role="switch"
               aria-checked={isDark}
-              className="relative w-14 h-8 rounded-full border border-white/20 bg-white/10 transition"
+              className="relative w-12 h-6 rounded-full border border-white/20 bg-white/10 transition"
               title={isDark ? 'Thème sombre' : 'Thème clair'}
             >
               {/* Lune */}
-              <svg viewBox="0 0 24 24" className={`absolute left-1 top-1.5 w-5 h-5 ${isDark ? 'opacity-100' : 'opacity-50'}`}>
+              <svg viewBox="0 0 24 24" className={`absolute left-0.5 top-0.5 w-4 h-4 ${isDark ? 'opacity-100' : 'opacity-50'}`}>
                 <path fill="currentColor" d="M12 2a1 1 0 0 1 .97 1.243A8 8 0 1 0 20.757 11a1 1 0 0 1 1.243-.97A10 10 0 1 1 12 2z"/>
               </svg>
               {/* Soleil */}
-              <svg viewBox="0 0 24 24" className={`absolute right-1 top-1.5 w-5 h-5 ${isDark ? 'opacity-50' : 'opacity-100'}`}>
+              <svg viewBox="0 0 24 24" className={`absolute right-0.5 top-0.5 w-4 h-4 ${isDark ? 'opacity-50' : 'opacity-100'}`}>
                 <path fill="currentColor" d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79l1.8-1.79zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zm8.83-2.95l1.79-1.79l-1.79-1.79l-1.79 1.79l1.79 1.79zM17.24 4.84l1.79 1.79l1.79-1.79l-1.79-1.79l-1.79 1.79zM20 13h3v-2h-3v2zM11 1v3h2V1h-2zM4.22 17.66l-1.79 1.79l1.79 1.79l1.79-1.79l-1.79-1.79zM12 6a6 6 0 1 0 .001 12A6 6 0 0 0 12 6z"/>
               </svg>
-              <span className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${isDark ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isDark ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
         </div>

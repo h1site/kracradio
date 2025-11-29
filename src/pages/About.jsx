@@ -83,6 +83,8 @@ const STRINGS = {
     ctaTitle: 'Écoutez, découvrez, partagez',
     ctaBody:
       "KracRadio est une expérience musicale vivante. Chaque jour, nous donnons une place aux artistes émergents et aux auditeurs curieux.",
+    imageCreditsTitle: 'Crédits photos',
+    imageCreditsIntro: 'Les images utilisées sur ce site proviennent de Unsplash. Merci aux photographes :',
   },
   en: {
     metaTitle: 'About KracRadio — Our Story, Mission, and Values',
@@ -146,6 +148,8 @@ const STRINGS = {
     ctaTitle: 'Listen, Discover, Share',
     ctaBody:
       'KracRadio is a living musical experience. Every day, we give space to emerging artists and curious listeners.',
+    imageCreditsTitle: 'Photo Credits',
+    imageCreditsIntro: 'Images used on this site are from Unsplash. Thanks to the photographers:',
   },
   es: {
     metaTitle: 'Acerca de KracRadio — Historia, Misión y Valores',
@@ -209,8 +213,25 @@ const STRINGS = {
     ctaTitle: 'Escuchar, descubrir, compartir',
     ctaBody:
       'KracRadio es una experiencia musical viva. Cada día damos espacio a artistas emergentes y oyentes curiosos.',
+    imageCreditsTitle: 'Créditos de fotos',
+    imageCreditsIntro: 'Las imágenes de este sitio provienen de Unsplash. Gracias a los fotógrafos:',
   },
 };
+
+// Liste des crédits d'images Unsplash utilisées sur le site
+const IMAGE_CREDITS = [
+  { page: 'About', photographer: 'Wes Hicks', url: 'https://unsplash.com/@sickhews' },
+  { page: 'Charts', photographer: 'Marcela Laskoski', url: 'https://unsplash.com/@marcelalaskoski' },
+  { page: 'Contact', photographer: 'John Matychuk', url: 'https://unsplash.com/@john_matychuk' },
+  { page: 'Articles', photographer: 'Caught In Joy', url: 'https://unsplash.com/@caughtinjoy' },
+  { page: 'Schedule', photographer: 'Caught In Joy', url: 'https://unsplash.com/@caughtinjoy' },
+  { page: 'Videos', photographer: 'Jakob Owens', url: 'https://unsplash.com/@jakobowens1' },
+  { page: 'Artists', photographer: 'Austin Neill', url: 'https://unsplash.com/@arstyy' },
+  { page: 'Feed', photographer: 'Austin Neill', url: 'https://unsplash.com/@arstyy' },
+  { page: 'Spotify', photographer: 'Simon Noh', url: 'https://unsplash.com/@smnoh' },
+  { page: 'Podcasts', photographer: 'Jonathan Velasquez', url: 'https://unsplash.com/@jonathanvelasquez' },
+  { page: 'Community', photographer: 'Aditya Chinchure', url: 'https://unsplash.com/@adityachinchure' },
+];
 
 // ————————————————————————————————————————
 // Utilitaires Head : favicon
@@ -464,6 +485,43 @@ export default function About() {
             <h3 className="text-xl md:text-2xl font-bold mb-2 text-red-900 dark:text-red-100">{L.ctaTitle}</h3>
             <p className="text-red-800 dark:text-red-200">{L.ctaBody}</p>
           </div>
+        </div>
+      </Section>
+
+      {/* Image Credits */}
+      <Section title={L.imageCreditsTitle}>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50 p-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{L.imageCreditsIntro}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {IMAGE_CREDITS.map((credit, idx) => (
+              <a
+                key={idx}
+                href={credit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {credit.photographer.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {credit.photographer}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{credit.page}</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 text-center">
+            <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">
+              Unsplash
+            </a>
+            {' '}— {lang === 'fr' ? 'Photos libres de droits' : lang === 'es' ? 'Fotos libres de derechos' : 'Royalty-free photos'}
+          </p>
         </div>
       </Section>
       </div>

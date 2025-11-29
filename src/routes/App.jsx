@@ -55,6 +55,7 @@ import StoreDashboard from '../pages/StoreDashboard';
 import AdminStore from '../pages/AdminStore';
 import Messages from '../pages/Messages';
 import Feed from '../pages/Feed';
+import Donation from '../pages/Donation';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
@@ -245,6 +246,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/submit-music" element={<SubmitMusic />} />
+          <Route path="/donation" element={<Donation />} />
 
           {/* Store - Artist submission and dashboard */}
           <Route
