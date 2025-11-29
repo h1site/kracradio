@@ -100,28 +100,42 @@ export default function VideoPlayer({
             display: none !important;
           }
 
-          /* Mobile fullscreen - simple fullscreen without rotation */
-          html.mobile-fullscreen-active .mobile-fullscreen-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 99999 !important;
-            background: black !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+          /* Mobile fullscreen in LANDSCAPE orientation */
+          @media screen and (orientation: landscape) {
+            html.mobile-fullscreen-active .mobile-fullscreen-container {
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              z-index: 99999 !important;
+              background: black !important;
+            }
+            html.mobile-fullscreen-active .mobile-fullscreen-container iframe {
+              width: 100vw !important;
+              height: 100vh !important;
+            }
           }
 
-          /* Keep video aspect ratio */
-          html.mobile-fullscreen-active .mobile-fullscreen-container #krac-video-player {
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 16/9 !important;
-            max-height: 100% !important;
+          /* Mobile fullscreen in PORTRAIT orientation - rotate to landscape */
+          @media screen and (orientation: portrait) {
+            html.mobile-fullscreen-active .mobile-fullscreen-container {
+              position: fixed !important;
+              /* Position at center of screen */
+              top: 50% !important;
+              left: 50% !important;
+              /* After rotation: container width = screen height, container height = screen width */
+              width: 100vh !important;
+              height: 100vw !important;
+              /* Center then rotate */
+              transform: translate(-50%, -50%) rotate(90deg) !important;
+              z-index: 99999 !important;
+              background: black !important;
+            }
+            html.mobile-fullscreen-active .mobile-fullscreen-container iframe {
+              width: 100% !important;
+              height: 100% !important;
+            }
           }
         `;
         document.head.appendChild(style);
