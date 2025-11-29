@@ -93,7 +93,7 @@ export default function VideoDetail() {
   const [loadingLike, setLoadingLike] = useState(false);
 
   const playerId = `youtube-player-${slug}`;
-  const isAdminSubmission = video?.submitter_id === '00000000-0000-0000-0000-000000000000';
+  const isAdminSubmission = video?.submitter?.role === 'admin';
 
   // Load video by slug
   useEffect(() => {
