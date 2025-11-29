@@ -128,21 +128,27 @@ export default function VideoPlayer({
               /* Position at top-left corner */
               top: 0 !important;
               left: 100vw !important;
-              /* IMPORTANT: Set dimensions for AFTER rotation */
-              /* Width becomes height (screen width), Height becomes width (screen height) */
-              width: 100vh !important;
+              /* Use max of vh/vw to ensure full coverage */
+              width: max(100vh, 100vw) !important;
               height: 100vw !important;
               /* Rotate 90deg clockwise around top-left */
               transform-origin: top left !important;
               transform: rotate(90deg) !important;
               z-index: 99999 !important;
               background: black !important;
+              /* Center the video if there's extra space */
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
             }
             html.mobile-fullscreen-active .mobile-fullscreen-container iframe,
             html.mobile-fullscreen-active .mobile-fullscreen-container > div:first-child {
-              /* Fill the rotated container */
+              /* Fill the rotated container completely */
               width: 100% !important;
               height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              object-fit: cover !important;
             }
             /* Controls need extra padding in rotated mode - right side gets cut */
             html.mobile-fullscreen-active .mobile-fullscreen-container .video-controls-wrapper {
