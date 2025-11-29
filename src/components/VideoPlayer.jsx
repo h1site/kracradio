@@ -104,9 +104,12 @@ export default function VideoPlayer({
           @media screen and (orientation: portrait) {
             html.mobile-fullscreen-active .mobile-fullscreen-container {
               position: fixed !important;
-              /* Swap width and height for rotation */
-              width: 100vh !important;
-              height: 100vw !important;
+              /* After 90deg rotation: width becomes height, height becomes width */
+              /* Use 100vw as the "width" (which shows as height after rotation) */
+              /* Calculate height to fit 16:9 aspect ratio within screen width */
+              width: 100vw !important;
+              height: calc(100vw * 16 / 9) !important;
+              max-height: 100vh !important;
               /* Center and rotate */
               top: 50% !important;
               left: 50% !important;
