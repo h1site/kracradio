@@ -300,6 +300,10 @@ export default function VideoDetail() {
               showTopBar={true}
               onVideoEnd={handleVideoEnd}
               onSkip={handleSkip}
+              liked={liked}
+              likeCount={likeCount}
+              onLike={handleLike}
+              loadingLike={loadingLike}
             />
           </div>
         </div>

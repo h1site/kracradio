@@ -13,6 +13,10 @@ import React, { useState, useEffect, useRef } from 'react';
  * @param {string} props.playerId - Unique player ID (required for multiple players)
  * @param {boolean} props.showTopBar - Whether to show top bar with logo/title/share (default: true)
  * @param {Function} props.onPlayerReady - Callback when player is ready (optional)
+ * @param {boolean} props.liked - Whether the video is liked (optional)
+ * @param {number} props.likeCount - Number of likes (optional)
+ * @param {Function} props.onLike - Callback when like button is clicked (optional)
+ * @param {boolean} props.loadingLike - Whether like is loading (optional)
  */
 export default function VideoPlayer({
   videoId,
@@ -22,7 +26,11 @@ export default function VideoPlayer({
   autoplay = false,
   playerId,
   showTopBar = true,
-  onPlayerReady
+  onPlayerReady,
+  liked = false,
+  likeCount = 0,
+  onLike,
+  loadingLike = false
 }) {
   const [player, setPlayer] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -712,6 +720,28 @@ export default function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Like Button */}
+              {onLike && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLike();
+                  }}
+                  disabled={loadingLike}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors ${
+                    liked
+                      ? 'bg-white text-black'
+                      : 'bg-white/10 hover:bg-white/20 text-white'
+                  }`}
+                  title="Like"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <span className="text-sm font-medium">{likeCount}</span>
+                </button>
+              )}
+
               {/* Skip Button */}
               {onSkip && (
                 <button
