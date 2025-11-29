@@ -630,32 +630,48 @@ export default function PublicProfile() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {videos.map(video => (
-                    <div
-                      key={video.id}
-                      className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
-                    >
-                      <div className="aspect-video w-full">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${video.youtube_id}`}
-                          title={video.title}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-2">
-                          {video.title}
-                        </h3>
-                        {video.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                            {video.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  {videos.map(video => {
+                    const videoSlug = video.title
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-+|-+$/g, '');
+                    return (
+                      <Link
+                        key={video.id}
+                        to={`/videos/${videoSlug}`}
+                        className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-800 hover:border-red-500"
+                      >
+                        <div className="aspect-video w-full relative">
+                          <img
+                            src={`https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`}
+                            alt={video.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.src = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
+                            }}
+                          />
+                          {/* Play button overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-all">
+                            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-600 group-hover:bg-red-700 group-hover:scale-110 transition-all shadow-2xl">
+                              <svg className="w-6 h-6 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-2 group-hover:text-red-500 transition-colors">
+                            {video.title}
+                          </h3>
+                          {video.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                              {video.description}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
