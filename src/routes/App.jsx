@@ -43,8 +43,7 @@ import AdminPanel from '../pages/AdminPanel';
 import PodcastEditor from '../pages/PodcastEditor';
 import CommunityDashboard from '../pages/CommunityDashboard';
 import PublicProfile from '../pages/PublicProfile';
-import LikedSongs from '../pages/LikedSongs';
-import LikedVideos from '../pages/LikedVideos';
+// LikedSongs and LikedVideos pages are now redirected to /playlists
 import Charts from '../pages/Charts';
 import Videos from '../pages/Videos';
 import VideoDetail from '../pages/VideoDetail';
@@ -56,11 +55,14 @@ import AdminStore from '../pages/AdminStore';
 import Messages from '../pages/Messages';
 import Feed from '../pages/Feed';
 import Donation from '../pages/Donation';
+import UserPlaylists from '../pages/UserPlaylists';
+import VideoPlaylistPlayer from '../pages/VideoPlaylistPlayer';
 
 import { useUI } from '../context/UIContext';
 import { useLocation } from 'react-router-dom';
 import { NotificationProvider } from '../context/NotificationContext';
 import { LikedSongsProvider } from '../context/LikedSongsContext';
+import { PlaylistProvider } from '../context/PlaylistContext';
 import NotificationPopup from '../components/NotificationPopup';
 
 export default function App() {
@@ -82,6 +84,7 @@ export default function App() {
   return (
     <NotificationProvider>
       <LikedSongsProvider>
+        <PlaylistProvider>
         <div className="bg-white text-black dark:bg-[#1e1e1e] dark:text-white">
           <ScrollToTop />
           <Header />
@@ -130,25 +133,22 @@ export default function App() {
           {/* Profil public par slug/username (après /profile exacte) */}
           <Route path="/profile/:username" element={<PublicProfile />} />
 
-          {/* Liked Songs (protected) */}
+          {/* Redirect old liked pages to unified playlists page */}
+          <Route path="/liked-songs" element={<Navigate to="/playlists" replace />} />
+          <Route path="/liked-videos" element={<Navigate to="/playlists" replace />} />
+
+          {/* User Playlists - unified page for liked songs, liked videos, and custom playlists */}
           <Route
-            path="/liked-songs"
+            path="/playlists"
             element={
               <ProtectedRoute>
-                <LikedSongs />
+                <UserPlaylists />
               </ProtectedRoute>
             }
           />
 
-          {/* Liked Videos (protected) */}
-          <Route
-            path="/liked-videos"
-            element={
-              <ProtectedRoute>
-                <LikedVideos />
-              </ProtectedRoute>
-            }
-          />
+          {/* Video Playlist Player */}
+          <Route path="/playlist/video/:playlistId" element={<VideoPlaylistPlayer />} />
 
           {/* Messages (protected) */}
           <Route
@@ -284,6 +284,7 @@ export default function App() {
         <Footer />
         <PlayerBar />
       </div>
+        </PlaylistProvider>
       </LikedSongsProvider>
     </NotificationProvider>
   );

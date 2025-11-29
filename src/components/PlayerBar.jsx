@@ -532,9 +532,9 @@ export default function PlayerBar() {
         {/* Bloc 1 — Image de la chaîne OU image principale podcast OU liked songs icon */}
         <div className="relative channel-menu-container">
           <button
-            onClick={(isPodcast || isLikedSongs) ? undefined : toggleChannelMenu}
-            disabled={isPodcast || isLikedSongs}
-            className={`h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0 ${(!isPodcast && !isLikedSongs) ? 'hover:border-red-500/50 cursor-pointer transition-all' : 'cursor-default'}`}
+            onClick={(!isPodcast && !isLikedSongs) ? toggleChannelMenu : undefined}
+            className={`h-14 aspect-square overflow-hidden rounded-lg border border-white/10 shadow-lg flex-shrink-0 ${(!isPodcast && !isLikedSongs) ? 'hover:border-red-500/50 cursor-pointer' : 'cursor-default'} transition-all`}
+            title={(!isPodcast && !isLikedSongs) ? "Changer de chaîne" : undefined}
           >
             {isLikedSongs ? (
               <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
@@ -553,8 +553,8 @@ export default function PlayerBar() {
             )}
           </button>
 
-          {/* Menu de sélection de chaîne */}
-          {showChannelMenu && !isPodcast && (
+          {/* Menu de sélection de chaîne - seulement pour la radio */}
+          {showChannelMenu && !isPodcast && !isLikedSongs && (
             <div className="absolute bottom-full left-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-h-[400px] overflow-y-auto">
               {channels.map((channel) => (
                 <button
@@ -586,9 +586,9 @@ export default function PlayerBar() {
 
         {/* Bloc 2 — Label + nom du channel OU nom du podcast OU Liked Songs */}
         <button
-          onClick={(isPodcast || isLikedSongs) ? undefined : toggleChannelMenu}
-          disabled={isPodcast || isLikedSongs}
-          className={`channel-menu-container flex flex-col justify-center min-w-[140px] px-2 text-left ${(!isPodcast && !isLikedSongs) ? 'hover:opacity-80 cursor-pointer transition-opacity' : 'cursor-default'}`}
+          onClick={(!isPodcast && !isLikedSongs) ? toggleChannelMenu : undefined}
+          className={`channel-menu-container flex flex-col justify-center min-w-[140px] px-2 text-left ${(!isPodcast && !isLikedSongs) ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'} transition-opacity`}
+          title={(!isPodcast && !isLikedSongs) ? "Changer de chaîne" : undefined}
         >
           <div className="text-[10px] uppercase font-semibold tracking-wider opacity-50 leading-none mb-1">
             {isLikedSongs ? likedSongsLabel : isPodcast ? podcastLabel : channelLabel}
