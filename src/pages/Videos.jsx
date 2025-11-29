@@ -171,7 +171,7 @@ function VideoCard({ video, L }) {
           {video.submitter?.role === 'admin' && (
             <div className="absolute top-3 left-3 z-10">
               <img
-                src="/krac_short_white_white.png"
+                src="/images/logos/krac_short_white_white.png"
                 alt="KracRadio"
                 className="h-6 w-auto drop-shadow-lg"
               />
