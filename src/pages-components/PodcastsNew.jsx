@@ -5,7 +5,14 @@ import Link from 'next/link';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import { supabase } from '../lib/supabase';
+import {
+  FadeIn,
+  StaggerContainer,
+  StaggerItem,
+  motion
+} from '../components/animations';
 
 const STRINGS = {
   fr: {
@@ -50,6 +57,7 @@ export default function Podcasts() {
   const { lang } = useI18n();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
   const { user } = useAuth();
+  const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
 
   const [podcasts, setPodcasts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +100,7 @@ export default function Podcasts() {
   };
 
   return (
-    <main className="container-max pb-16 pl-4">
+    <>
       <Seo
         lang={lang}
         title={L.metaTitle}
@@ -101,27 +109,76 @@ export default function Podcasts() {
         type="website"
       />
 
-      <header className="pb-12 pr-[30px] flex items-center justify-between">
-        <div>
-          <span className="inline-flex items-center rounded-full border border-red-600/40 bg-red-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
-            {L.heroBadge}
-          </span>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-black dark:text-white md:text-5xl">
-            {L.heroTitle}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base text-gray-700 dark:text-gray-300 md:text-lg">
-            {L.heroSubtitle}
-          </p>
-        </div>
-        {user && (
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+      <div className="min-h-screen bg-white dark:bg-black">
+        {/* Full-screen header */}
+        <header
+          className="relative w-full overflow-hidden"
+          style={{
+            marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
+            width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
+            transition: 'margin-left 300ms ease, width 300ms ease'
+          }}
+        >
+          <div className="absolute inset-0">
+            <img
+              src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1200&h=400&fit=crop&auto=format&q=80"
+              alt="Podcasts"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+          </div>
+          <div
+            className="relative py-16 md:py-24"
+            style={{
+              marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+              transition: 'margin-left 300ms ease'
+            }}
           >
-            {L.managePodcasts}
-          </Link>
-        )}
-      </header>
+            <div className="max-w-4xl pl-[60px] md:pl-[100px] pr-8">
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300"
+              >
+                {L.heroBadge}
+              </motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="mt-4 text-4xl md:text-6xl font-black uppercase text-white"
+              >
+                {L.heroTitle}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-4 max-w-3xl text-lg text-gray-200"
+              >
+                {L.heroSubtitle}
+              </motion.p>
+              {user && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-6"
+                >
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                  >
+                    {L.managePodcasts}
+                  </Link>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main className="px-[5px] py-12">
 
       {loading ? (
         <div className="py-20 text-center text-gray-600 dark:text-gray-400">
@@ -212,11 +269,13 @@ export default function Podcasts() {
         </section>
       )}
 
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </main>
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        </main>
+      </div>
+    </>
   );
 }

@@ -5,6 +5,7 @@ import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
 import GoogleAd from '../components/ads/GoogleAd';
+import { FadeIn, StaggerContainer, StaggerItem, motion } from '../components/animations';
 
 const STRINGS = {
   fr: {
@@ -310,12 +311,22 @@ export default function Podcasts() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
         </div>
         <div className="relative pl-[60px] md:pl-[100px] pr-8 py-16 md:py-24">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-6xl max-w-2xl">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-extrabold tracking-tight text-white md:text-6xl max-w-2xl"
+          >
             {L.heroTitle}
-          </h1>
-          <p className="mt-4 text-lg text-gray-200 max-w-xl">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-4 text-lg text-gray-200 max-w-xl"
+          >
             {L.heroSubtitle}
-          </p>
+          </motion.p>
         </div>
       </header>
 
@@ -324,7 +335,8 @@ export default function Podcasts() {
       </div>
 
       {/* Info Section - Modern Design */}
-      <section className="rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 dark:border-purple-800 dark:from-purple-950/50 dark:to-pink-950/50 p-8 shadow-lg relative overflow-hidden">
+      <FadeIn direction="up">
+        <section className="rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 dark:border-purple-800 dark:from-purple-950/50 dark:to-pink-950/50 p-8 shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-purple-400/10 dark:bg-purple-400/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/10 dark:bg-pink-400/5 rounded-full blur-3xl"></div>
 
@@ -365,9 +377,11 @@ export default function Podcasts() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
       {/* Form Section - Modern Design */}
-      <section className="mt-10">
+      <FadeIn direction="up" delay={0.1}>
+        <section className="mt-10">
         <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:border-blue-800 dark:from-blue-950/50 dark:to-cyan-950/50 p-8 shadow-lg relative overflow-hidden">
           <div className="absolute top-0 left-0 w-40 h-40 bg-blue-400/10 dark:bg-blue-400/5 rounded-full blur-3xl"></div>
 
@@ -595,10 +609,12 @@ export default function Podcasts() {
           </form>
           </div>
         </div>
-      </section>
+        </section>
+      </FadeIn>
 
       {/* Submissions Section */}
-      <section className="mt-12">
+      <FadeIn direction="up" delay={0.2}>
+        <section className="mt-12">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-600 to-red-600 dark:from-orange-500 dark:to-red-500 flex items-center justify-center shadow-lg">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -699,7 +715,8 @@ export default function Podcasts() {
             ))}
           </div>
         )}
-      </section>
+        </section>
+      </FadeIn>
     </main>
   );
 }

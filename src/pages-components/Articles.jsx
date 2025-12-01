@@ -8,6 +8,13 @@ import { useI18n } from '../i18n';
 import GoogleAd from '../components/ads/GoogleAd';
 import { useUI } from '../context/UIContext';
 import { collectionPageSchema, breadcrumbSchema } from '../seo/schemas';
+import {
+  FadeIn,
+  StaggerContainer,
+  StaggerItem,
+  AnimatedCard,
+  motion
+} from '../components/animations';
 
 const STRINGS = {
   fr: {
@@ -131,15 +138,30 @@ export default function Articles() {
             }}
           >
             <div className="max-w-4xl pl-[60px] md:pl-[100px] pr-8">
-              <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300"
+              >
                 {L.heroBadge}
-              </span>
-              <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase text-white">
+              </motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="mt-4 text-4xl md:text-6xl font-black uppercase text-white"
+              >
                 {L.heroTitle}
-              </h1>
-              <p className="mt-4 max-w-3xl text-lg text-gray-200">
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-4 max-w-3xl text-lg text-gray-200"
+              >
                 {L.heroSubtitle}
-              </p>
+              </motion.p>
             </div>
           </div>
         </header>
@@ -166,7 +188,7 @@ export default function Articles() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16">
+          <StaggerContainer staggerDelay={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16">
             {rows.map((article, index) => {
               let excerpt = article.excerpt || '';
               if (!excerpt && typeof article.content === 'string' && article.content.trim().startsWith('{')) {
@@ -185,15 +207,18 @@ export default function Articles() {
                 }) : '';
 
                 return (
-                  <React.Fragment key={article.slug}>
-                    <article className="group md:col-span-2 lg:col-span-3 relative rounded-2xl overflow-hidden shadow-lg">
+                  <StaggerItem key={article.slug} direction="scale" className="md:col-span-2 lg:col-span-3">
+                    <motion.article
+                      className="group relative rounded-2xl overflow-hidden shadow-lg"
+                      whileHover={{ scale: 1.01 }}
+                    >
                       <Link href={`/article/${article.slug}`} className="block">
                         <div className="h-96">
                           {imageUrl && (
                             <img
                               src={imageUrl}
                               alt={article.title}
-                              className="absolute inset-0 w-full h-full object-cover"
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -226,51 +251,57 @@ export default function Articles() {
                           <p className="text-gray-300 line-clamp-2">{excerpt}</p>
                         </div>
                       </Link>
-                    </article>
-                  </React.Fragment>
+                    </motion.article>
+                  </StaggerItem>
                 )
               }
 
               return (
-                <article key={article.slug} className="group relative rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
-                   <Link href={`/article/${article.slug}`} className="block">
-                    {imageUrl && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={imageUrl}
-                          alt={article.title}
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
-                    <div className="p-5">
-                      {/* Author info */}
-                      {article.author_name && (
-                        <div className="flex items-center gap-2 mb-2">
-                          {article.author_avatar && (
-                            <img
-                              src={article.author_avatar}
-                              alt={article.author_name}
-                              className="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-700"
-                            />
-                          )}
-                          <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                            {article.author_name}
-                          </div>
+                <StaggerItem key={article.slug} direction="scale">
+                  <motion.article
+                    className="group relative rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 h-full"
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  >
+                    <Link href={`/article/${article.slug}`} className="block h-full">
+                      {imageUrl && (
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img
+                            src={imageUrl}
+                            alt={article.title}
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                          />
                         </div>
                       )}
-                      <h2 className="text-xl font-bold mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
-                        {article.title}
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3">
-                        {excerpt}
-                      </p>
-                    </div>
-                  </Link>
-                </article>
+                      <div className="p-5">
+                        {/* Author info */}
+                        {article.author_name && (
+                          <div className="flex items-center gap-2 mb-2">
+                            {article.author_avatar && (
+                              <img
+                                src={article.author_avatar}
+                                alt={article.author_name}
+                                className="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                              />
+                            )}
+                            <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                              {article.author_name}
+                            </div>
+                          </div>
+                        )}
+                        <h2 className="text-xl font-bold mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
+                          {article.title}
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3">
+                          {excerpt}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.article>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
 
           <div className="pb-10">
             <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />

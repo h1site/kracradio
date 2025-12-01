@@ -111,9 +111,30 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Critical resource hints for Core Web Vitals */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://gpcedzaflhiucwyjgdai.supabase.co" />
         <link rel="dns-prefetch" href="https://gpcedzaflhiucwyjgdai.supabase.co" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
+        <link rel="preconnect" href="https://img.youtube.com" />
+
+        {/* Preload critical LCP images */}
+        <link
+          rel="preload"
+          href="/channels/kracradio.webp"
+          as="image"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          href="/logo-white.png"
+          as="image"
+          type="image/png"
+        />
       </head>
       <body>
         <Providers>

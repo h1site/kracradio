@@ -1,6 +1,6 @@
 'use client';
 // src/pages/Videos.jsx
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +29,7 @@ const STRINGS = {
     delete: 'Supprimer',
     by: 'par',
     submittedBy: 'Soumis par',
+    loadMore: 'Charger plus',
   },
   en: {
     metaTitle: 'Videos — KracRadio',
@@ -46,6 +47,7 @@ const STRINGS = {
     delete: 'Delete',
     by: 'by',
     submittedBy: 'Submitted by',
+    loadMore: 'Load more',
   },
   es: {
     metaTitle: 'Videos — KracRadio',
@@ -63,16 +65,16 @@ const STRINGS = {
     delete: 'Eliminar',
     by: 'por',
     submittedBy: 'Enviado por',
+    loadMore: 'Cargar más',
   },
 };
 
-// Video Card Component
+// Video Card Component - sans animations framer-motion
 function VideoCard({ video, L }) {
   const [likeCount, setLikeCount] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [player, setPlayer] = useState(null);
-  const playerRef = React.useRef(null);
-  const hoverTimeoutRef = React.useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -108,12 +110,10 @@ function VideoCard({ video, L }) {
   }, [isHovering, player, video.id, video.youtube_id]);
 
   const handleMouseEnter = (e) => {
-    // Prevent navigation when hovering
     e.preventDefault();
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    // Delay before starting preview
     hoverTimeoutRef.current = setTimeout(() => {
       setIsHovering(true);
     }, 500);
@@ -129,7 +129,6 @@ function VideoCard({ video, L }) {
     }
   };
 
-  // Generate slug from title only (simpler and more reliable)
   const videoSlug = video.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -138,22 +137,19 @@ function VideoCard({ video, L }) {
   return (
     <Link href={`/videos/${videoSlug}`} className="block group">
       <div
-        className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-lg hover:shadow-xl transition-all group-hover:scale-[1.02]"
+        className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-lg hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* YouTube Preview/Thumbnail */}
         <div className="relative aspect-video w-full bg-black overflow-hidden">
-          {/* Thumbnail - hidden when hovering */}
           <img
-            src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg`}
+            src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`}
             alt={video.title}
-            className={`w-full h-full object-cover transition-all ${isHovering ? 'opacity-0' : 'opacity-100'}`}
+            loading="lazy"
+            className={`w-full h-full object-cover transition-opacity duration-200 ${isHovering ? 'opacity-0' : 'opacity-100'}`}
             onError={(e) => {
-              // Try hqdefault, then default thumbnail
-              if (e.target.src.includes('maxresdefault')) {
-                e.target.src = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`;
-              } else if (!e.target.src.includes('video-thumbnail-default')) {
+              if (!e.target.src.includes('video-thumbnail-default')) {
                 e.target.src = '/images/video-thumbnail-default.svg';
               }
             }}
@@ -164,7 +160,7 @@ function VideoCard({ video, L }) {
             <div id={`player-${video.id}`} className="w-full h-full"></div>
           </div>
 
-          {/* Play button overlay - hidden when hovering */}
+          {/* Play button overlay */}
           <div className={`absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-all ${isHovering ? 'opacity-0' : 'opacity-100'}`}>
             <div className="w-20 h-20 flex items-center justify-center rounded-full bg-red-600 group-hover:bg-red-700 group-hover:scale-110 transition-all shadow-2xl">
               <svg className="w-8 h-8 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -207,19 +203,25 @@ function VideoCard({ video, L }) {
   );
 }
 
+// Nombre de vidéos à charger initialement et par batch
+const INITIAL_LOAD = 6;
+const LOAD_MORE = 6;
+
 export default function Videos() {
   const { lang } = useI18n();
   const { user } = useAuth();
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
 
-  const [videos, setVideos] = useState([]);
+  const [allVideos, setAllVideos] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_LOAD);
   const [loading, setLoading] = useState(true);
+  const loaderRef = useRef(null);
 
   const loadVideos = useCallback(async () => {
     try {
       const data = await getApprovedVideos();
-      setVideos(data);
+      setAllVideos(data);
     } catch (err) {
       console.error('Error loading videos:', err);
     } finally {
@@ -230,6 +232,29 @@ export default function Videos() {
   useEffect(() => {
     loadVideos();
   }, [loadVideos]);
+
+  // Infinite scroll avec IntersectionObserver
+  useEffect(() => {
+    if (loading || visibleCount >= allVideos.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + LOAD_MORE, allVideos.length));
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loading, visibleCount, allVideos.length]);
+
+  const visibleVideos = allVideos.slice(0, visibleCount);
+  const hasMore = visibleCount < allVideos.length;
 
   return (
     <>
@@ -246,54 +271,69 @@ export default function Videos() {
         ]}
       />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-black">
-        {/* Hero Header */}
-        <header className="relative overflow-hidden border-b border-gray-800">
-          {/* Background image with gradient overlay */}
+      <div className="min-h-screen bg-white dark:bg-black">
+        {/* Full-screen header */}
+        <header
+          className="relative w-full overflow-hidden"
+          style={{
+            marginLeft: isDesktop && sidebarOpen ? -sidebarWidth : 0,
+            width: isDesktop && sidebarOpen ? `calc(100% + ${sidebarWidth}px)` : '100%',
+            transition: 'margin-left 300ms ease, width 300ms ease'
+          }}
+        >
           <div className="absolute inset-0">
             <img
-              src="https://images.unsplash.com/photo-1574267432644-f65b56c5e2ce?w=1920&h=400&fit=crop&auto=format&q=80"
-              alt=""
+              src="https://images.unsplash.com/photo-1574267432644-f65b56c5e2ce?w=1200&h=400&fit=crop&auto=format&q=80"
+              alt="Videos"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/70"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
           </div>
-
-          <div className="relative px-6 py-12 max-w-[1800px] mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-red-400 text-xs font-bold uppercase tracking-widest">
+          <div
+            className="relative py-16 md:py-24"
+            style={{
+              marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
+              transition: 'margin-left 300ms ease'
+            }}
+          >
+            <div className="max-w-4xl pl-[60px] md:pl-[100px] pr-8">
+              <span className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
                 {L.heroBadge}
               </span>
+              <h1 className="mt-4 text-4xl md:text-6xl font-black uppercase text-white">
+                {L.heroTitle}
+              </h1>
+              <p className="mt-4 max-w-3xl text-lg text-gray-200">
+                {L.heroSubtitle}
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-3">
-              {L.heroTitle}
-            </h1>
-            <p className="text-lg text-gray-400 max-w-2xl">
-              {L.heroSubtitle}
-            </p>
           </div>
         </header>
 
-        <main className="px-6 py-8 max-w-[1800px] mx-auto">
+        <main className="px-[5px] py-12">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ) : videos.length === 0 ? (
+          ) : allVideos.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 dark:text-gray-400">{L.noVideos}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {videos.map((video) => (
-                <VideoCard
-                  key={video.id}
-                  video={video}
-                  L={L}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {visibleVideos.map((video) => (
+                  <VideoCard key={video.id} video={video} L={L} />
+                ))}
+              </div>
+
+              {/* Loader pour infinite scroll */}
+              {hasMore && (
+                <div ref={loaderRef} className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -210,3 +210,80 @@ html, body {
   html, body { min-height: 100%; }
   body { padding-bottom: 40px; }
 }
+
+/* ===== Core Web Vitals Optimizations ===== */
+
+/* Prevent CLS: Reserve space for images */
+img {
+  content-visibility: auto;
+}
+
+/* Hero image placeholder to prevent CLS */
+.hero-image-container {
+  aspect-ratio: 16 / 9;
+  background-color: #1a1a1a;
+}
+
+/* Prevent layout shift from fonts */
+@supports (font-display: swap) {
+  * {
+    font-display: swap;
+  }
+}
+
+/* Optimize paint performance */
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Reduce layout thrashing */
+.contain-layout {
+  contain: layout;
+}
+
+/* Optimize scroll performance */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-smooth {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Skeleton loading for better perceived performance */
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Video thumbnail aspect ratio to prevent CLS */
+.video-thumbnail {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Podcast card image aspect ratio */
+.podcast-image {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Article card image aspect ratio */
+.article-image {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}

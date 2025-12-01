@@ -28,12 +28,25 @@ function stripHtml(html) {
 }
 
 /**
+ * Convertit une URL RSS pour utiliser le proxy si nécessaire (CORS)
+ */
+function getProxiedUrl(rssUrl) {
+  // Si c'est une URL baladoquebec.ca, utiliser le proxy Next.js
+  if (rssUrl.includes('baladoquebec.ca')) {
+    const url = new URL(rssUrl);
+    return `/api/proxy${url.pathname}`;
+  }
+  return rssUrl;
+}
+
+/**
  * Parse un flux RSS de podcast et retourne les épisodes
  */
 export async function parseRssFeed(rssUrl) {
   try {
-    console.log('[RSS Parser] Fetching:', rssUrl);
-    const response = await fetch(rssUrl);
+    const fetchUrl = getProxiedUrl(rssUrl);
+    console.log('[RSS Parser] Fetching:', fetchUrl, '(original:', rssUrl, ')');
+    const response = await fetch(fetchUrl);
     const xmlText = await response.text();
     console.log('[RSS Parser] Response length:', xmlText.length);
 
@@ -247,8 +260,9 @@ export async function importPodcastEpisodes(supabase, podcastId, rssUrl) {
  */
 export async function parsePodcastMetadata(rssUrl) {
   try {
-    console.log('[RSS Parser] Fetching metadata from:', rssUrl);
-    const response = await fetch(rssUrl);
+    const fetchUrl = getProxiedUrl(rssUrl);
+    console.log('[RSS Parser] Fetching metadata from:', fetchUrl, '(original:', rssUrl, ')');
+    const response = await fetch(fetchUrl);
     const xmlText = await response.text();
 
     const parser = new DOMParser();

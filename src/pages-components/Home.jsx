@@ -14,6 +14,14 @@ import GoogleAd from '../components/ads/GoogleAd';
 import daily from '../data/daily-schedule.json';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
+import {
+  FadeIn,
+  StaggerContainer,
+  StaggerItem,
+  AnimatedCard,
+  SlideIn,
+  motion
+} from '../components/animations';
 
 const KRAC_KEY = 'kracradio';
 
@@ -346,25 +354,47 @@ export default function Home() {
           
           <div className="relative z-10 flex flex-col justify-end h-full p-8 md:p-12">
             <div className="max-w-4xl">
-              <div className="text-sm uppercase tracking-widest font-semibold text-red-400 mb-2">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="text-sm uppercase tracking-widest font-semibold text-red-400 mb-2"
+              >
                 {t?.site?.nowPlaying || 'En lecture'}
-              </div>
-              <h1 className="text-5xl md:text-7xl font-black leading-tight drop-shadow-lg mb-4">
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="text-5xl md:text-7xl font-black leading-tight drop-shadow-lg mb-4"
+              >
                 {currentSeg?.title || 'Musique en continu'}
-              </h1>
-              <div className="text-white/90 text-lg font-medium mb-8">
+              </motion.h1>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-white/90 text-lg font-medium mb-8"
+              >
                 {currentSeg ? fmtRange(currentSeg.start, currentSeg.end, lang) : '—'}
-              </div>
+              </motion.div>
               
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                <button
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-6"
+              >
+                <motion.button
                   type="button"
                   aria-label={t.home?.listenCta || 'Écouter'}
                   aria-pressed={isKracPlaying}
-                  className="group transition duration-200 focus:outline-none flex items-center justify-center gap-4 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="group transition duration-200 focus:outline-none flex items-center justify-center gap-4 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 shadow-lg hover:shadow-xl"
                   onClick={() =>
                     (current?.key === KRAC_KEY ? togglePlay() : playChannel(KRAC_KEY))
                   }
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {isKracPlaying ? (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -379,10 +409,15 @@ export default function Home() {
                   <span>
                     {isKracPlaying ? 'En direct' : (t.home?.listenCta || 'Écouter')}
                   </span>
-                </button>
-                
+                </motion.button>
+
                 {nextSeg && (
-                  <div className="border-l-2 border-white/20 pl-6">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.5 }}
+                    className="border-l-2 border-white/20 pl-6"
+                  >
                     <div className="text-[11px] uppercase tracking-widest font-semibold text-white/80 mb-1">
                       {t?.schedule?.upNext || 'À suivre'}
                     </div>
@@ -396,9 +431,9 @@ export default function Home() {
                       {t.home?.viewScheduleCta || 'Voir l\'horaire'}
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </Link>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -406,17 +441,17 @@ export default function Home() {
 
       {/* Carrousel des chaînes - Background #1E1E1E */}
       <section className="w-full relative z-10 overflow-visible py-16" style={{ backgroundColor: '#1E1E1E' }}>
-        <div className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
+        <FadeIn direction="up" className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             {t.home?.channelsHeading || 'Nos Chaînes Musicales'}
           </h2>
           <p className="text-lg text-gray-400">
             Explorez notre sélection de chaînes thématiques pour tous les goûts.
           </p>
-        </div>
-        <div className="overflow-visible">
+        </FadeIn>
+        <FadeIn delay={0.2} className="overflow-visible">
           <ChannelCarousel channels={channels} />
-        </div>
+        </FadeIn>
       </section>
 
       {/* Section Soumettre Musique à la Radio - Background avec image */}
@@ -431,26 +466,36 @@ export default function Home() {
       >
         <div className="absolute inset-0" style={{ backgroundColor: 'rgba(147, 31, 25, 0.85)' }} />
         <div className="max-w-4xl mx-auto text-center px-5 relative z-10">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-            {t.home?.submitMusicTitle || 'Soumettez votre musique'}
-          </h2>
-          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-            {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/submit-music"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
-            </Link>
-            <Link
-              href="/artists"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/50 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors"
-            >
-              {t.home?.discoverArtists || 'Découvrir les artistes'}
-            </Link>
-          </div>
+          <FadeIn direction="up">
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+              {t.home?.submitMusicTitle || 'Soumettez votre musique'}
+            </h2>
+          </FadeIn>
+          <FadeIn direction="up" delay={0.1}>
+            <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+              {t.home?.submitMusicDesc || 'Vous êtes artiste? Partagez votre talent avec notre communauté. Envoyez vos créations et faites découvrir votre musique à des milliers d\'auditeurs!'}
+            </p>
+          </FadeIn>
+          <FadeIn direction="up" delay={0.2}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href="/submit-music"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl"
+                >
+                  🎵 {t.home?.submitMusicCta || 'Soumettre ma musique'}
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href="/artists"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/50 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors"
+                >
+                  {t.home?.discoverArtists || 'Découvrir les artistes'}
+                </Link>
+              </motion.div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
@@ -458,42 +503,48 @@ export default function Home() {
       {/* Section Articles - Background #1E1E1E */}
       <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-white">
-              {lang === 'en' ? 'Latest Articles' : lang === 'es' ? 'Últimos Artículos' : 'Derniers Articles'}
-            </h2>
-            <Link href="/articles" className="text-red-400 font-semibold hover:underline">
-              {t.home?.viewAll || 'Voir tout'} →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {latestBlogs.slice(0, 4).map((article, idx) => (
-              <Link key={article.id} href={`/article/${article.slug}`} className={`group block ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
-                <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
-                  <img
-                    src={article.featured_image || article.cover_url}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 absolute inset-0"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                    {article.author_name && (
-                      <div className="flex items-center gap-2 mb-2">
-                        {article.author_avatar && (
-                          <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
-                        )}
-                        <span className="text-xs text-white/80">{article.author_name}</span>
-                      </div>
-                    )}
-                    <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
-                      {article.title}
-                    </h3>
-                  </div>
-                </div>
+          <FadeIn direction="up">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl md:text-4xl font-black text-white">
+                {lang === 'en' ? 'Latest Articles' : lang === 'es' ? 'Últimos Artículos' : 'Derniers Articles'}
+              </h2>
+              <Link href="/articles" className="text-red-400 font-semibold hover:underline">
+                {t.home?.viewAll || 'Voir tout'} →
               </Link>
+            </div>
+          </FadeIn>
+
+          <StaggerContainer staggerDelay={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {latestBlogs.slice(0, 4).map((article, idx) => (
+              <StaggerItem key={article.id} direction="scale" className={idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
+                <AnimatedCard className="h-full">
+                  <Link href={`/article/${article.slug}`} className="group block h-full">
+                    <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
+                      <img
+                        src={article.featured_image || article.cover_url}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 absolute inset-0"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                        {article.author_name && (
+                          <div className="flex items-center gap-2 mb-2">
+                            {article.author_avatar && (
+                              <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
+                            )}
+                            <span className="text-xs text-white/80">{article.author_name}</span>
+                          </div>
+                        )}
+                        <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
+                          {article.title}
+                        </h3>
+                      </div>
+                    </div>
+                  </Link>
+                </AnimatedCard>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -509,52 +560,60 @@ export default function Home() {
       >
         <div className="absolute inset-0" style={{ backgroundColor: 'rgba(147, 31, 25, 0.85)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-white">
-              {lang === 'en' ? 'Featured Podcasts' : lang === 'es' ? 'Podcasts Destacados' : 'Podcasts en Vedette'}
-            </h2>
-            <Link href="/podcasts" className="text-white/80 font-semibold hover:text-white hover:underline">
-              {t.home?.viewAll || 'Voir tout'} →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {latestPodcasts.slice(0, 3).map((podcast) => (
-              <Link key={podcast.id} href={`/podcast/${podcast.id}`} className="group flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all border border-white/10">
-                <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                  <img
-                    src={podcast.image_url}
-                    alt={podcast.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white group-hover:text-white/80 transition-colors line-clamp-2 text-sm">
-                    {podcast.title}
-                  </h3>
-                  <p className="text-xs text-white/60 mt-1 line-clamp-2">
-                    {podcast.description}
-                  </p>
-                </div>
+          <FadeIn direction="up">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl md:text-4xl font-black text-white">
+                {lang === 'en' ? 'Featured Podcasts' : lang === 'es' ? 'Podcasts Destacados' : 'Podcasts en Vedette'}
+              </h2>
+              <Link href="/podcasts" className="text-white/80 font-semibold hover:text-white hover:underline">
+                {t.home?.viewAll || 'Voir tout'} →
               </Link>
+            </div>
+          </FadeIn>
+
+          <StaggerContainer staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {latestPodcasts.slice(0, 3).map((podcast) => (
+              <StaggerItem key={podcast.id} direction="left">
+                <AnimatedCard hoverScale={1.03} className="h-full">
+                  <Link href={`/podcast/${podcast.id}`} className="group flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all border border-white/10 h-full">
+                    <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                      <img
+                        src={podcast.image_url}
+                        alt={podcast.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white group-hover:text-white/80 transition-colors line-clamp-2 text-sm">
+                        {podcast.title}
+                      </h3>
+                      <p className="text-xs text-white/60 mt-1 line-clamp-2">
+                        {podcast.description}
+                      </p>
+                    </div>
+                  </Link>
+                </AnimatedCard>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* Section Feed - Background #1E1E1E */}
       <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-white">
-              {t.feed?.title || 'Feed'}
-            </h2>
-            <Link href="/feed" className="text-red-400 font-semibold hover:underline">
-              {t.home?.viewAll || 'Voir tout'} →
-            </Link>
-          </div>
+          <FadeIn direction="up">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl md:text-4xl font-black text-white">
+                {t.feed?.title || 'Feed'}
+              </h2>
+              <Link href="/feed" className="text-red-400 font-semibold hover:underline">
+                {t.home?.viewAll || 'Voir tout'} →
+              </Link>
+            </div>
+          </FadeIn>
 
-          <div className="space-y-4">
+          <StaggerContainer staggerDelay={0.08} className="space-y-4">
             {latestPosts.slice(0, 5).map((post) => {
               const author = post.author;
               const profileLink = author?.artist_slug ? `/profile/${author.artist_slug}` : post.user_id ? `/profile/${post.user_id}` : '#';
@@ -569,31 +628,36 @@ export default function Home() {
               };
 
               return (
-                <div key={post.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-colors">
-                  <div className="flex items-start gap-3">
-                    <Link href={profileLink} className="shrink-0">
-                      {author?.avatar_url ? (
-                        <img src={author.avatar_url} alt={author.username} className="w-12 h-12 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                          {author?.username?.[0]?.toUpperCase() || '?'}
+                <StaggerItem key={post.id} direction="right">
+                  <motion.div
+                    whileHover={{ scale: 1.01, x: 5 }}
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Link href={profileLink} className="shrink-0">
+                        {author?.avatar_url ? (
+                          <img src={author.avatar_url} alt={author.username} className="w-12 h-12 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                            {author?.username?.[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link href={profileLink} className="font-semibold text-white hover:underline">
+                            {author?.username || 'User'}
+                          </Link>
+                          <span className="text-gray-500">·</span>
+                          <span className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</span>
                         </div>
-                      )}
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Link href={profileLink} className="font-semibold text-white hover:underline">
-                          {author?.username || 'User'}
-                        </Link>
-                        <span className="text-gray-500">·</span>
-                        <span className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</span>
+                        <p className="text-gray-300 line-clamp-3">
+                          {post.content}
+                        </p>
                       </div>
-                      <p className="text-gray-300 line-clamp-3">
-                        {post.content}
-                      </p>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </StaggerItem>
               );
             })}
             {latestPosts.length === 0 && (
@@ -601,7 +665,7 @@ export default function Home() {
                 {t.feed?.noPosts || 'Aucun post'}
               </p>
             )}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -619,35 +683,47 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-5 relative z-10">
           <div className="flex flex-col md:flex-row items-center gap-10">
             {/* Left: Icon/Visual */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-2xl">
+            <SlideIn direction="left" className="flex-shrink-0">
+              <motion.div
+                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-2xl"
+                whileHover={{ scale: 1.05, rotate: 3 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
                 <svg className="w-16 h-16 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
                 </svg>
-              </div>
-            </div>
+              </motion.div>
+            </SlideIn>
 
             {/* Right: Content */}
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-                {lang === 'en' ? 'Music Videos' : lang === 'es' ? 'Videos Musicales' : 'Clips Musicaux'}
-              </h2>
-              <p className="text-lg text-white/80 mb-8 max-w-xl">
-                {lang === 'en'
-                  ? 'Watch the best music videos from artists featured on KracRadio. Like and build your playlist! Play them fullscreen non-stop — at a party, in your bedroom, at the office, in a bar, you name it!'
-                  : lang === 'es'
-                  ? 'Mira los mejores videos musicales de los artistas destacados en KracRadio. ¡Dale like y crea tu playlist! Ponlos en pantalla completa sin parar — en una fiesta, en tu cuarto, en la oficina, en un bar, ¡donde quieras!'
-                  : 'Regardez les meilleurs clips musicaux des artistes diffusés sur KracRadio. Likez et construisez votre playlist! Écoutez-les en mode plein écran en continu — dans un party, dans ta chambre à coucher, au bureau, dans un bar, name it!'}
-              </p>
-              <Link
-                href="/videos"
-                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
-              >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                {lang === 'en' ? 'Watch Videos' : lang === 'es' ? 'Ver Videos' : 'Voir les clips'}
-              </Link>
+              <FadeIn direction="up">
+                <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                  {lang === 'en' ? 'Music Videos' : lang === 'es' ? 'Videos Musicales' : 'Clips Musicaux'}
+                </h2>
+              </FadeIn>
+              <FadeIn direction="up" delay={0.1}>
+                <p className="text-lg text-white/80 mb-8 max-w-xl">
+                  {lang === 'en'
+                    ? 'Watch the best music videos from artists featured on KracRadio. Like and build your playlist! Play them fullscreen non-stop — at a party, in your bedroom, at the office, in a bar, you name it!'
+                    : lang === 'es'
+                    ? 'Mira los mejores videos musicales de los artistas destacados en KracRadio. ¡Dale like y crea tu playlist! Ponlos en pantalla completa sin parar — en una fiesta, en tu cuarto, en la oficina, en un bar, ¡donde quieras!'
+                    : 'Regardez les meilleurs clips musicaux des artistes diffusés sur KracRadio. Likez et construisez votre playlist! Écoutez-les en mode plein écran en continu — dans un party, dans ta chambre à coucher, au bureau, dans un bar, name it!'}
+                </p>
+              </FadeIn>
+              <FadeIn direction="up" delay={0.2}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/videos"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-[#931F19] rounded-full font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    {lang === 'en' ? 'Watch Videos' : lang === 'es' ? 'Ver Videos' : 'Voir les clips'}
+                  </Link>
+                </motion.div>
+              </FadeIn>
             </div>
           </div>
         </div>
@@ -657,110 +733,124 @@ export default function Home() {
       {storeProducts.length > 0 && (
         <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl md:text-4xl font-black text-white">
-                {lang === 'en' ? 'Store' : lang === 'es' ? 'Tienda' : 'Boutique'}
-              </h2>
-              <a
-                href="https://store.kracradio.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-red-400 font-semibold hover:underline"
-              >
-                {lang === 'en' ? 'Visit Store' : lang === 'es' ? 'Visitar Tienda' : 'Visiter la boutique'} →
-              </a>
-            </div>
+            <FadeIn direction="up">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-3xl md:text-4xl font-black text-white">
+                  {lang === 'en' ? 'Store' : lang === 'es' ? 'Tienda' : 'Boutique'}
+                </h2>
+                <a
+                  href="https://store.kracradio.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-red-400 font-semibold hover:underline"
+                >
+                  {lang === 'en' ? 'Visit Store' : lang === 'es' ? 'Visitar Tienda' : 'Visiter la boutique'} →
+                </a>
+              </div>
+            </FadeIn>
 
             {/* Black Friday / Cyber Monday Banner */}
-            <div className="mb-8 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 rounded-xl p-4 md:p-6 text-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)' }} />
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-2xl">🔥</span>
-                  <span className="text-lg md:text-xl font-black text-white uppercase tracking-wider">
-                    Black Friday & Cyber Monday
-                  </span>
-                  <span className="text-2xl">🔥</span>
+            <FadeIn direction="up" delay={0.1}>
+              <motion.div
+                className="mb-8 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 rounded-xl p-4 md:p-6 text-center relative overflow-hidden"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)' }} />
                 </div>
-                <p className="text-white text-2xl md:text-3xl font-black">
-                  {lang === 'en' ? '15% OFF on everything!' : lang === 'es' ? '¡15% DE DESCUENTO en todo!' : '15% DE RABAIS sur tout!'}
-                </p>
-                <p className="text-white/80 text-sm mt-2">
-                  {lang === 'en' ? 'Limited time offer' : lang === 'es' ? 'Oferta por tiempo limitado' : 'Offre à durée limitée'}
-                </p>
-              </div>
-            </div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-2xl">🔥</span>
+                    <span className="text-lg md:text-xl font-black text-white uppercase tracking-wider">
+                      Black Friday & Cyber Monday
+                    </span>
+                    <span className="text-2xl">🔥</span>
+                  </div>
+                  <p className="text-white text-2xl md:text-3xl font-black">
+                    {lang === 'en' ? '15% OFF on everything!' : lang === 'es' ? '¡15% DE DESCUENTO en todo!' : '15% DE RABAIS sur tout!'}
+                  </p>
+                  <p className="text-white/80 text-sm mt-2">
+                    {lang === 'en' ? 'Limited time offer' : lang === 'es' ? 'Oferta por tiempo limitado' : 'Offre à durée limitée'}
+                  </p>
+                </div>
+              </motion.div>
+            </FadeIn>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            <StaggerContainer staggerDelay={0.08} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
               {storeProducts.slice(0, 5).map((product, index) => {
                 const currentPrice = parseFloat(product.price || 0);
                 const comparePrice = product.compare_at_price ? parseFloat(product.compare_at_price) : null;
                 const hasDiscount = comparePrice && comparePrice > currentPrice;
 
                 return (
-                  <a
-                    key={product.id}
-                    href={`https://store.kracradio.com/products/${product.handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group block bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all hover:border-white/20 ${index === 4 ? 'hidden sm:block' : ''}`}
-                  >
-                    <div className="aspect-square overflow-hidden relative">
-                      <img
-                        src={product.image_url || '/images/default-cover.jpg'}
-                        alt={product.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      {hasDiscount && (
-                        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                          -15%
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
-                        {product.title}
-                      </h3>
-                      <p className="text-xs text-gray-400 line-clamp-1 mt-1">
-                        {product.vendor}
-                      </p>
-                      <div className="mt-2">
-                        {hasDiscount ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-red-400">
-                              ${currentPrice.toFixed(2)}
-                            </span>
-                            <span className="text-xs text-gray-500 line-through">
-                              ${comparePrice.toFixed(2)}
-                            </span>
+                  <StaggerItem key={product.id} direction="scale" className={index === 4 ? 'hidden sm:block' : ''}>
+                    <motion.a
+                      href={`https://store.kracradio.com/products/${product.handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all hover:border-white/20 h-full"
+                      whileHover={{ y: -5 }}
+                    >
+                      <div className="aspect-square overflow-hidden relative">
+                        <img
+                          src={product.image_url || '/images/default-cover.jpg'}
+                          alt={product.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        {hasDiscount && (
+                          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                            -15%
                           </div>
-                        ) : (
-                          <p className="text-sm font-bold text-red-400">
-                            ${currentPrice.toFixed(2)}
-                          </p>
                         )}
                       </div>
-                    </div>
-                  </a>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
+                          {product.title}
+                        </h3>
+                        <p className="text-xs text-gray-400 line-clamp-1 mt-1">
+                          {product.vendor}
+                        </p>
+                        <div className="mt-2">
+                          {hasDiscount ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-red-400">
+                                ${currentPrice.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-gray-500 line-through">
+                                ${comparePrice.toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-bold text-red-400">
+                              ${currentPrice.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.a>
+                  </StaggerItem>
                 );
               })}
-            </div>
+            </StaggerContainer>
 
-            <div className="text-center mt-8">
-              <a
-                href="https://store.kracradio.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                {lang === 'en' ? 'Go to Store' : lang === 'es' ? 'Ir a la Tienda' : 'Aller à la boutique'}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            </div>
+            <FadeIn direction="up" delay={0.3}>
+              <div className="text-center mt-8">
+                <motion.a
+                  href="https://store.kracradio.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {lang === 'en' ? 'Go to Store' : lang === 'es' ? 'Ir a la Tienda' : 'Aller à la boutique'}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </motion.a>
+              </div>
+            </FadeIn>
           </div>
         </section>
       )}
@@ -768,87 +858,107 @@ export default function Home() {
       {/* Sponsors Section - Background #1E1E1E */}
       <section className="py-16" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-4xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
-              {lang === 'en' ? 'Our Sponsors' : lang === 'es' ? 'Nuestros Patrocinadores' : 'Nos Commanditaires'}
-            </h2>
-          </div>
+          <FadeIn direction="up">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
+                {lang === 'en' ? 'Our Sponsors' : lang === 'es' ? 'Nuestros Patrocinadores' : 'Nos Commanditaires'}
+              </h2>
+            </div>
+          </FadeIn>
 
           {/* H1Site Sponsor */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/10 mb-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <a href="https://h1site.com" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 hover:opacity-80 transition-opacity">
-                <img
-                  src="/images/sponsors/h1site_logo_svg.svg"
-                  alt="H1Site"
-                  className="h-16 md:h-20 w-auto"
-                />
-              </a>
-              <div className="text-center md:text-left">
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  {lang === 'en'
-                    ? 'This platform is developed by H1Site. For all your website, web application, and SEO needs.'
-                    : lang === 'es'
-                    ? 'Esta plataforma está desarrollada por H1Site. Para todas sus necesidades de sitios web, aplicaciones web y SEO.'
-                    : 'Cette plateforme est développée par H1Site. Pour tous vos besoins de site internet, application web et SEO.'}
-                </p>
-                <a
+          <FadeIn direction="up" delay={0.1}>
+            <motion.div
+              className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/10 mb-8"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <motion.a
                   href="https://h1site.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-4 text-red-400 font-semibold hover:underline"
+                  className="flex-shrink-0"
+                  whileHover={{ scale: 1.1 }}
                 >
-                  {lang === 'en' ? 'Visit H1Site' : lang === 'es' ? 'Visitar H1Site' : 'Visiter H1Site'}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
+                  <img
+                    src="/images/sponsors/h1site_logo_svg.svg"
+                    alt="H1Site"
+                    className="h-16 md:h-20 w-auto"
+                  />
+                </motion.a>
+                <div className="text-center md:text-left">
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                    {lang === 'en'
+                      ? 'This platform is developed by H1Site. For all your website, web application, and SEO needs.'
+                      : lang === 'es'
+                      ? 'Esta plataforma está desarrollada por H1Site. Para todas sus necesidades de sitios web, aplicaciones web y SEO.'
+                      : 'Cette plateforme est développée par H1Site. Pour tous vos besoins de site internet, application web et SEO.'}
+                  </p>
+                  <a
+                    href="https://h1site.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-4 text-red-400 font-semibold hover:underline"
+                  >
+                    {lang === 'en' ? 'Visit H1Site' : lang === 'es' ? 'Visitar H1Site' : 'Visiter H1Site'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </FadeIn>
 
           {/* Become a Sponsor CTA */}
-          <div
-            className="rounded-2xl p-8 text-center text-white relative overflow-hidden"
-            style={{
-              backgroundImage: 'url(/images/concert-bg.jpg)',
-              backgroundAttachment: 'fixed',
-              backgroundPosition: 'center',
-              backgroundSize: 'cover'
-            }}
-          >
-            <div className="absolute inset-0 rounded-2xl" style={{ backgroundColor: 'rgba(147, 31, 25, 0.9)' }} />
-            <div className="relative z-10">
-              <h3 className="text-2xl font-bold mb-3">
-                {lang === 'en'
-                  ? 'Want to sponsor KracRadio?'
-                  : lang === 'es'
-                  ? '¿Quieres patrocinar KracRadio?'
-                  : 'Vous voulez commanditer KracRadio?'}
-              </h3>
-              <p className="text-white/90 mb-6 max-w-xl mx-auto">
-                {lang === 'en'
-                  ? 'Join our sponsors and reach thousands of music lovers. Contact us to learn more about sponsorship opportunities.'
-                  : lang === 'es'
-                  ? 'Únete a nuestros patrocinadores y llega a miles de amantes de la música. Contáctanos para conocer las oportunidades de patrocinio.'
-                  : 'Rejoignez nos commanditaires et rejoignez des milliers d\'amateurs de musique. Contactez-nous pour en savoir plus sur les opportunités de commandite.'}
-              </p>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-[#931F19] rounded-full font-bold hover:bg-gray-100 transition-colors"
-              >
-                {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
+          <FadeIn direction="up" delay={0.2}>
+            <div
+              className="rounded-2xl p-8 text-center text-white relative overflow-hidden"
+              style={{
+                backgroundImage: 'url(/images/concert-bg.jpg)',
+                backgroundAttachment: 'fixed',
+                backgroundPosition: 'center',
+                backgroundSize: 'cover'
+              }}
+            >
+              <div className="absolute inset-0 rounded-2xl" style={{ backgroundColor: 'rgba(147, 31, 25, 0.9)' }} />
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-3">
+                  {lang === 'en'
+                    ? 'Want to sponsor KracRadio?'
+                    : lang === 'es'
+                    ? '¿Quieres patrocinar KracRadio?'
+                    : 'Vous voulez commanditer KracRadio?'}
+                </h3>
+                <p className="text-white/90 mb-6 max-w-xl mx-auto">
+                  {lang === 'en'
+                    ? 'Join our sponsors and reach thousands of music lovers. Contact us to learn more about sponsorship opportunities.'
+                    : lang === 'es'
+                    ? 'Únete a nuestros patrocinadores y llega a miles de amantes de la música. Contáctanos para conocer las oportunidades de patrocinio.'
+                    : 'Rejoignez nos commanditaires et rejoignez des milliers d\'amateurs de musique. Contactez-nous pour en savoir plus sur les opportunités de commandite.'}
+                </p>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-white text-[#931F19] rounded-full font-bold hover:bg-gray-100 transition-colors"
+                  >
+                    {lang === 'en' ? 'Contact Us' : lang === 'es' ? 'Contáctanos' : 'Contactez-nous'}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </Link>
+                </motion.div>
+              </div>
             </div>
-          </div>
+          </FadeIn>
 
           {/* Google Ads */}
-          <div className="mt-10">
-            <GoogleAd slot="3411355648" className="mx-auto" />
-          </div>
+          <FadeIn direction="up" delay={0.3}>
+            <div className="mt-10">
+              <GoogleAd slot="3411355648" className="mx-auto" />
+            </div>
+          </FadeIn>
         </div>
       </section>
 
