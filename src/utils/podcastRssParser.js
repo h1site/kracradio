@@ -324,7 +324,7 @@ export async function parsePodcastMetadata(rssUrl) {
 }
 
 /**
- * Importe un podcast externe dans la table podcasts (pour admin)
+ * Importe un podcast externe dans la table user_podcasts (pour admin)
  */
 export async function importExternalPodcast(supabase, rssUrl, adminUserId) {
   try {
@@ -333,26 +333,26 @@ export async function importExternalPodcast(supabase, rssUrl, adminUserId) {
 
     // Vérifier si le podcast existe déjà
     const { data: existing } = await supabase
-      .from('podcasts')
+      .from('user_podcasts')
       .select('id')
-      .eq('rss_feed', rssUrl)
+      .eq('rss_url', rssUrl)
       .single();
 
     if (existing) {
       throw new Error('Ce podcast est déjà importé');
     }
 
-    // Insérer le podcast
+    // Insérer le podcast dans user_podcasts
     const { data, error } = await supabase
-      .from('podcasts')
+      .from('user_podcasts')
       .insert({
         title: metadata.title,
         description: metadata.description,
-        cover_image: metadata.coverImage,
-        host_name: metadata.author || 'KracRadio',
-        rss_feed: rssUrl,
-        status: 'approved',
-        submitter_id: adminUserId,
+        image_url: metadata.coverImage,
+        author: metadata.author || 'KracRadio',
+        rss_url: rssUrl,
+        user_id: adminUserId,
+        is_active: true,
         is_kracradio_import: true, // Marquer comme importé par KracRadio
       })
       .select()

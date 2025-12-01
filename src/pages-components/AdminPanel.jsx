@@ -386,7 +386,7 @@ export default function AdminPanel() {
             .order('created_at', { ascending: false });
 
           const podcastsPromise = supabase
-            .from('podcasts')
+            .from('user_podcasts')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -990,7 +990,7 @@ export default function AdminPanel() {
 
       // Reload podcasts
       const { data: newPodcasts } = await supabase
-        .from('podcasts')
+        .from('user_podcasts')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -1014,20 +1014,20 @@ export default function AdminPanel() {
     }
   };
 
-  const handlePodcastStatus = async (podcastId, status) => {
+  const handlePodcastStatus = async (podcastId, isActive) => {
     try {
       const { error } = await supabase
-        .from('podcasts')
+        .from('user_podcasts')
         .update({
-          status,
+          is_active: isActive,
           updated_at: new Date().toISOString(),
         })
         .eq('id', podcastId);
 
       if (error) throw error;
 
-      setPodcasts(podcasts.map(p => p.id === podcastId ? { ...p, status } : p));
-      setMessage({ type: 'success', text: `Podcast ${status}` });
+      setPodcasts(podcasts.map(p => p.id === podcastId ? { ...p, is_active: isActive } : p));
+      setMessage({ type: 'success', text: `Podcast ${isActive ? 'activé' : 'désactivé'}` });
     } catch (error) {
       console.error('Error updating podcast:', error);
       setMessage({ type: 'error', text: error.message });
@@ -1039,7 +1039,7 @@ export default function AdminPanel() {
 
     try {
       const { error } = await supabase
-        .from('podcasts')
+        .from('user_podcasts')
         .delete()
         .eq('id', podcastId);
 
@@ -1055,7 +1055,7 @@ export default function AdminPanel() {
 
   const filteredPodcasts = podcasts.filter(p =>
     p.title?.toLowerCase().includes(podcastFilter.toLowerCase()) ||
-    p.host_name?.toLowerCase().includes(podcastFilter.toLowerCase())
+    p.author?.toLowerCase().includes(podcastFilter.toLowerCase())
   );
 
   const filteredUsers = users.filter(u =>
@@ -1873,7 +1873,7 @@ export default function AdminPanel() {
                       <td className="px-4 py-3">
                         <div className="relative">
                           <img
-                            src={podcast.cover_image || '/logo-og.png'}
+                            src={podcast.image_url || '/logo-og.png'}
                             alt={podcast.title}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
@@ -1898,29 +1898,27 @@ export default function AdminPanel() {
                         {podcast.description && (
                           <p className="text-xs text-gray-500 mt-1 line-clamp-2">{podcast.description}</p>
                         )}
-                        {podcast.rss_feed && (
+                        {podcast.rss_url && (
                           <a
-                            href={podcast.rss_feed}
+                            href={podcast.rss_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-500 hover:underline"
                           >
-                            📡 RSS Feed
+                            RSS Feed
                           </a>
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                        {podcast.host_name || '-'}
+                        {podcast.author || '-'}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          podcast.status === 'approved'
+                          podcast.is_active
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                            : podcast.status === 'rejected'
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
                             : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
                         }`}>
-                          {podcast.status === 'approved' ? L.approved : podcast.status === 'rejected' ? L.rejected : L.pending}
+                          {podcast.is_active ? L.approved : L.pending}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
@@ -1928,27 +1926,27 @@ export default function AdminPanel() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
-                          {podcast.status !== 'approved' && (
+                          {!podcast.is_active && (
                             <button
-                              onClick={() => handlePodcastStatus(podcast.id, 'approved')}
+                              onClick={() => handlePodcastStatus(podcast.id, true)}
                               className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
                             >
-                              ✓ {L.approve}
+                              {L.approve}
                             </button>
                           )}
-                          {podcast.status !== 'rejected' && (
+                          {podcast.is_active && (
                             <button
-                              onClick={() => handlePodcastStatus(podcast.id, 'rejected')}
+                              onClick={() => handlePodcastStatus(podcast.id, false)}
                               className="rounded bg-yellow-600 px-3 py-1 text-xs font-semibold text-white hover:bg-yellow-700"
                             >
-                              ✗ {L.reject}
+                              {L.reject}
                             </button>
                           )}
                           <button
                             onClick={() => handleDeletePodcast(podcast.id, podcast.title)}
                             className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
                           >
-                            🗑️ {L.delete}
+                            {L.delete}
                           </button>
                         </div>
                       </td>
