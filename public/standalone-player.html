@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KracRadio" />
+  <title>KracRadio Player</title>
+  <link rel="manifest" href="/player-manifest.json" />
+  <link rel="apple-touch-icon" href="/logo192.png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .player-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .album-art-container {
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .album-art {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      background: #333;
+    }
+
+    /* Carousel navigation on album art */
+    .art-carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+      pointer-events: none;
+    }
+
+    .art-carousel-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      pointer-events: auto;
+      opacity: 0;
+    }
+
+    .album-art-container:hover .art-carousel-btn {
+      opacity: 1;
+    }
+
+    .art-carousel-btn:hover {
+      background: rgba(0,0,0,0.8);
+      transform: scale(1.1);
+    }
+
+    .art-carousel-btn:disabled {
+      opacity: 0 !important;
+      cursor: not-allowed;
+    }
+
+    .art-carousel-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .track-info {
+      text-align: center;
+      margin-bottom: 20px;
+      overflow: hidden;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .track-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: visible;
+      position: relative;
+    }
+
+    .track-title.scrolling {
+      animation: marquee 12s linear infinite;
+      display: inline-block;
+      padding-left: 100%;
+      will-change: transform;
+    }
+
+    @keyframes marquee {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    .track-artist {
+      font-size: 14px;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: visible;
+      position: relative;
+    }
+
+    .track-artist.scrolling {
+      animation: marquee 12s linear infinite;
+      display: inline-block;
+      padding-left: 100%;
+      will-change: transform;
+    }
+
+    .radio-frequency {
+      font-size: 14px;
+      color: red;
+      margin-top: 4px;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
+    .progress-container {
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .control-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .control-btn.primary {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+    }
+
+    .control-btn.primary:hover {
+      background: linear-gradient(135deg, #dc2626, #ea580c);
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+
+    .volume-slider {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+
+    .now-playing {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .now-playing-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #333;
+      flex-shrink: 0;
+    }
+
+    .now-playing-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .now-playing-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .now-playing-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .now-playing-artist {
+      font-size: 12px;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .live-indicator {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .control-btn.primary svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .volume-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .volume-text {
+      font-size: 12px;
+      color: #888;
+      width: 40px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+    <div class="album-art-container">
+      <img id="albumArt" class="album-art" src="/logo192.png" alt="Album Art" />
+      <!-- Carousel navigation on top of image (Radio only) -->
+      <div id="artCarouselNav" class="art-carousel-nav hidden">
+        <button id="artCarouselPrev" class="art-carousel-btn">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          </svg>
+        </button>
+        <button id="artCarouselNext" class="art-carousel-btn">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="track-info">
+      <div id="trackTitle" class="track-title">KracRadio</div>
+      <div id="trackArtist" class="track-artist">Sélectionne une station</div>
+      <div id="radioFrequency" class="radio-frequency hidden">00.0 MHz</div>
+    </div>
+
+    <!-- Now Playing (Radio only) -->
+    <div id="nowPlaying" class="now-playing hidden">
+      <img id="nowPlayingImg" class="now-playing-img" src="/logo192.png" alt="Station" />
+      <div class="now-playing-info">
+        <div class="now-playing-label">📻 Station</div>
+        <div id="nowPlayingTitle" class="now-playing-title">—</div>
+        <div id="nowPlayingArtist" class="now-playing-artist">—</div>
+      </div>
+      <div class="live-indicator"></div>
+    </div>
+
+    <div id="progressContainer" class="progress-container hidden">
+      <div id="progressBar" class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="prevBtn" class="control-btn hidden">
+        <svg viewBox="0 0 24 24">
+          <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+      </button>
+
+      <button id="playPauseBtn" class="control-btn primary">
+        <svg id="playIcon" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+      </button>
+
+      <button id="nextBtn" class="control-btn hidden">
+        <svg viewBox="0 0 24 24">
+          <path d="M12.01 19V15l5 5-5 5v-4c-4.42 0-8-3.58-8-8s3.58-8 8-8v2c-3.31 0-6 2.69-6 6s2.69 6 6 6z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="volume-container">
+      <svg class="volume-icon" viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+      </svg>
+      <input id="volumeSlider" type="range" min="0" max="100" value="75" class="volume-slider" />
+      <span id="volumeText" class="volume-text">75%</span>
+    </div>
+  </div>
+
+  <audio id="audio" preload="none"></audio>
+
+  <script>
+    // Get initial data from opener window or localStorage
+    let initialData = window.opener?.standalonePlayerData || {};
+
+    // Fallback to localStorage if no opener data
+    if (!initialData.channels) {
+      try {
+        const storedData = localStorage.getItem('kracradio_player_data');
+        if (storedData) {
+          initialData = JSON.parse(storedData);
+        }
+      } catch (e) {
+        console.warn('Could not load player data from localStorage:', e);
+      }
+    }
+
+    const audio = document.getElementById('audio');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const albumArt = document.getElementById('albumArt');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeText = document.getElementById('volumeText');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const artCarouselNav = document.getElementById('artCarouselNav');
+    const artCarouselPrev = document.getElementById('artCarouselPrev');
+    const artCarouselNext = document.getElementById('artCarouselNext');
+    const nowPlaying = document.getElementById('nowPlaying');
+    const nowPlayingImg = document.getElementById('nowPlayingImg');
+    const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+    const nowPlayingArtist = document.getElementById('nowPlayingArtist');
+    const radioFrequency = document.getElementById('radioFrequency');
+
+    let currentType = 'radio';
+    let channels = [];
+    let currentChannel = null;
+    let currentChannelIndex = 0;
+    let nowPlayingData = null;
+    let nowPlayingInterval = null;
+
+    // FM frequencies for each channel (realistic FM band: 88.0 - 108.0 MHz)
+    const channelFrequencies = {
+      'kracradio': '101.5',
+      'ebm_industrial': '95.7',
+      'electro': '98.3',
+      'metal': '106.9',
+      'jazz': '89.1',
+      'francophonie': '103.7',
+      'rock': '97.5'
+    };
+
+    // Load channels
+    if (initialData.channels) {
+      channels = initialData.channels;
+      // Find current channel index
+      if (initialData.current) {
+        currentChannelIndex = channels.findIndex(ch => ch.key === initialData.current.key);
+        if (currentChannelIndex === -1) currentChannelIndex = 0;
+      }
+      updateCarousel();
+    }
+
+    // Initialize with current playing data
+    if (initialData.current) {
+      currentChannel = initialData.current;
+      updateUI(initialData);
+      if (initialData.streamUrl) {
+        audio.src = initialData.streamUrl;
+        if (initialData.playing) {
+          audio.play().catch(e => console.warn('Auto-play blocked:', e));
+        }
+      }
+      // Start fetching now playing if radio
+      if (initialData.currentType === 'radio') {
+        fetchNowPlaying();
+        nowPlayingInterval = setInterval(fetchNowPlaying, 2000);
+      }
+    }
+
+    // Set initial volume
+    audio.volume = (initialData.volume || 0.75);
+    volumeSlider.value = Math.round(audio.volume * 100);
+    volumeText.textContent = volumeSlider.value + '%';
+
+    // Helper function to check if text needs scrolling
+    function checkTextOverflow(element, maxWidth = 350) {
+      // Create a temporary span to measure the text width
+      const temp = document.createElement('span');
+      temp.style.visibility = 'hidden';
+      temp.style.position = 'absolute';
+      temp.style.whiteSpace = 'nowrap';
+      temp.style.fontSize = window.getComputedStyle(element).fontSize;
+      temp.style.fontWeight = window.getComputedStyle(element).fontWeight;
+      temp.textContent = element.textContent;
+      document.body.appendChild(temp);
+      const width = temp.offsetWidth;
+      document.body.removeChild(temp);
+
+      if (width > maxWidth) {
+        element.classList.add('scrolling');
+      } else {
+        element.classList.remove('scrolling');
+      }
+    }
+
+    function updateUI(data) {
+      if (data.currentType === 'podcast') {
+        currentType = 'podcast';
+        trackTitle.textContent = data.title || 'Podcast';
+        trackArtist.textContent = data.subtitle || '';
+        albumArt.src = data.image || '/logo192.png';
+        radioFrequency.classList.add('hidden');
+        progressContainer.classList.remove('hidden');
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+        artCarouselNav.classList.add('hidden');
+        nowPlaying.classList.add('hidden');
+        // Stop fetching now playing
+        if (nowPlayingInterval) {
+          clearInterval(nowPlayingInterval);
+          nowPlayingInterval = null;
+        }
+        // Check for text overflow
+        setTimeout(() => {
+          checkTextOverflow(trackTitle);
+          checkTextOverflow(trackArtist);
+        }, 100);
+      } else {
+        currentType = 'radio';
+        trackTitle.textContent = data.title || data.name || 'Radio';
+        trackArtist.textContent = data.subtitle || data.tagline || '';
+        // Show radio frequency
+        const channelKey = data.key || currentChannel?.key;
+        const frequency = channelKey ? channelFrequencies[channelKey] || '00.0' : '00.0';
+        radioFrequency.textContent = `${frequency} MHz`;
+        radioFrequency.classList.remove('hidden');
+        // Show channel image in "Now Playing" section
+        nowPlayingImg.src = data.image || '/logo192.png';
+        // Album art starts with channel image, will be updated by fetchNowPlaying if song art is available
+        albumArt.src = data.image || '/logo192.png';
+        progressContainer.classList.add('hidden');
+        prevBtn.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        artCarouselNav.classList.remove('hidden');
+        nowPlaying.classList.remove('hidden');
+        // Start fetching now playing
+        if (!nowPlayingInterval) {
+          fetchNowPlaying();
+          nowPlayingInterval = setInterval(fetchNowPlaying, 2000);
+        }
+        updateCarousel();
+        // Check for text overflow
+        setTimeout(() => {
+          checkTextOverflow(trackTitle);
+          checkTextOverflow(trackArtist);
+        }, 100);
+      }
+    }
+
+    function updateCarousel() {
+      if (channels.length === 0) return;
+
+      // Update button states
+      artCarouselPrev.disabled = currentChannelIndex === 0;
+      artCarouselNext.disabled = currentChannelIndex === channels.length - 1;
+    }
+
+    async function fetchNowPlaying() {
+      if (!currentChannel || !currentChannel.apiUrl) return;
+
+      try {
+        const res = await fetch(currentChannel.apiUrl, { cache: 'no-store' });
+        const json = await res.json();
+        const np = json.now_playing || json.nowPlaying || {};
+        const song = np.song || {};
+
+        if (song.title || song.artist) {
+          nowPlayingTitle.textContent = song.title || '—';
+          nowPlayingArtist.textContent = song.artist || '—';
+
+          // Update main album art with song artwork
+          if (song.art) {
+            albumArt.src = song.art;
+            albumArt.onerror = () => {
+              albumArt.src = currentChannel.image || '/logo192.png';
+            };
+          } else {
+            albumArt.src = currentChannel.image || '/logo192.png';
+          }
+
+          // Check for text overflow on track info
+          setTimeout(() => {
+            checkTextOverflow(trackTitle);
+            checkTextOverflow(trackArtist);
+          }, 100);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch now playing:', e);
+      }
+    }
+
+    // Play/Pause
+    playPauseBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      playIcon.classList.add('hidden');
+      pauseIcon.classList.remove('hidden');
+    });
+
+    audio.addEventListener('pause', () => {
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+    });
+
+    // Volume
+    volumeSlider.addEventListener('input', (e) => {
+      const value = parseInt(e.target.value);
+      audio.volume = value / 100;
+      volumeText.textContent = value + '%';
+    });
+
+    // Progress (for podcasts)
+    audio.addEventListener('timeupdate', () => {
+      if (currentType === 'podcast' && audio.duration) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = percent + '%';
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        durationEl.textContent = formatTime(audio.duration);
+      }
+    });
+
+    progressBar.addEventListener('click', (e) => {
+      if (currentType === 'podcast' && audio.duration) {
+        const rect = progressBar.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = x / rect.width;
+        audio.currentTime = percent * audio.duration;
+      }
+    });
+
+    // Skip buttons (±15s)
+    prevBtn.addEventListener('click', () => {
+      audio.currentTime = Math.max(0, audio.currentTime - 15);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
+    });
+
+    // Carousel navigation on album art
+    artCarouselPrev.addEventListener('click', () => {
+      if (currentChannelIndex > 0) {
+        currentChannelIndex--;
+        switchToChannel(channels[currentChannelIndex]);
+      }
+    });
+
+    artCarouselNext.addEventListener('click', () => {
+      if (currentChannelIndex < channels.length - 1) {
+        currentChannelIndex++;
+        switchToChannel(channels[currentChannelIndex]);
+      }
+    });
+
+    function switchToChannel(ch) {
+      if (!ch) return;
+
+      currentChannel = ch;
+      audio.src = ch.streamUrl;
+      audio.play();
+
+      updateUI({
+        currentType: 'radio',
+        title: ch.name,
+        subtitle: ch.tagline,
+        image: ch.image,
+        key: ch.key
+      });
+    }
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+
+    // Keep playing even if main window closes
+    window.addEventListener('beforeunload', (e) => {
+      // Don't stop audio
+    });
+  </script>
+</body>
+</html>

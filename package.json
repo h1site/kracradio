@@ -1,0 +1,54 @@
+{
+  "name": "kracradio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plateforme web moderne pour la diffusion de podcasts et contenu audio avec gestion de communauté d'artistes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/h1site/kracradio.git"
+  },
+  "author": "KracRadio Team",
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@paypal/react-paypal-js": "^8.9.2",
+    "@supabase/supabase-js": "^2.47.0",
+    "@tiptap/extension-color": "^3.6.5",
+    "@tiptap/extension-highlight": "^3.6.5",
+    "@tiptap/extension-image": "^3.6.5",
+    "@tiptap/extension-link": "^3.6.5",
+    "@tiptap/extension-placeholder": "^3.6.5",
+    "@tiptap/extension-subscript": "^3.6.5",
+    "@tiptap/extension-superscript": "^3.6.5",
+    "@tiptap/extension-table": "^3.6.5",
+    "@tiptap/extension-table-cell": "^3.6.5",
+    "@tiptap/extension-table-header": "^3.6.5",
+    "@tiptap/extension-table-row": "^3.6.5",
+    "@tiptap/extension-text-align": "^3.6.5",
+    "@tiptap/extension-text-style": "^3.6.5",
+    "@tiptap/extension-typography": "^3.6.5",
+    "@tiptap/extension-underline": "^3.6.5",
+    "@tiptap/extension-youtube": "^3.6.5",
+    "@tiptap/pm": "^3.6.5",
+    "@tiptap/react": "^3.6.5",
+    "@tiptap/starter-kit": "^3.6.5",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "react-markdown": "^9.0.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13"
+  }
+}

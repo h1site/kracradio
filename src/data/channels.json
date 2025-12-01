@@ -1,0 +1,9 @@
+[
+  { "key": "kracradio", "name": "KracRadio", "image": "/channels/kracradio.webp" },
+  { "key": "ebm_industrial", "name": "EBM Industrial", "image": "/channels/ebm_industrial.webp" },
+  { "key": "electro", "name": "Electro", "image": "/channels/electro.webp" },
+  { "key": "francophonie", "name": "Francophonie", "image": "/channels/francophonie.webp" },
+  { "key": "jazz", "name": "Jazz", "image": "/channels/jazz.webp" },
+  { "key": "metal", "name": "Metal", "image": "/channels/metal.webp" },
+  { "key": "rock", "name": "Rock", "image": "/channels/rock.webp" }
+]

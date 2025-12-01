@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Thème par variables ===== */
+@layer base {
+  /* Thème clair APPAISANT */
+  :root {
+    --page-bg: #f3f4f6;   /* gris doux (au lieu de blanc) */
+    --page-text: #0f172a; /* texte foncé confortable */
+  }
+
+  /* Thème sombre */
+  html.dark {
+    color-scheme: dark;
+    --page-bg: #141414;   /* demandé */
+    --page-text: #ffffff;
+  }
+
+  /* Pas de scroll horizontal global */
+  html, body { overflow-x: hidden; }
+
+  /* Couleurs de page — NE PAS utiliser bg-white ici */
+  body {
+    background-color: var(--page-bg);
+    color: var(--page-text);
+    padding-top: 64px;     /* header (h-16) */
+    padding-bottom: 0px;  /* player (h-16) */
+  }
+}
+
+/* ===== Helpers / Layout ===== */
+@layer components {
+  /* (Si besoin plus tard) section plein écran */
+  .full-bleed {
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Masquer proprement les scrollbars si besoin */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Alias pour cacher scrollbar (utilisé par carrousels) */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Custom scrollbar for standalone player */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Carte générique — utilise variables, pas bg-white */
+  .card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;   /* ~ rounded-2xl */
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+  .dark .card {
+    background-color: #1e1e1e;
+    border-color: #2a2a2a;
+  }
+
+  /* Boutons utilitaires */
+  .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium transition; }
+
+  .btn-primary {
+    @apply btn text-white;
+    background-color: #E50914; /* rouge marque */
+  }
+  .btn-primary:hover { opacity: 0.9; }
+
+  /* Ghost: doux en clair, translucide en sombre (pas bg-white brut) */
+  .btn-ghost {
+    @apply btn backdrop-blur border text-black dark:text-white;
+    background-color: rgba(255,255,255,0.85);
+    border-color: rgba(0,0,0,0.08);
+  }
+  .dark .btn-ghost {
+    background-color: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.25);
+  }
+
+  /* Badge */
+  .badge { @apply text-xs px-2 py-1 rounded-md; background: rgba(0,0,0,0.8); color: #fff; }
+  .dark .badge { background: rgba(255,255,255,0.18); color: #fff; }
+
+  /* Icône ronde (header/player) */
+  .icon-btn { @apply inline-flex items-center justify-center w-9 h-9 rounded-full transition; color: rgba(255,255,255,0.8); }
+  .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* Progress bar générique */
+  .progress-track { height: 0.5rem; border-radius: 9999px; background: rgba(0,0,0,0.25); }
+  .dark .progress-track { background: rgba(255,255,255,0.15); }
+  .progress-fill  { height: 100%; background: #fff; }
+}
+
+/* ===== Sliders (progress + volume) ===== */
+@layer components {
+  .range {
+    width: 100%;
+    height: 0.5rem;                /* h-2 */
+    border-radius: 9999px;
+    background: rgba(148,163,184,0.35); /* slate-400/35 */
+    appearance: none;
+  }
+  .dark .range { background: rgba(255,255,255,0.25); }
+
+  .range::-webkit-slider-runnable-track { height: 8px; background: transparent; border-radius: 9999px; }
+  .range::-moz-range-track { height: 8px; background: transparent; border-radius: 9999px; }
+
+  .range::-webkit-slider-thumb {
+    appearance: none;
+    height: 14px; width: 14px; margin-top: -3px;
+    border-radius: 9999px; background: #fff;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.15);
+  }
+  .dark .range::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(255,255,255,0.35); }
+
+  .range::-moz-range-thumb {
+    height: 14px; width: 14px; border: none; border-radius: 9999px; background: #fff;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.15);
+  }
+  .dark .range::-moz-range-thumb { box-shadow: 0 0 0 4px rgba(255,255,255,0.35); }
+
+  /* Variante plus fine (volume) */
+  .range-sm { height: 0.25rem; } /* h-1 */
+  .input {
+  @apply rounded-lg border border-black/15 dark:border-white/15
+         bg-white text-black dark:bg-[#101010] dark:text-white
+         px-3 py-2 outline-none focus:ring-2 focus:ring-red-600/40;
+}
+
+}
+/* ===== AutoMarquee ===== */
+.marquee-track {
+  display: inline-flex;
+  width: max-content;
+  gap: var(--marquee-gap, 40px);
+  padding-right: var(--marquee-gap, 40px);
+  animation: marquee var(--marquee-duration, 12s) linear infinite;
+}
+.marquee-item { display: inline-block; }
+
+/* Pause au survol */
+.marquee-track:hover { animation-play-state: paused; }
+
+/* Petit fondu aux bords pour éviter les coupures (optionnel) */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); } /* la seconde copie assure la boucle */
+}
+
+.content-with-sidebar {
+  transition: margin-left 300ms ease;
+}
+/* ---- Smooth content shift when sidebar toggles ---- */
+.content-shift {
+  transition: margin-left 300ms ease-out;
+}
+
+/* === Scroll vertical global (activé) === */
+html, body {
+  height: 100%;
+}
+html, body {
+  overflow-y: auto;            /* (corrigé) permet le scroll vertical global */
+  overscroll-behavior: auto;   /* (corrigé) comportement par défaut */
+}
+
+/* Animation quand la sidebar ouvre/ferme */
+.content-shift {
+  transition: margin-left 300ms ease-out;
+}
+
+/* --- Zone de page scrollable entre header (64) et player (64) --- */
+.page-scroll {
+  height: calc(100vh - 128px);      /* 64 + 64 */
+  overflow-y: auto;                  /* défilement vertical local (home/schedule) */
+  overscroll-behavior: contain;      /* évite de "tirer" le body */
+  -webkit-overflow-scrolling: touch; /* fluide sur mobile */
+}
+
+/* Ajoute 40px d'espace en bas seulement en mobile */
+@media (max-width: 640px) {
+  html, body { min-height: 100%; }
+  body { padding-bottom: 40px; }
+}
