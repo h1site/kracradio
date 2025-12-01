@@ -1,14 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create a server-side supabase client for sitemap generation
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
+// Helper to create supabase client only when needed
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
 export default async function sitemap() {
+  const supabase = getSupabaseClient();
   // Static pages
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
@@ -43,6 +50,11 @@ export default async function sitemap() {
   let videoPages = [];
   let podcastPages = [];
   let profilePages = [];
+
+  // Only fetch dynamic content if supabase is available
+  if (!supabase) {
+    return [...staticPages, ...channelPages];
+  }
 
   try {
     // Articles

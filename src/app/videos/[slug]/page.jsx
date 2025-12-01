@@ -1,14 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import VideoDetail from '../../../pages-components/VideoDetail';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return { title: 'Music Video', description: 'Watch music videos on KracRadio' };
+  }
 
   try {
     const { data: video } = await supabase

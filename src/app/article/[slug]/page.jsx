@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import Article from '../../../pages-components/Article';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
-// Server-side supabase client for metadata generation
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Helper to create supabase client only when needed
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 // Helper to strip HTML and truncate
 function stripHtml(html, maxLength = 160) {
@@ -18,6 +21,11 @@ function stripHtml(html, maxLength = 160) {
 // Generate metadata for SEO
 export async function generateMetadata({ params }) {
   const { slug } = await params;
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return { title: 'Article', description: 'Read articles on KracRadio' };
+  }
 
   try {
     const { data: article } = await supabase
