@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import Seo from '../seo/Seo';
 import { supabase } from '../lib/supabase';
-import { importPodcastEpisodes } from '../utils/podcastRssParser';
+import { importPodcastEpisodes, importExternalPodcast } from '../utils/podcastRssParser';
 
 const STRINGS = {
   fr: {
@@ -94,6 +94,19 @@ const STRINGS = {
     playlistImported: 'Playlist importée: {count} vidéos',
     invalidYoutubeUrl: 'URL YouTube invalide',
     fetchingVideoInfo: 'Récupération des infos...',
+    // Podcasts section
+    podcasts: 'Podcasts',
+    noPodcasts: 'Aucun podcast',
+    importPodcast: 'Importer un podcast',
+    podcastRssUrl: 'URL du flux RSS du podcast',
+    importPodcastBtn: 'Importer le podcast',
+    importingPodcast: 'Import en cours...',
+    podcastImported: 'Podcast importé avec succès',
+    invalidRssUrl: 'URL RSS invalide',
+    podcastAlreadyExists: 'Ce podcast existe déjà',
+    hostName: 'Animateur',
+    episodeCount: 'Épisodes',
+    kracradioImport: 'Import KracRadio',
   },
   en: {
     title: 'Admin Panel',
@@ -179,6 +192,19 @@ const STRINGS = {
     playlistImported: 'Playlist imported: {count} videos',
     invalidYoutubeUrl: 'Invalid YouTube URL',
     fetchingVideoInfo: 'Fetching info...',
+    // Podcasts section
+    podcasts: 'Podcasts',
+    noPodcasts: 'No podcasts',
+    importPodcast: 'Import a podcast',
+    podcastRssUrl: 'Podcast RSS feed URL',
+    importPodcastBtn: 'Import podcast',
+    importingPodcast: 'Importing...',
+    podcastImported: 'Podcast imported successfully',
+    invalidRssUrl: 'Invalid RSS URL',
+    podcastAlreadyExists: 'This podcast already exists',
+    hostName: 'Host',
+    episodeCount: 'Episodes',
+    kracradioImport: 'KracRadio Import',
   },
   es: {
     title: 'Panel de Administración',
@@ -264,6 +290,19 @@ const STRINGS = {
     playlistImported: 'Playlist importada: {count} videos',
     invalidYoutubeUrl: 'URL de YouTube inválida',
     fetchingVideoInfo: 'Obteniendo información...',
+    // Podcasts section
+    podcasts: 'Podcasts',
+    noPodcasts: 'Sin podcasts',
+    importPodcast: 'Importar un podcast',
+    podcastRssUrl: 'URL del feed RSS del podcast',
+    importPodcastBtn: 'Importar podcast',
+    importingPodcast: 'Importando...',
+    podcastImported: 'Podcast importado con éxito',
+    invalidRssUrl: 'URL RSS inválida',
+    podcastAlreadyExists: 'Este podcast ya existe',
+    hostName: 'Presentador',
+    episodeCount: 'Episodios',
+    kracradioImport: 'Importación KracRadio',
   },
 };
 
@@ -273,12 +312,13 @@ export default function AdminPanel() {
   const { user, userRole, isAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState('users'); // users, rss, articles, artists, videos
+  const [activeTab, setActiveTab] = useState('users'); // users, rss, articles, artists, videos, podcasts
   const [users, setUsers] = useState([]);
   const [rssFeeds, setRssFeeds] = useState([]);
   const [articles, setArticles] = useState([]);
   const [artists, setArtists] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [podcasts, setPodcasts] = useState([]); // External podcasts (from podcasts table)
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [importing, setImporting] = useState(null); // null or podcast ID being imported
@@ -297,6 +337,11 @@ export default function AdminPanel() {
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [importingVideo, setImportingVideo] = useState(false);
   const [importingPlaylist, setImportingPlaylist] = useState(false);
+
+  // Podcast import states
+  const [podcastRssUrl, setPodcastRssUrl] = useState('');
+  const [importingExternalPodcast, setImportingExternalPodcast] = useState(false);
+  const [podcastFilter, setPodcastFilter] = useState('');
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -340,12 +385,18 @@ export default function AdminPanel() {
             .select('*')
             .order('created_at', { ascending: false });
 
-          const [usersResult, rssResult, articlesResult, artistsResult, videosResult] = await Promise.all([
+          const podcastsPromise = supabase
+            .from('podcasts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          const [usersResult, rssResult, articlesResult, artistsResult, videosResult, podcastsResult] = await Promise.all([
             usersPromise,
             rssPromise,
             articlesPromise,
             artistsPromise,
-            videosPromise
+            videosPromise,
+            podcastsPromise
           ]);
 
           // Charger les emails depuis auth
@@ -370,6 +421,15 @@ export default function AdminPanel() {
           if (videosResult.data) {
             console.log('[AdminPanel] Videos loaded:', videosResult.data.length);
             setVideos(videosResult.data);
+          }
+
+          // Podcasts loading
+          if (podcastsResult.error) {
+            console.error('[AdminPanel] Podcasts error:', podcastsResult.error);
+          }
+          if (podcastsResult.data) {
+            console.log('[AdminPanel] Podcasts loaded:', podcastsResult.data.length);
+            setPodcasts(podcastsResult.data);
           }
         } catch (error) {
           console.error('[AdminPanel] Error loading data:', error);
@@ -912,6 +972,92 @@ export default function AdminPanel() {
     }
   };
 
+  // Podcast functions
+  const handleImportExternalPodcast = async () => {
+    if (!podcastRssUrl.trim()) return;
+
+    // Validate RSS URL format
+    if (!podcastRssUrl.match(/^https?:\/\//)) {
+      setMessage({ type: 'error', text: L.invalidRssUrl });
+      return;
+    }
+
+    setImportingExternalPodcast(true);
+    setMessage(null);
+
+    try {
+      const result = await importExternalPodcast(supabase, podcastRssUrl.trim(), user.id);
+
+      // Reload podcasts
+      const { data: newPodcasts } = await supabase
+        .from('podcasts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (newPodcasts) setPodcasts(newPodcasts);
+
+      setPodcastRssUrl('');
+      setMessage({
+        type: 'success',
+        text: `${L.podcastImported}: ${result.metadata.title}`
+      });
+    } catch (error) {
+      console.error('Error importing podcast:', error);
+      setMessage({
+        type: 'error',
+        text: error.message.includes('déjà') || error.message.includes('already')
+          ? L.podcastAlreadyExists
+          : error.message
+      });
+    } finally {
+      setImportingExternalPodcast(false);
+    }
+  };
+
+  const handlePodcastStatus = async (podcastId, status) => {
+    try {
+      const { error } = await supabase
+        .from('podcasts')
+        .update({
+          status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', podcastId);
+
+      if (error) throw error;
+
+      setPodcasts(podcasts.map(p => p.id === podcastId ? { ...p, status } : p));
+      setMessage({ type: 'success', text: `Podcast ${status}` });
+    } catch (error) {
+      console.error('Error updating podcast:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleDeletePodcast = async (podcastId, title) => {
+    if (!window.confirm(`${L.confirmDelete} "${title}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('podcasts')
+        .delete()
+        .eq('id', podcastId);
+
+      if (error) throw error;
+
+      setPodcasts(podcasts.filter(p => p.id !== podcastId));
+      setMessage({ type: 'success', text: `Podcast deleted: ${title}` });
+    } catch (error) {
+      console.error('Error deleting podcast:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const filteredPodcasts = podcasts.filter(p =>
+    p.title?.toLowerCase().includes(podcastFilter.toLowerCase()) ||
+    p.host_name?.toLowerCase().includes(podcastFilter.toLowerCase())
+  );
+
   const filteredUsers = users.filter(u =>
     u.email?.toLowerCase().includes(userFilter.toLowerCase())
   );
@@ -1033,6 +1179,16 @@ export default function AdminPanel() {
           }`}
         >
           🎬 {L.videos} ({videos.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('podcasts')}
+          className={`px-4 py-2 text-sm font-semibold transition ${
+            activeTab === 'podcasts'
+              ? 'border-b-2 border-red-600 text-red-600'
+              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          🎙️ {L.podcasts} ({podcasts.length})
         </button>
         <Link
           href="/admin/store"
@@ -1640,6 +1796,170 @@ export default function AdminPanel() {
               <p className="p-8 text-center text-gray-500">{L.noVideos}</p>
             )}
           </div>
+          </div>
+        </div>
+      )}
+
+      {/* Podcasts Table */}
+      {activeTab === 'podcasts' && (
+        <div className="space-y-4">
+          {/* Import Section */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+              🎙️ {L.importPodcast}
+            </h3>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {L.podcastRssUrl}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://anchor.fm/s/.../podcast/rss"
+                  value={podcastRssUrl}
+                  onChange={(e) => setPodcastRssUrl(e.target.value)}
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
+                  disabled={importingExternalPodcast}
+                />
+                <button
+                  onClick={handleImportExternalPodcast}
+                  disabled={importingExternalPodcast || !podcastRssUrl.trim()}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
+                >
+                  {importingExternalPodcast ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                      {L.importingPodcast}
+                    </>
+                  ) : (
+                    <>🎙️ {L.importPodcastBtn}</>
+                  )}
+                </button>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              {lang === 'fr' ? 'Les podcasts importés seront automatiquement approuvés et marqués comme "Import KracRadio".' :
+               lang === 'en' ? 'Imported podcasts will be automatically approved and marked as "KracRadio Import".' :
+               'Los podcasts importados serán aprobados automáticamente y marcados como "Importación KracRadio".'}
+            </p>
+          </div>
+
+          {/* Podcasts List */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
+            <div className="p-4">
+              <input
+                type="text"
+                placeholder={L.filter}
+                value={podcastFilter}
+                onChange={(e) => setPodcastFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Cover</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.title_col}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.hostName}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.status}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">{L.createdAt}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-500">{L.actions}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                  {filteredPodcasts.map((podcast) => (
+                    <tr key={podcast.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                      <td className="px-4 py-3">
+                        <div className="relative">
+                          <img
+                            src={podcast.cover_image || '/logo-og.png'}
+                            alt={podcast.title}
+                            className="w-16 h-16 object-cover rounded-lg"
+                          />
+                          {podcast.is_kracradio_import && (
+                            <div className="absolute -top-1 -right-1 bg-red-600 rounded-full p-1" title={L.kracradioImport}>
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.5 7.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm4.5 6a4 4 0 01-6 0 .5.5 0 01.5-.5h5a.5.5 0 01.5.5z"/>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <a
+                          href={`/podcast/${podcast.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-gray-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                        >
+                          {podcast.title}
+                        </a>
+                        {podcast.description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{podcast.description}</p>
+                        )}
+                        {podcast.rss_feed && (
+                          <a
+                            href={podcast.rss_feed}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-500 hover:underline"
+                          >
+                            📡 RSS Feed
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                        {podcast.host_name || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          podcast.status === 'approved'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                            : podcast.status === 'rejected'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                        }`}>
+                          {podcast.status === 'approved' ? L.approved : podcast.status === 'rejected' ? L.rejected : L.pending}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                        {new Date(podcast.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          {podcast.status !== 'approved' && (
+                            <button
+                              onClick={() => handlePodcastStatus(podcast.id, 'approved')}
+                              className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                            >
+                              ✓ {L.approve}
+                            </button>
+                          )}
+                          {podcast.status !== 'rejected' && (
+                            <button
+                              onClick={() => handlePodcastStatus(podcast.id, 'rejected')}
+                              className="rounded bg-yellow-600 px-3 py-1 text-xs font-semibold text-white hover:bg-yellow-700"
+                            >
+                              ✗ {L.reject}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeletePodcast(podcast.id, podcast.title)}
+                            className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                          >
+                            🗑️ {L.delete}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredPodcasts.length === 0 && (
+                <p className="p-8 text-center text-gray-500">{L.noPodcasts}</p>
+              )}
+            </div>
           </div>
         </div>
       )}

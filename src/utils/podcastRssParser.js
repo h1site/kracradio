@@ -242,6 +242,136 @@ export async function importPodcastEpisodes(supabase, podcastId, rssUrl) {
 }
 
 /**
+ * Parse les métadonnées d'un podcast depuis son flux RSS
+ * @returns {title, description, coverImage, author, episodes}
+ */
+export async function parsePodcastMetadata(rssUrl) {
+  try {
+    console.log('[RSS Parser] Fetching metadata from:', rssUrl);
+    const response = await fetch(rssUrl);
+    const xmlText = await response.text();
+
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+    const parseError = xmlDoc.querySelector('parsererror');
+    if (parseError) {
+      throw new Error('Erreur de parsing XML');
+    }
+
+    const channel = xmlDoc.querySelector('channel');
+    if (!channel) {
+      throw new Error('Flux RSS invalide - pas de channel trouvé');
+    }
+
+    // Titre
+    const title = channel.querySelector('title')?.textContent?.trim() || 'Podcast sans titre';
+
+    // Description
+    let description = channel.querySelector('description')?.textContent?.trim() || '';
+    if (!description) {
+      description = channel.getElementsByTagNameNS('*', 'summary')[0]?.textContent?.trim() || '';
+    }
+    if (!description) {
+      description = channel.getElementsByTagNameNS('*', 'subtitle')[0]?.textContent?.trim() || '';
+    }
+    // Nettoyer le HTML
+    description = stripHtml(description);
+
+    // Image
+    let coverImage = channel.querySelector('image > url')?.textContent?.trim() || '';
+    if (!coverImage) {
+      const itunesImage = channel.getElementsByTagNameNS('*', 'image')[0];
+      if (itunesImage) {
+        coverImage = itunesImage.getAttribute('href') || '';
+      }
+    }
+
+    // Auteur/Host
+    let author = '';
+    const itunesAuthor = channel.getElementsByTagNameNS('*', 'author')[0];
+    if (itunesAuthor) {
+      author = itunesAuthor.textContent?.trim() || '';
+    }
+    if (!author) {
+      const itunesOwner = channel.getElementsByTagNameNS('*', 'owner')[0];
+      if (itunesOwner) {
+        const ownerName = itunesOwner.getElementsByTagNameNS('*', 'name')[0];
+        author = ownerName?.textContent?.trim() || '';
+      }
+    }
+    if (!author) {
+      author = channel.querySelector('managingEditor')?.textContent?.trim() || '';
+    }
+
+    // Compter les épisodes
+    const items = xmlDoc.querySelectorAll('item');
+    const episodeCount = items.length;
+
+    console.log('[RSS Parser] Parsed metadata:', { title, author, episodeCount });
+
+    return {
+      title,
+      description,
+      coverImage,
+      author,
+      episodeCount,
+    };
+  } catch (error) {
+    console.error('Erreur parsing podcast metadata:', error);
+    throw error;
+  }
+}
+
+/**
+ * Importe un podcast externe dans la table podcasts (pour admin)
+ */
+export async function importExternalPodcast(supabase, rssUrl, adminUserId) {
+  try {
+    // Parser les métadonnées du podcast
+    const metadata = await parsePodcastMetadata(rssUrl);
+
+    // Vérifier si le podcast existe déjà
+    const { data: existing } = await supabase
+      .from('podcasts')
+      .select('id')
+      .eq('rss_feed', rssUrl)
+      .single();
+
+    if (existing) {
+      throw new Error('Ce podcast est déjà importé');
+    }
+
+    // Insérer le podcast
+    const { data, error } = await supabase
+      .from('podcasts')
+      .insert({
+        title: metadata.title,
+        description: metadata.description,
+        cover_image: metadata.coverImage,
+        host_name: metadata.author || 'KracRadio',
+        rss_feed: rssUrl,
+        status: 'approved',
+        submitter_id: adminUserId,
+        is_kracradio_import: true, // Marquer comme importé par KracRadio
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      podcast: data,
+      metadata,
+    };
+  } catch (error) {
+    console.error('Erreur importExternalPodcast:', error);
+    throw error;
+  }
+}
+
+/**
  * Importe tous les podcasts actifs d'un utilisateur
  */
 export async function importAllUserPodcasts(supabase, userId) {
