@@ -91,16 +91,20 @@ export default async function sitemap() {
   }
 
   try {
-    // Videos - use slug if available, otherwise generate from title
-    const { data: videos } = await supabase
+    // Videos - generate slug from title (slug column may not exist)
+    const { data: videos, error: videosError } = await supabase
       .from('videos')
-      .select('id, title, slug, updated_at')
+      .select('id, title, youtube_id, updated_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
-    if (videos) {
+    if (videosError) {
+      console.error('Sitemap: Error fetching videos:', videosError);
+    } else if (videos && videos.length > 0) {
+      console.log(`Sitemap: Found ${videos.length} approved videos`);
       videoPages = videos.map(video => {
-        const videoSlug = video.slug || generateSlug(video.title);
+        // Generate slug from title (same logic as Videos.jsx)
+        const videoSlug = generateSlug(video.title);
         return {
           url: `${baseUrl}/videos/${videoSlug}`,
           lastModified: video.updated_at ? new Date(video.updated_at) : new Date(),
@@ -108,9 +112,11 @@ export default async function sitemap() {
           priority: 0.7,
         };
       });
+    } else {
+      console.log('Sitemap: No approved videos found');
     }
   } catch (e) {
-    console.error('Sitemap: Error fetching videos', e);
+    console.error('Sitemap: Exception fetching videos', e);
   }
 
   try {
@@ -159,14 +165,17 @@ export default async function sitemap() {
   }
 
   try {
-    // Podcast Episodes
-    const { data: episodes } = await supabase
+    // Podcast Episodes - get all episodes
+    const { data: episodes, error: episodesError } = await supabase
       .from('podcast_episodes')
-      .select('id, title, podcast_id, pub_date, updated_at')
-      .order('pub_date', { ascending: false })
-      .limit(500); // Limit to recent episodes
+      .select('id, title, podcast_id, pub_date, created_at')
+      .order('pub_date', { ascending: false });
 
-    if (episodes) {
+    if (episodesError) {
+      console.error('Sitemap: Error fetching episodes:', episodesError);
+    } else if (episodes && episodes.length > 0) {
+      console.log(`Sitemap: Found ${episodes.length} podcast episodes`);
+
       // Get podcast info for slug generation
       const podcastIds = [...new Set(episodes.map(e => e.podcast_id).filter(Boolean))];
       let podcastsMap = {};
@@ -178,6 +187,7 @@ export default async function sitemap() {
           .in('id', podcastIds);
 
         if (podcastsData) {
+          console.log(`Sitemap: Found ${podcastsData.length} podcasts for episodes`);
           podcastsData.forEach(p => {
             podcastsMap[p.id] = generateSlug(p.title);
           });
@@ -185,22 +195,26 @@ export default async function sitemap() {
       }
 
       episodePages = episodes
-        .filter(episode => podcastsMap[episode.podcast_id]) // Only include episodes with known podcasts
+        .filter(episode => podcastsMap[episode.podcast_id])
         .map(episode => {
           const podcastSlug = podcastsMap[episode.podcast_id];
           const episodeSlug = generateSlug(episode.title);
           return {
             url: `${baseUrl}/podcast/${podcastSlug}/episode/${episodeSlug}`,
-            lastModified: episode.updated_at || episode.pub_date
-              ? new Date(episode.updated_at || episode.pub_date)
+            lastModified: episode.pub_date || episode.created_at
+              ? new Date(episode.pub_date || episode.created_at)
               : new Date(),
             changeFrequency: 'monthly',
             priority: 0.6,
           };
         });
+
+      console.log(`Sitemap: Added ${episodePages.length} episode pages`);
+    } else {
+      console.log('Sitemap: No podcast episodes found');
     }
   } catch (e) {
-    console.error('Sitemap: Error fetching podcast episodes', e);
+    console.error('Sitemap: Exception fetching podcast episodes', e);
   }
 
   try {
