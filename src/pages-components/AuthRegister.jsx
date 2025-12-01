@@ -73,7 +73,7 @@ export default function AuthRegister() {
 
     try {
       await signUp({ email, password: pwd });
-      nav('/profile'); // Rediriger vers le profil (connecté directement)
+      nav.push('/settings'); // Rediriger vers settings après inscription
     } catch (error) {
       setErr(error.message);
     } finally {
