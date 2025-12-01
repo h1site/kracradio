@@ -1,6 +1,7 @@
 import './globals.css';
 import Providers from '../components/Providers';
 import AppLayout from '../components/AppLayout';
+import GoogleAnalytics from '../components/GoogleAnalytics';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
@@ -111,6 +112,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <GoogleAnalytics />
         {/* Critical resource hints for Core Web Vitals */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
