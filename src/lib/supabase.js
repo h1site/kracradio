@@ -415,19 +415,19 @@ export async function getVideoById(id) {
 /**
  * Submit a new video (by artist)
  */
-export async function submitVideo({ youtubeUrl, userId }) {
+export async function submitVideo({ youtubeUrl, title, description, genres, userId }) {
   const youtubeId = extractYouTubeId(youtubeUrl);
   if (!youtubeId) throw new Error('Invalid YouTube URL');
 
-  // Fetch video info from YouTube oEmbed API
-  let title = 'Video';
+  // Fetch video info from YouTube oEmbed API for artist name if not provided
   let artistName = '';
+  let finalTitle = title || 'Video';
   try {
     const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
     const response = await fetch(oembedUrl);
     if (response.ok) {
       const oembedData = await response.json();
-      title = oembedData.title || 'Video';
+      if (!title) finalTitle = oembedData.title || 'Video';
       artistName = oembedData.author_name || '';
     }
   } catch (e) {
@@ -436,16 +436,27 @@ export async function submitVideo({ youtubeUrl, userId }) {
 
   const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
+  // Generate slug from title
+  const slug = finalTitle
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 100) + '-' + youtubeId;
+
   const { data, error } = await supabase
     .from('videos')
     .insert({
       youtube_url: youtubeUrl,
       youtube_id: youtubeId,
-      title,
-      description: '',
+      title: finalTitle,
+      description: description || '',
+      genres: genres || '',
       thumbnail_url: thumbnailUrl,
       artist_name: artistName,
       user_id: userId,
+      slug,
       status: 'pending'
     })
     .select()
