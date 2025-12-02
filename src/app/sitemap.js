@@ -163,13 +163,13 @@ export default async function sitemap() {
     // User Podcasts (from user_podcasts table)
     const { data: userPodcasts } = await supabase
       .from('user_podcasts')
-      .select('id, title, updated_at')
+      .select('id, title, slug, updated_at')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (userPodcasts) {
       const userPodcastPages = userPodcasts.map(podcast => {
-        const podcastSlug = generateSlug(podcast.title);
+        const podcastSlug = podcast.slug || generateSlug(podcast.title);
         return {
           url: `${baseUrl}/podcast/${podcastSlug}`,
           lastModified: podcast.updated_at ? new Date(podcast.updated_at) : new Date(),
@@ -243,13 +243,13 @@ export default async function sitemap() {
         // Fetch all podcasts (not just is_active) to ensure we get all parents
         const { data: podcastsData } = await supabase
           .from('user_podcasts')
-          .select('id, title')
+          .select('id, title, slug')
           .in('id', podcastIds);
 
         if (podcastsData) {
           console.log(`Sitemap: Found ${podcastsData.length} podcasts for episodes`);
           podcastsData.forEach(p => {
-            podcastsMap[p.id] = generateSlug(p.title);
+            podcastsMap[p.id] = p.slug || generateSlug(p.title);
           });
         }
       }

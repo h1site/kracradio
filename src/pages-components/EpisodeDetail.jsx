@@ -181,7 +181,7 @@ export default function EpisodeDetail() {
 
   const isCurrentlyPlaying = isPlaying && currentTrack?.episodeId === episode?.id;
 
-  const podcastSlug = podcast ? generateSlug(podcast.title) : id;
+  const podcastSlug = podcast?.slug || (podcast ? generateSlug(podcast.title) : id);
 
   if (loading) {
     return (

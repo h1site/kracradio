@@ -32,7 +32,7 @@ export async function generateMetadata({ params }) {
   try {
     // Find podcast by id or slug
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    let podcastQuery = supabase.from('user_podcasts').select('id, title, image_url, author').eq('is_active', true);
+    let podcastQuery = supabase.from('user_podcasts').select('id, title, image_url, author, slug').eq('is_active', true);
     podcastQuery = isUUID ? podcastQuery.eq('id', id) : podcastQuery.eq('slug', id);
     const { data: podcastData, error: podcastError } = await podcastQuery.single();
 
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }) {
     if (podcastError || !podcastData) {
       const { data: allPodcasts } = await supabase
         .from('user_podcasts')
-        .select('id, title, image_url, author')
+        .select('id, title, image_url, author, slug')
         .eq('is_active', true);
 
       podcast = allPodcasts?.find(p => generateSlug(p.title) === id);
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }) {
       : `Listen to ${episode.title} from ${podcast.title} on KracRadio`;
 
     const coverImage = episode.image_url || podcast.image_url || '/logo-og.png';
-    const podcastSlug = generateSlug(podcast.title);
+    const podcastSlug = podcast.slug || generateSlug(podcast.title);
     const episodeUrl = `${siteUrl}/podcast/${podcastSlug}/episode/${episodeSlug}`;
 
     return {

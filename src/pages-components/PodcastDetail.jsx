@@ -313,7 +313,7 @@ export default function PodcastDetail() {
                         {/* Episode Info */}
                         <div className="flex-1 min-w-0">
                           <Link
-                            href={`/podcast/${generateSlug(podcast.title)}/episode/${generateSlug(episode.title)}`}
+                            href={`/podcast/${podcast.slug || generateSlug(podcast.title)}/episode/${generateSlug(episode.title)}`}
                             className={`font-bold text-lg mb-1 block hover:text-red-600 dark:hover:text-red-400 transition-colors ${isCurrentlyPlaying ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
                           >
                             <h3 className="inline">{episode.title}</h3>
