@@ -6,6 +6,7 @@ import { useI18n } from '../i18n';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
 import { FaPlay, FaPause, FaClock, FaCalendar, FaRss, FaArrowLeft } from 'react-icons/fa';
+import GoogleAd from '../components/ads/GoogleAd';
 
 const STRINGS = {
   fr: {
@@ -319,6 +320,11 @@ export default function EpisodeDetail() {
             />
           </article>
         )}
+
+        {/* Ad after description */}
+        <div className="mt-12">
+          <GoogleAd slot="5041624401" />
+        </div>
 
         {/* Episode Details */}
         <div className="mt-12 p-6 bg-gray-100 dark:bg-gray-900 rounded-xl">

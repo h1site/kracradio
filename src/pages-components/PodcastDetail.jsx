@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase';
 import { FaPlay, FaGlobe, FaRss, FaSpinner, FaChevronRight } from 'react-icons/fa';
 import { useUI } from '../context/UIContext';
 import { podcastSeriesSchema, breadcrumbSchema } from '../seo/schemas';
+import GoogleAd from '../components/ads/GoogleAd';
 
 const STRINGS = {
   fr: {
@@ -287,64 +288,71 @@ export default function PodcastDetail() {
                   const episodeImage = episode.image_url || podcast.image_url;
 
                   return (
-                    <div
-                      key={episode.id}
-                      className="group relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-200 dark:border-gray-800"
-                    >
-                      <div className="flex items-center gap-4 p-4">
-                        {/* Episode Image */}
-                        <div className="relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden">
-                          <img
-                            src={episodeImage}
-                            alt={episode.title}
-                            className="w-full h-full object-cover"
-                          />
+                    <React.Fragment key={episode.id}>
+                      <div
+                        className="group relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-200 dark:border-gray-800"
+                      >
+                        <div className="flex items-center gap-4 p-4">
+                          {/* Episode Image */}
+                          <div className="relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden">
+                            <img
+                              src={episodeImage}
+                              alt={episode.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={() => handlePlayEpisode(episode)}
+                              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label={`${L.play} ${episode.title}`}
+                            >
+                              <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-600 text-white">
+                                <FaPlay className="text-lg ml-1" />
+                              </div>
+                            </button>
+                          </div>
+
+                          {/* Episode Info */}
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={`/podcast/${podcast.slug || generateSlug(podcast.title)}/episode/${generateSlug(episode.title)}`}
+                              className={`font-bold text-lg mb-1 block hover:text-red-600 dark:hover:text-red-400 transition-colors ${isCurrentlyPlaying ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
+                            >
+                              <h3 className="inline">{episode.title}</h3>
+                              <FaChevronRight className="inline ml-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                              {episode.description}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                              <span className="flex items-center gap-1">
+                                {new Date(episode.pub_date).toLocaleDateString(lang, {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                              <span>•</span>
+                              <span>{formatDuration(episode.duration_seconds)}</span>
+                            </div>
+                          </div>
+
+                          {/* Play Button (Desktop) */}
                           <button
                             onClick={() => handlePlayEpisode(episode)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors flex-shrink-0"
                             aria-label={`${L.play} ${episode.title}`}
                           >
-                            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-600 text-white">
-                              <FaPlay className="text-lg ml-1" />
-                            </div>
+                            <FaPlay className="text-sm ml-1" />
                           </button>
                         </div>
-
-                        {/* Episode Info */}
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/podcast/${podcast.slug || generateSlug(podcast.title)}/episode/${generateSlug(episode.title)}`}
-                            className={`font-bold text-lg mb-1 block hover:text-red-600 dark:hover:text-red-400 transition-colors ${isCurrentlyPlaying ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
-                          >
-                            <h3 className="inline">{episode.title}</h3>
-                            <FaChevronRight className="inline ml-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </Link>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
-                            {episode.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
-                            <span className="flex items-center gap-1">
-                              {new Date(episode.pub_date).toLocaleDateString(lang, {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <span>•</span>
-                            <span>{formatDuration(episode.duration_seconds)}</span>
-                          </div>
-                        </div>
-
-                        {/* Play Button (Desktop) */}
-                        <button
-                          onClick={() => handlePlayEpisode(episode)}
-                          className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors flex-shrink-0"
-                          aria-label={`${L.play} ${episode.title}`}
-                        >
-                          <FaPlay className="text-sm ml-1" />
-                        </button>
                       </div>
-                    </div>
+                      {/* Insert ad after every 5 episodes */}
+                      {(index + 1) % 5 === 0 && index < episodes.length - 1 && (
+                        <div className="my-4">
+                          <GoogleAd slot="5041624401" />
+                        </div>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </div>

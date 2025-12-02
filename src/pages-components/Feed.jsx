@@ -1,6 +1,6 @@
 'use client';
 // src/pages/Feed.jsx
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
@@ -11,6 +11,7 @@ import { useI18n } from '../i18n';
 import { useProfile } from '../hooks/useCommunity';
 import CreatePost from '../components/posts/CreatePost';
 import Seo from '../seo/Seo';
+import GoogleAd from '../components/ads/GoogleAd';
 
 function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
   const { t, lang } = useI18n();
@@ -592,14 +593,21 @@ export default function Feed() {
             </div>
           ) : (
             <div className="space-y-4">
-              {posts.map(post => (
-                <FeedPostCard
-                  key={post.id}
-                  post={post}
-                  onUpdate={loadPosts}
-                  onDelete={handlePostDeleted}
-                  currentUser={user}
-                />
+              {posts.map((post, index) => (
+                <React.Fragment key={post.id}>
+                  <FeedPostCard
+                    post={post}
+                    onUpdate={loadPosts}
+                    onDelete={handlePostDeleted}
+                    currentUser={user}
+                  />
+                  {/* Insert ad after every 4 posts */}
+                  {(index + 1) % 4 === 0 && index < posts.length - 1 && (
+                    <div className="my-4">
+                      <GoogleAd slot="5041624401" />
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}

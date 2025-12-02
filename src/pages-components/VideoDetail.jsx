@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import Seo from '../seo/Seo';
 import VideoPlayer from '../components/VideoPlayer';
 import { useNotification } from '../context/NotificationContext';
+import GoogleAd from '../components/ads/GoogleAd';
 import {
   getApprovedVideos,
   getVideoLikeCount,
@@ -424,8 +425,13 @@ export default function VideoDetail() {
               </div>
             )}
 
+            {/* Ad before comments */}
+            <div className="mt-8 mb-8">
+              <GoogleAd slot="5041624401" />
+            </div>
+
             {/* Comments Section */}
-            <div className="border-t border-gray-800 pt-12 pb-12 mt-8">
+            <div className="border-t border-gray-800 pt-12 pb-12">
               <h2 className="text-lg font-semibold text-white mb-8">{comments.length} {L.comments}</h2>
 
               {/* Add Comment */}
