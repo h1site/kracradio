@@ -7,7 +7,7 @@ import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
-import { FaPlay, FaGlobe, FaRss, FaSpinner } from 'react-icons/fa';
+import { FaPlay, FaGlobe, FaRss, FaSpinner, FaChevronRight } from 'react-icons/fa';
 import { useUI } from '../context/UIContext';
 import { podcastSeriesSchema, breadcrumbSchema } from '../seo/schemas';
 
@@ -69,6 +69,17 @@ function formatDuration(seconds) {
   const s = Math.floor(seconds % 60);
   if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+function generateSlug(title) {
+  if (!title) return '';
+  return title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 100);
 }
 
 export default function PodcastDetail() {
@@ -287,9 +298,13 @@ export default function PodcastDetail() {
 
                         {/* Episode Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className={`font-bold text-lg mb-1 ${isCurrentlyPlaying ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-                            {episode.title}
-                          </h3>
+                          <Link
+                            href={`/podcast/${generateSlug(podcast.title)}/episode/${generateSlug(episode.title)}`}
+                            className={`font-bold text-lg mb-1 block hover:text-red-600 dark:hover:text-red-400 transition-colors ${isCurrentlyPlaying ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}
+                          >
+                            <h3 className="inline">{episode.title}</h3>
+                            <FaChevronRight className="inline ml-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Link>
                           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
                             {episode.description}
                           </p>
