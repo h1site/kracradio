@@ -10,72 +10,63 @@ import { supabase } from '../lib/supabaseClient';
 const STRINGS = {
   fr: {
     metaTitle: 'Éditeur de podcast',
-    newTitle: 'Nouveau podcast',
+    newTitle: 'Ajouter un podcast',
     editTitle: 'Modifier le podcast',
     back: 'Retour',
-    title: 'Titre du podcast',
     rssUrl: 'URL du flux RSS',
-    description: 'Description',
-    imageUrl: 'URL Image de couverture',
-    imageUrlHint: '*Optionnel : l\'image sera fournie par votre flux RSS',
-    websiteUrl: 'URL du site web',
-    author: 'Auteur',
-    imagePreview: 'Aperçu de l\'image',
-    save: 'Créer le podcast',
+    rssUrlHint: 'Entrez l\'URL de votre flux RSS et les informations seront extraites automatiquement',
+    save: 'Ajouter le podcast',
     update: 'Mettre à jour',
     saving: 'Enregistrement...',
-    validating: 'Validation du flux RSS...',
-    validateRss: 'Valider le flux RSS',
-    rssValid: 'Flux RSS valide ✓',
+    validating: 'Validation...',
     rssInvalid: 'Flux RSS invalide',
     rssError: 'Erreur de validation',
     rssRequired: 'L\'URL du flux RSS est requise',
+    feedInfo: 'Informations du flux',
+    title: 'Titre',
+    author: 'Auteur',
+    episodes: 'Épisodes',
+    description: 'Description',
   },
   en: {
     metaTitle: 'Podcast Editor',
-    newTitle: 'New Podcast',
+    newTitle: 'Add a Podcast',
     editTitle: 'Edit Podcast',
     back: 'Back',
-    title: 'Podcast Title',
     rssUrl: 'RSS Feed URL',
-    description: 'Description',
-    imageUrl: 'Cover Image URL',
-    imageUrlHint: '*Optional: image will be provided by your RSS feed',
-    websiteUrl: 'Website URL',
-    author: 'Author',
-    imagePreview: 'Image Preview',
-    save: 'Create Podcast',
+    rssUrlHint: 'Enter your RSS feed URL and the information will be extracted automatically',
+    save: 'Add Podcast',
     update: 'Update',
     saving: 'Saving...',
-    validating: 'Validating RSS feed...',
-    validateRss: 'Validate RSS Feed',
-    rssValid: 'RSS feed is valid ✓',
+    validating: 'Validating...',
     rssInvalid: 'Invalid RSS feed',
     rssError: 'Validation error',
     rssRequired: 'RSS feed URL is required',
+    feedInfo: 'Feed Information',
+    title: 'Title',
+    author: 'Author',
+    episodes: 'Episodes',
+    description: 'Description',
   },
   es: {
     metaTitle: 'Editor de podcast',
-    newTitle: 'Nuevo podcast',
+    newTitle: 'Agregar un podcast',
     editTitle: 'Editar podcast',
     back: 'Volver',
-    title: 'Título del podcast',
     rssUrl: 'URL del feed RSS',
-    description: 'Descripción',
-    imageUrl: 'URL de la imagen de portada',
-    imageUrlHint: '*Opcional: la imagen será proporcionada por su feed RSS',
-    websiteUrl: 'URL del sitio web',
-    author: 'Autor',
-    imagePreview: 'Vista previa de la imagen',
-    save: 'Crear podcast',
+    rssUrlHint: 'Ingrese la URL de su feed RSS y la información se extraerá automáticamente',
+    save: 'Agregar podcast',
     update: 'Actualizar',
     saving: 'Guardando...',
-    validating: 'Validando feed RSS...',
-    validateRss: 'Validar feed RSS',
-    rssValid: 'Feed RSS válido ✓',
+    validating: 'Validando...',
     rssInvalid: 'Feed RSS inválido',
     rssError: 'Error de validación',
     rssRequired: 'La URL del feed RSS es obligatoria',
+    feedInfo: 'Información del feed',
+    title: 'Título',
+    author: 'Autor',
+    episodes: 'Episodios',
+    description: 'Descripción',
   },
 };
 
@@ -87,19 +78,13 @@ export default function PodcastEditor() {
   const L = STRINGS[lang] || STRINGS.fr;
   const isEdit = Boolean(id);
 
-  const [title, setTitle] = useState('');
   const [rssUrl, setRssUrl] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [author, setAuthor] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [validating, setValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState(null); // null, 'valid', or 'invalid'
-  const [validationMessage, setValidationMessage] = useState('');
+  const [feedData, setFeedData] = useState(null); // Extracted feed data
 
-  // Charger le podcast à éditer
+  // Load existing podcast for editing
   useEffect(() => {
     if (!isEdit) return;
     let mounted = true;
@@ -115,12 +100,16 @@ export default function PodcastEditor() {
         if (mounted) {
           if (error) throw error;
           if (data) {
-            setTitle(data.title || '');
             setRssUrl(data.rss_url || '');
-            setDescription(data.description || '');
-            setImageUrl(data.image_url || '');
-            setWebsiteUrl(data.website_url || '');
-            setAuthor(data.author || '');
+            // Set existing data as feed preview
+            setFeedData({
+              feedTitle: data.title,
+              feedImage: data.image_url,
+              feedDescription: data.description,
+              feedAuthor: data.author,
+              feedWebsite: data.website_url,
+              episodeCount: null, // Unknown for existing
+            });
           }
         }
       } catch (e) {
@@ -133,72 +122,82 @@ export default function PodcastEditor() {
     return () => { mounted = false; };
   }, [id, isEdit]);
 
-  async function validateRssUrl() {
-    if (!rssUrl.trim()) {
-      setValidationResult('invalid');
-      setValidationMessage(L.rssRequired);
-      return;
+  async function validateAndExtract(url) {
+    if (!url.trim()) {
+      setFeedData(null);
+      return null;
     }
 
     setValidating(true);
-    setValidationResult(null);
-    setValidationMessage('');
+    setErr('');
+    setFeedData(null);
 
     try {
-      // Try to fetch the RSS feed
-      const response = await fetch(rssUrl, {
-        method: 'HEAD',
-        mode: 'no-cors', // Avoid CORS issues for HEAD request
+      const response = await fetch('/api/validate-rss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
       });
 
-      // Since mode is no-cors, we can't read the response, but if no error is thrown, URL is accessible
-      // Now let's try to actually parse it using a CORS proxy or direct fetch
-      const xmlResponse = await fetch(rssUrl);
+      const result = await response.json();
 
-      if (!xmlResponse.ok) {
-        throw new Error(`HTTP ${xmlResponse.status}`);
+      if (result.valid) {
+        setFeedData(result);
+        return result;
+      } else {
+        setErr(`${L.rssInvalid}: ${result.error}`);
+        return null;
       }
-
-      const xmlText = await xmlResponse.text();
-
-      // Basic XML validation - check for RSS/feed structure
-      if (!xmlText.includes('<rss') && !xmlText.includes('<feed')) {
-        throw new Error('Not a valid RSS/Atom feed');
-      }
-
-      // Check for essential podcast elements
-      const hasChannel = xmlText.includes('<channel') || xmlText.includes('<feed');
-      const hasItems = xmlText.includes('<item') || xmlText.includes('<entry');
-
-      if (!hasChannel || !hasItems) {
-        throw new Error('Feed missing required elements');
-      }
-
-      setValidationResult('valid');
-      setValidationMessage(L.rssValid);
     } catch (error) {
       console.error('RSS validation error:', error);
-      setValidationResult('invalid');
-      setValidationMessage(`${L.rssInvalid}: ${error.message}`);
+      setErr(`${L.rssError}: ${error.message}`);
+      return null;
     } finally {
       setValidating(false);
     }
   }
 
+  // Debounced validation on URL change
+  useEffect(() => {
+    if (!rssUrl.trim() || isEdit) return;
+
+    const timer = setTimeout(() => {
+      validateAndExtract(rssUrl);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [rssUrl, isEdit]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!user) return;
+
+    if (!rssUrl.trim()) {
+      setErr(L.rssRequired);
+      return;
+    }
+
     setBusy(true);
     setErr('');
 
     try {
+      // If no feed data yet, validate first
+      let data = feedData;
+      if (!data && !isEdit) {
+        data = await validateAndExtract(rssUrl);
+        if (!data) {
+          setBusy(false);
+          return;
+        }
+      }
+
       const podcastData = {
-        title,
+        title: data?.feedTitle || rssUrl,
         rss_url: rssUrl,
-        description,
-        image_url: imageUrl || null,
-        website_url: websiteUrl || null,
-        author: author || null,
+        description: data?.feedDescription || null,
+        image_url: data?.feedImage || null,
+        website_url: data?.feedWebsite || null,
+        author: data?.feedAuthor || null,
       };
 
       if (isEdit) {
@@ -223,7 +222,7 @@ export default function PodcastEditor() {
 
   return (
     <main className="container-max px-5 py-6 pb-20">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-black dark:text-white">
             {isEdit ? L.editTitle : L.newTitle}
@@ -247,128 +246,86 @@ export default function PodcastEditor() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-            <div className="space-y-6">
-              {/* Titre */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {L.title} *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-
-              {/* URL RSS Feed */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {L.rssUrl} *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    required
-                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    value={rssUrl}
-                    onChange={(e) => {
-                      setRssUrl(e.target.value);
-                      setValidationResult(null);
-                      setValidationMessage('');
-                    }}
-                    placeholder="https://example.com/feed.xml"
-                  />
-                  <button
-                    type="button"
-                    onClick={validateRssUrl}
-                    disabled={validating || !rssUrl.trim()}
-                    className="px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap"
-                  >
-                    {validating ? L.validating : L.validateRss}
-                  </button>
-                </div>
-                {validationMessage && (
-                  <div className={`mt-2 rounded-lg px-3 py-2 text-sm ${
-                    validationResult === 'valid'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
-                  }`}>
-                    {validationMessage}
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {L.description}
-                </label>
-                <textarea
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 min-h-[100px] transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                {/* URL Image */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    {L.imageUrl}
-                  </label>
-                  <input
-                    type="url"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/cover.jpg"
-                  />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{L.imageUrlHint}</p>
-                </div>
-
-                {/* URL Website */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    {L.websiteUrl}
-                  </label>
-                  <input
-                    type="url"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://example.com"
-                  />
-                </div>
-              </div>
-
-              {/* Auteur */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {L.author}
-                </label>
-                <input
-                  type="text"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                />
-              </div>
-
-              {imageUrl && (
-                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                  <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{L.imagePreview}:</p>
-                  <img src={imageUrl} alt="Preview" className="max-h-48 rounded-lg object-cover" />
-                </div>
-              )}
+            {/* RSS URL Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {L.rssUrl} *
+              </label>
+              <input
+                type="url"
+                required
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 transition focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                value={rssUrl}
+                onChange={(e) => {
+                  setRssUrl(e.target.value);
+                  if (!isEdit) {
+                    setFeedData(null);
+                    setErr('');
+                  }
+                }}
+                placeholder="https://example.com/feed.xml"
+              />
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {L.rssUrlHint}
+              </p>
             </div>
 
-            {/* Bouton submit */}
+            {/* Loading indicator */}
+            {validating && (
+              <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                {L.validating}
+              </div>
+            )}
+
+            {/* Feed Preview */}
+            {feedData && !validating && (
+              <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  {L.feedInfo}
+                </h3>
+                <div className="flex gap-4">
+                  {feedData.feedImage && (
+                    <img
+                      src={feedData.feedImage}
+                      alt={feedData.feedTitle}
+                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    {feedData.feedTitle && (
+                      <p className="font-semibold text-gray-900 dark:text-white truncate">
+                        {feedData.feedTitle}
+                      </p>
+                    )}
+                    {feedData.feedAuthor && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {L.author}: {feedData.feedAuthor}
+                      </p>
+                    )}
+                    {feedData.episodeCount != null && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {feedData.episodeCount} {L.episodes}
+                      </p>
+                    )}
+                    {feedData.feedDescription && (
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {feedData.feedDescription}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
             <div className="flex items-center justify-end pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || validating}
                 className="rounded-xl bg-red-600 px-8 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {busy ? L.saving : (isEdit ? L.update : L.save)}
