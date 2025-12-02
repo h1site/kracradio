@@ -455,6 +455,7 @@ export default function Dashboard() {
       };
 
       let podcastId = editingPodcast?.id;
+      let isExisting = false;
 
       if (editingPodcast) {
         // Update existing podcast
@@ -464,26 +465,39 @@ export default function Dashboard() {
           .eq('id', editingPodcast.id);
         if (error) throw error;
       } else {
-        // Check if podcast already exists for this user
+        // Check if podcast already exists GLOBALLY (not just for this user)
         const { data: existingPodcast } = await supabase
           .from('user_podcasts')
-          .select('id')
-          .eq('user_id', user.id)
+          .select('id, user_id')
           .eq('rss_url', podcastForm.rss_url)
           .single();
 
         if (existingPodcast) {
-          // Podcast already exists, just import episodes
-          podcastId = existingPodcast.id;
-          console.log('[Dashboard] Podcast already exists, will just import episodes:', podcastId);
+          if (existingPodcast.user_id === user.id) {
+            // Same user already has this podcast, just import episodes
+            podcastId = existingPodcast.id;
+            isExisting = true;
+            console.log('[Dashboard] User already has this podcast, will import episodes:', podcastId);
+          } else {
+            // Another user has this podcast - show error
+            setMessage({ type: 'error', text: L.podcastAlreadyExists || 'Ce podcast est déjà importé par un autre utilisateur' });
+            setSavingPodcast(false);
+            return;
+          }
         } else {
           // Insert new podcast
+          console.log('[Dashboard] Inserting new podcast:', podcastData);
           const { data: newPodcast, error } = await supabase
             .from('user_podcasts')
             .insert([{ ...podcastData, user_id: user.id, is_active: true }])
             .select()
             .single();
-          if (error) throw error;
+
+          if (error) {
+            console.error('[Dashboard] Insert error:', error);
+            throw error;
+          }
+          console.log('[Dashboard] New podcast created:', newPodcast);
           podcastId = newPodcast.id;
         }
       }
@@ -497,14 +511,14 @@ export default function Dashboard() {
         if (importResult.success) {
           setMessage({
             type: 'success',
-            text: editingPodcast
-              ? `${L.podcastUpdated || 'Podcast updated'} - ${importResult.imported || 0} ${L.episodesImported || 'episodes imported'}`
-              : `${L.podcastAdded || 'Podcast added'} - ${importResult.imported || 0} ${L.episodesImported || 'episodes imported'}`
+            text: isExisting
+              ? `${L.episodesUpdated || 'Episodes updated'} - ${importResult.imported || 0} ${L.episodesImported || 'episodes'}`
+              : `${L.podcastAdded || 'Podcast ajouté'} - ${importResult.imported || 0} ${L.episodesImported || 'épisodes importés'}`
           });
         } else {
           setMessage({
             type: 'warning',
-            text: `${L.podcastAdded || 'Podcast added'}, ${L.importError || 'but episode import failed'}: ${importResult.error || 'Unknown error'}`
+            text: `${L.podcastAdded || 'Podcast ajouté'}, ${L.importError || 'mais erreur import épisodes'}: ${importResult.error || 'Erreur inconnue'}`
           });
         }
       } else {
@@ -518,9 +532,9 @@ export default function Dashboard() {
       console.error('Error saving podcast:', error);
       // Handle duplicate RSS URL error (409 Conflict or unique constraint violation)
       if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique') || String(error.code) === '409') {
-        setMessage({ type: 'error', text: L.duplicatePodcast || 'Ce podcast existe déjà (URL RSS en double)' });
+        setMessage({ type: 'error', text: L.duplicatePodcast || 'Ce podcast existe déjà' });
       } else {
-        setMessage({ type: 'error', text: error.message || 'Error saving podcast' });
+        setMessage({ type: 'error', text: error.message || 'Erreur lors de la sauvegarde' });
       }
     } finally {
       setSavingPodcast(false);
