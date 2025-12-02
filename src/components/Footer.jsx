@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useI18n } from '../i18n';
 import { useUI } from '../context/UIContext';
+import GoogleAd from './ads/GoogleAd';
 
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
@@ -102,6 +103,11 @@ export default function Footer() {
       style={footerStyle}
     >
       <div className="px-8 py-12">
+        {/* Google Ads */}
+        <div className="mx-auto max-w-4xl mb-12">
+          <GoogleAd slot="3411355648" />
+        </div>
+
         {/* Newsletter Section */}
         <div className="mx-auto max-w-2xl text-center">
           <h3 className="mb-2 text-2xl font-bold uppercase tracking-wide text-white">
