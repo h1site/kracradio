@@ -6,7 +6,6 @@ import { useI18n } from '../i18n';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase } from '../lib/supabase';
 import { FaPlay, FaPause, FaClock, FaCalendar, FaRss, FaArrowLeft } from 'react-icons/fa';
-import { useUI } from '../context/UIContext';
 
 const STRINGS = {
   fr: {
@@ -183,16 +182,11 @@ export default function EpisodeDetail() {
 
   const isCurrentlyPlaying = isPlaying && currentTrack?.episodeId === episode?.id;
 
-  const containerStyle = {
-    marginLeft: isDesktop && sidebarOpen ? sidebarWidth : 0,
-    transition: 'margin-left 300ms ease',
-  };
-
   const podcastSlug = podcast ? generateSlug(podcast.title) : id;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white flex items-center justify-center" style={containerStyle}>
+      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">{L.loading}</p>
@@ -203,7 +197,7 @@ export default function EpisodeDetail() {
 
   if (!episode || !podcast) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white flex items-center justify-center" style={containerStyle}>
+      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-red-600 mb-4">{L.notFound}</h1>
           <Link href="/podcasts" className="text-red-600 hover:underline">
@@ -218,7 +212,7 @@ export default function EpisodeDetail() {
   const pubDate = episode.pub_date ? new Date(episode.pub_date) : null;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black" style={containerStyle}>
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
