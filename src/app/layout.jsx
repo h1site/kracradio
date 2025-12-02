@@ -138,7 +138,7 @@ export default function RootLayout({ children }) {
           type="image/png"
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Providers>
           <AppLayout>
             {children}
