@@ -464,14 +464,28 @@ export default function Dashboard() {
           .eq('id', editingPodcast.id);
         if (error) throw error;
       } else {
-        // Insert new podcast
-        const { data: newPodcast, error } = await supabase
+        // Check if podcast already exists for this user
+        const { data: existingPodcast } = await supabase
           .from('user_podcasts')
-          .insert([{ ...podcastData, user_id: user.id, is_active: true }])
-          .select()
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('rss_url', podcastForm.rss_url)
           .single();
-        if (error) throw error;
-        podcastId = newPodcast.id;
+
+        if (existingPodcast) {
+          // Podcast already exists, just import episodes
+          podcastId = existingPodcast.id;
+          console.log('[Dashboard] Podcast already exists, will just import episodes:', podcastId);
+        } else {
+          // Insert new podcast
+          const { data: newPodcast, error } = await supabase
+            .from('user_podcasts')
+            .insert([{ ...podcastData, user_id: user.id, is_active: true }])
+            .select()
+            .single();
+          if (error) throw error;
+          podcastId = newPodcast.id;
+        }
       }
 
       // Import episodes for the podcast
@@ -502,7 +516,12 @@ export default function Dashboard() {
       setTimeout(() => setMessage(null), 5000);
     } catch (error) {
       console.error('Error saving podcast:', error);
-      setMessage({ type: 'error', text: error.message || 'Error saving podcast' });
+      // Handle duplicate RSS URL error (409 Conflict or unique constraint violation)
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique') || String(error.code) === '409') {
+        setMessage({ type: 'error', text: L.duplicatePodcast || 'Ce podcast existe déjà (URL RSS en double)' });
+      } else {
+        setMessage({ type: 'error', text: error.message || 'Error saving podcast' });
+      }
     } finally {
       setSavingPodcast(false);
     }
