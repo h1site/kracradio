@@ -220,7 +220,7 @@ const STRINGS = {
   },
 };
 
-const blankPodcast = { title: '', rss_url: '', description: '', image_url: '', author: '' };
+const blankPodcast = { rss_url: '' };
 
 export default function Dashboard() {
   const { lang } = useI18n();
@@ -240,6 +240,8 @@ export default function Dashboard() {
   const [editingPodcast, setEditingPodcast] = useState(null);
   const [podcastForm, setPodcastForm] = useState(blankPodcast);
   const [savingPodcast, setSavingPodcast] = useState(false);
+  const [validatingRss, setValidatingRss] = useState(false);
+  const [feedData, setFeedData] = useState(null);
 
   // Video state
   const [videos, setVideos] = useState([]);
@@ -358,11 +360,13 @@ export default function Dashboard() {
   const handleEditPodcast = (podcast) => {
     setEditingPodcast(podcast);
     setPodcastForm({
-      title: podcast.title || '',
       rss_url: podcast.rss_url || '',
-      description: podcast.description || '',
-      image_url: podcast.image_url || '',
-      author: podcast.author || '',
+    });
+    setFeedData({
+      feedTitle: podcast.title,
+      feedImage: podcast.image_url,
+      feedDescription: podcast.description,
+      feedAuthor: podcast.author,
     });
     setShowPodcastForm(true);
   };
@@ -377,23 +381,95 @@ export default function Dashboard() {
     setShowPodcastForm(false);
     setEditingPodcast(null);
     setPodcastForm(blankPodcast);
+    setFeedData(null);
   };
+
+  // Validate and extract RSS feed data
+  const validateAndExtractRss = async (url) => {
+    if (!url.trim()) {
+      setFeedData(null);
+      return null;
+    }
+
+    setValidatingRss(true);
+    setFeedData(null);
+
+    try {
+      const response = await fetch('/api/validate-rss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const result = await response.json();
+
+      if (result.valid) {
+        setFeedData(result);
+        return result;
+      } else {
+        setMessage({ type: 'error', text: `${L.rssInvalid || 'Invalid RSS'}: ${result.error}` });
+        return null;
+      }
+    } catch (error) {
+      console.error('RSS validation error:', error);
+      setMessage({ type: 'error', text: error.message });
+      return null;
+    } finally {
+      setValidatingRss(false);
+    }
+  };
+
+  // Debounced RSS validation
+  useEffect(() => {
+    if (!podcastForm.rss_url?.trim() || editingPodcast) return;
+
+    const timer = setTimeout(() => {
+      validateAndExtractRss(podcastForm.rss_url);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [podcastForm.rss_url, editingPodcast]);
 
   const handleSavePodcast = async (e) => {
     e.preventDefault();
+
+    if (!podcastForm.rss_url?.trim()) {
+      setMessage({ type: 'error', text: L.rssRequired || 'RSS URL is required' });
+      return;
+    }
+
     setSavingPodcast(true);
     try {
+      // If no feed data yet, validate first
+      let data = feedData;
+      if (!data && !editingPodcast) {
+        data = await validateAndExtractRss(podcastForm.rss_url);
+        if (!data) {
+          setSavingPodcast(false);
+          return;
+        }
+      }
+
+      const podcastData = {
+        title: data?.feedTitle || podcastForm.rss_url,
+        rss_url: podcastForm.rss_url,
+        description: data?.feedDescription || null,
+        image_url: data?.feedImage || null,
+        website_url: data?.feedWebsite || null,
+        author: data?.feedAuthor || null,
+      };
+
       if (editingPodcast) {
         const { error } = await supabase
           .from('user_podcasts')
-          .update(podcastForm)
+          .update({ rss_url: podcastForm.rss_url })
           .eq('id', editingPodcast.id);
         if (error) throw error;
         setMessage({ type: 'success', text: L.podcastUpdated });
       } else {
         const { error } = await supabase
           .from('user_podcasts')
-          .insert([{ ...podcastForm, user_id: user.id, is_active: true }]);
+          .insert([{ ...podcastData, user_id: user.id, is_active: true }]);
         if (error) throw error;
         setMessage({ type: 'success', text: L.podcastAdded });
       }
@@ -1032,72 +1108,74 @@ export default function Dashboard() {
                 </h3>
               </div>
               <form onSubmit={handleSavePodcast} className="p-5 space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {L.podcastTitle} *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={podcastForm.title}
-                      onChange={(e) => setPodcastForm({ ...podcastForm, title: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                      placeholder="Mon podcast"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {L.rssUrl} *
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      value={podcastForm.rss_url}
-                      onChange={(e) => setPodcastForm({ ...podcastForm, rss_url: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                      placeholder="https://example.com/feed.xml"
-                    />
-                  </div>
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {L.description}
+                    {L.rssUrl} *
                   </label>
-                  <textarea
-                    value={podcastForm.description}
-                    onChange={(e) => setPodcastForm({ ...podcastForm, description: e.target.value })}
-                    rows={2}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition resize-none"
-                    placeholder="Description du podcast..."
+                  <input
+                    type="url"
+                    required
+                    value={podcastForm.rss_url}
+                    onChange={(e) => {
+                      setPodcastForm({ ...podcastForm, rss_url: e.target.value });
+                      if (!editingPodcast) {
+                        setFeedData(null);
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+                    placeholder="https://example.com/feed.xml"
                   />
+                  <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {L.rssUrlHint || 'Enter your RSS feed URL and the information will be extracted automatically'}
+                  </p>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      Image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={podcastForm.image_url}
-                      onChange={(e) => setPodcastForm({ ...podcastForm, image_url: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                      placeholder="https://..."
-                    />
+
+                {/* Loading indicator */}
+                {validatingRss && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    {L.validating || 'Validating...'}
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {L.author}
-                    </label>
-                    <input
-                      type="text"
-                      value={podcastForm.author}
-                      onChange={(e) => setPodcastForm({ ...podcastForm, author: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                      placeholder="Nom de l'auteur"
-                    />
+                )}
+
+                {/* Feed Preview */}
+                {feedData && !validatingRss && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                      {L.feedInfo || 'Feed Information'}
+                    </p>
+                    <div className="flex gap-3">
+                      {feedData.feedImage && (
+                        <img
+                          src={feedData.feedImage}
+                          alt={feedData.feedTitle}
+                          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {feedData.feedTitle && (
+                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                            {feedData.feedTitle}
+                          </p>
+                        )}
+                        {feedData.feedAuthor && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {feedData.feedAuthor}
+                          </p>
+                        )}
+                        {feedData.episodeCount != null && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            {feedData.episodeCount} {L.episodes || 'episodes'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <button
                     type="button"
@@ -1108,7 +1186,7 @@ export default function Dashboard() {
                   </button>
                   <button
                     type="submit"
-                    disabled={savingPodcast}
+                    disabled={savingPodcast || validatingRss}
                     className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {savingPodcast ? '...' : L.save}
