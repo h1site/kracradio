@@ -26,6 +26,48 @@ function generateSlug(title) {
     .slice(0, 100);
 }
 
+// Helper to fetch all records with pagination (bypass 1000 limit)
+async function fetchAllRecords(supabase, table, select, filters = {}, orderBy = 'created_at') {
+  const allRecords = [];
+  const pageSize = 1000;
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    let query = supabase
+      .from(table)
+      .select(select)
+      .order(orderBy, { ascending: false })
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+
+    // Apply filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value === null) {
+        query = query.not(key, 'is', null);
+      } else {
+        query = query.eq(key, value);
+      }
+    });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error(`Sitemap: Error fetching ${table}:`, error);
+      break;
+    }
+
+    if (data && data.length > 0) {
+      allRecords.push(...data);
+      page++;
+      hasMore = data.length === pageSize;
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allRecords;
+}
+
 export default async function sitemap() {
   const supabase = getSupabaseClient();
 
@@ -91,19 +133,17 @@ export default async function sitemap() {
   }
 
   try {
-    // Videos - generate slug from title (slug column may not exist)
-    const { data: videos, error: videosError } = await supabase
-      .from('videos')
-      .select('id, title, youtube_id, updated_at')
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false });
+    // Videos - fetch ALL with pagination (bypass 1000 limit)
+    const videos = await fetchAllRecords(
+      supabase,
+      'videos',
+      'id, title, youtube_id, updated_at',
+      { status: 'approved' }
+    );
 
-    if (videosError) {
-      console.error('Sitemap: Error fetching videos:', videosError);
-    } else if (videos && videos.length > 0) {
+    if (videos && videos.length > 0) {
       console.log(`Sitemap: Found ${videos.length} approved videos`);
       videoPages = videos.map(video => {
-        // Generate slug from title (same logic as Videos.jsx)
         const videoSlug = generateSlug(video.title);
         return {
           url: `${baseUrl}/videos/${videoSlug}`,
@@ -165,22 +205,42 @@ export default async function sitemap() {
   }
 
   try {
-    // Podcast Episodes - get all episodes
-    const { data: episodes, error: episodesError } = await supabase
-      .from('podcast_episodes')
-      .select('id, title, podcast_id, pub_date, created_at')
-      .order('pub_date', { ascending: false });
+    // Podcast Episodes - fetch ALL with pagination (bypass 1000 limit)
+    const allEpisodes = [];
+    const pageSize = 1000;
+    let page = 0;
+    let hasMore = true;
 
-    if (episodesError) {
-      console.error('Sitemap: Error fetching episodes:', episodesError);
-    } else if (episodes && episodes.length > 0) {
-      console.log(`Sitemap: Found ${episodes.length} podcast episodes`);
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('podcast_episodes')
+        .select('id, title, podcast_id, pub_date, created_at')
+        .order('pub_date', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      // Get podcast info for slug generation
-      const podcastIds = [...new Set(episodes.map(e => e.podcast_id).filter(Boolean))];
+      if (error) {
+        console.error('Sitemap: Error fetching episodes:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allEpisodes.push(...data);
+        page++;
+        hasMore = data.length === pageSize;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    if (allEpisodes.length > 0) {
+      console.log(`Sitemap: Found ${allEpisodes.length} podcast episodes`);
+
+      // Get ALL podcast info for slug generation
+      const podcastIds = [...new Set(allEpisodes.map(e => e.podcast_id).filter(Boolean))];
       let podcastsMap = {};
 
       if (podcastIds.length > 0) {
+        // Fetch all podcasts (not just is_active) to ensure we get all parents
         const { data: podcastsData } = await supabase
           .from('user_podcasts')
           .select('id, title')
@@ -194,7 +254,7 @@ export default async function sitemap() {
         }
       }
 
-      episodePages = episodes
+      episodePages = allEpisodes
         .filter(episode => podcastsMap[episode.podcast_id])
         .map(episode => {
           const podcastSlug = podcastsMap[episode.podcast_id];
