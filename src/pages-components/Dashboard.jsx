@@ -344,10 +344,23 @@ export default function Dashboard() {
   const handleDeletePodcast = async (id) => {
     if (!window.confirm(L.confirmDelete)) return;
     try {
+      // First delete all episodes for this podcast
+      const { error: episodesError } = await supabase
+        .from('podcast_episodes')
+        .delete()
+        .eq('podcast_id', id);
+
+      if (episodesError) {
+        console.error('[Dashboard] Error deleting episodes:', episodesError);
+        throw episodesError;
+      }
+
+      // Then delete the podcast itself
       const { error } = await supabase
         .from('user_podcasts')
-        .update({ is_active: false })
+        .delete()
         .eq('id', id);
+
       if (error) throw error;
       setMessage({ type: 'success', text: L.podcastDeleted });
       loadPodcasts();
