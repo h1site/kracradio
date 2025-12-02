@@ -380,10 +380,38 @@ export default function AdminPanel() {
             .not('artist_slug', 'is', null)
             .order('created_at', { ascending: false });
 
-          const videosPromise = supabase
-            .from('videos')
-            .select('*')
-            .order('created_at', { ascending: false });
+          // Fetch ALL videos with pagination (Supabase limit is 1000)
+          const fetchAllVideos = async () => {
+            const allVideos = [];
+            const pageSize = 1000;
+            let page = 0;
+            let hasMore = true;
+
+            while (hasMore) {
+              const { data, error } = await supabase
+                .from('videos')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .range(page * pageSize, (page + 1) * pageSize - 1);
+
+              if (error) {
+                console.error('[AdminPanel] Videos fetch error:', error);
+                break;
+              }
+
+              if (data && data.length > 0) {
+                allVideos.push(...data);
+                page++;
+                hasMore = data.length === pageSize;
+              } else {
+                hasMore = false;
+              }
+            }
+
+            return { data: allVideos, error: null };
+          };
+
+          const videosPromise = fetchAllVideos();
 
           const podcastsPromise = supabase
             .from('user_podcasts')
