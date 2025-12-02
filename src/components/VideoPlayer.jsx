@@ -564,9 +564,32 @@ export default function VideoPlayer({
 
   const handleSeek = (e) => {
     if (!player || !duration || typeof player.seekTo !== 'function') return;
+    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = x / rect.width;
+
+    // Get touch or mouse position (changedTouches for touchend, touches for touchmove)
+    const touch = e.changedTouches?.[0] || e.touches?.[0];
+    const clientX = touch ? touch.clientX : e.clientX;
+    const clientY = touch ? touch.clientY : e.clientY;
+
+    // Check if we're in rotated portrait fullscreen mode
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    const isRotatedFullscreen = isMobileFullscreen && isPortrait;
+
+    let percentage;
+    if (isRotatedFullscreen) {
+      // In rotated mode, the progress bar is visually horizontal but DOM is rotated
+      // We need to use Y coordinate and invert it
+      const y = clientY - rect.top;
+      percentage = 1 - (y / rect.height);
+    } else {
+      const x = clientX - rect.left;
+      percentage = x / rect.width;
+    }
+
+    // Clamp percentage between 0 and 1
+    percentage = Math.max(0, Math.min(1, percentage));
+
     const newTime = percentage * duration;
     player.seekTo(newTime, true);
     setCurrentTime(newTime);
@@ -803,7 +826,8 @@ export default function VideoPlayer({
           <div className="mb-3">
             <div
               onClick={handleSeek}
-              className="relative w-full h-1 bg-white/30 rounded-full cursor-pointer hover:h-1.5 transition-all group/progress"
+              onTouchEnd={handleSeek}
+              className="relative w-full h-1 bg-white/30 rounded-full cursor-pointer hover:h-1.5 transition-all group/progress touch-none"
             >
               <div
                 className="absolute top-0 left-0 h-full bg-red-600 rounded-full transition-all"
