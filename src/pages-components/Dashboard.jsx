@@ -362,11 +362,13 @@ export default function Dashboard() {
     setPodcastForm({
       rss_url: podcast.rss_url || '',
     });
+    // Set existing data as preview (will be refreshed on validation)
     setFeedData({
       feedTitle: podcast.title,
       feedImage: podcast.image_url,
       feedDescription: podcast.description,
       feedAuthor: podcast.author,
+      episodeCount: null,
     });
     setShowPodcastForm(true);
   };
@@ -421,19 +423,20 @@ export default function Dashboard() {
     }
   };
 
-  // Debounced RSS validation
+  // Auto-validate when editing existing podcast
   useEffect(() => {
-    if (!podcastForm.rss_url?.trim() || editingPodcast) return;
-
-    const timer = setTimeout(() => {
+    if (editingPodcast && podcastForm.rss_url?.trim() && !feedData) {
       validateAndExtractRss(podcastForm.rss_url);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [podcastForm.rss_url, editingPodcast]);
+    }
+  }, [editingPodcast, podcastForm.rss_url]);
 
   const handleSavePodcast = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+
+    if (!feedData) {
+      setMessage({ type: 'error', text: L.validateFirst || 'Please validate the RSS feed first' });
+      return;
+    }
 
     if (!podcastForm.rss_url?.trim()) {
       setMessage({ type: 'error', text: L.rssRequired || 'RSS URL is required' });
@@ -442,42 +445,61 @@ export default function Dashboard() {
 
     setSavingPodcast(true);
     try {
-      // If no feed data yet, validate first
-      let data = feedData;
-      if (!data && !editingPodcast) {
-        data = await validateAndExtractRss(podcastForm.rss_url);
-        if (!data) {
-          setSavingPodcast(false);
-          return;
-        }
-      }
-
       const podcastData = {
-        title: data?.feedTitle || podcastForm.rss_url,
+        title: feedData.feedTitle || podcastForm.rss_url,
         rss_url: podcastForm.rss_url,
-        description: data?.feedDescription || null,
-        image_url: data?.feedImage || null,
-        website_url: data?.feedWebsite || null,
-        author: data?.feedAuthor || null,
+        description: feedData.feedDescription || null,
+        image_url: feedData.feedImage || null,
+        website_url: feedData.feedWebsite || null,
+        author: feedData.feedAuthor || null,
       };
 
+      let podcastId = editingPodcast?.id;
+
       if (editingPodcast) {
+        // Update existing podcast
         const { error } = await supabase
           .from('user_podcasts')
-          .update({ rss_url: podcastForm.rss_url })
+          .update(podcastData)
           .eq('id', editingPodcast.id);
         if (error) throw error;
-        setMessage({ type: 'success', text: L.podcastUpdated });
       } else {
-        const { error } = await supabase
+        // Insert new podcast
+        const { data: newPodcast, error } = await supabase
           .from('user_podcasts')
-          .insert([{ ...podcastData, user_id: user.id, is_active: true }]);
+          .insert([{ ...podcastData, user_id: user.id, is_active: true }])
+          .select()
+          .single();
         if (error) throw error;
-        setMessage({ type: 'success', text: L.podcastAdded });
+        podcastId = newPodcast.id;
       }
+
+      // Import episodes for the podcast
+      if (podcastId) {
+        console.log('[Dashboard] Importing episodes for podcast:', podcastId);
+        const importResult = await importPodcastEpisodes(supabase, podcastId, podcastForm.rss_url);
+        console.log('[Dashboard] Import result:', importResult);
+
+        if (importResult.success) {
+          setMessage({
+            type: 'success',
+            text: editingPodcast
+              ? `${L.podcastUpdated || 'Podcast updated'} - ${importResult.imported || 0} ${L.episodesImported || 'episodes imported'}`
+              : `${L.podcastAdded || 'Podcast added'} - ${importResult.imported || 0} ${L.episodesImported || 'episodes imported'}`
+          });
+        } else {
+          setMessage({
+            type: 'warning',
+            text: `${L.podcastAdded || 'Podcast added'}, ${L.importError || 'but episode import failed'}: ${importResult.error || 'Unknown error'}`
+          });
+        }
+      } else {
+        setMessage({ type: 'success', text: editingPodcast ? L.podcastUpdated : L.podcastAdded });
+      }
+
       handleCancelPodcastForm();
       loadPodcasts();
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), 5000);
     } catch (error) {
       console.error('Error saving podcast:', error);
       setMessage({ type: 'error', text: error.message || 'Error saving podcast' });
@@ -1110,68 +1132,89 @@ export default function Dashboard() {
                   {editingPodcast ? L.editPodcast : L.newPodcast}
                 </h3>
               </div>
-              <form onSubmit={handleSavePodcast} className="p-5 space-y-4">
+              <div className="p-5 space-y-4">
+                {/* Step 1: Enter RSS URL */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     {L.rssUrl} *
                   </label>
-                  <input
-                    type="url"
-                    required
-                    value={podcastForm.rss_url}
-                    onChange={(e) => {
-                      setPodcastForm({ ...podcastForm, rss_url: e.target.value });
-                      if (!editingPodcast) {
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={podcastForm.rss_url}
+                      onChange={(e) => {
+                        setPodcastForm({ ...podcastForm, rss_url: e.target.value });
                         setFeedData(null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                    placeholder="https://example.com/feed.xml"
-                  />
+                      }}
+                      className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+                      placeholder="https://example.com/feed.xml"
+                      disabled={validatingRss || savingPodcast}
+                    />
+                    {!feedData && !validatingRss && (
+                      <button
+                        type="button"
+                        onClick={() => validateAndExtractRss(podcastForm.rss_url)}
+                        disabled={!podcastForm.rss_url?.trim() || validatingRss}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {L.validate || 'Valider'}
+                      </button>
+                    )}
+                  </div>
                   <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {L.rssUrlHint || 'Enter your RSS feed URL and the information will be extracted automatically'}
+                    {L.rssUrlHint || 'Enter your RSS feed URL and click Validate'}
                   </p>
                 </div>
 
                 {/* Loading indicator */}
                 {validatingRss && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                     </svg>
-                    {L.validating || 'Validating...'}
+                    {L.validating || 'Validation en cours...'}
                   </div>
                 )}
 
-                {/* Feed Preview */}
+                {/* Step 2: Feed Preview - shown after validation */}
                 {feedData && !validatingRss && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                      {L.feedInfo || 'Feed Information'}
-                    </p>
-                    <div className="flex gap-3">
+                  <div className="rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/20 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                        {L.feedValid || 'Feed RSS valide!'}
+                      </p>
+                    </div>
+                    <div className="flex gap-4">
                       {feedData.feedImage && (
                         <img
                           src={feedData.feedImage}
                           alt={feedData.feedTitle}
-                          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                          className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
                       <div className="flex-1 min-w-0">
                         {feedData.feedTitle && (
-                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                          <p className="font-bold text-base text-gray-900 dark:text-white">
                             {feedData.feedTitle}
                           </p>
                         )}
                         {feedData.feedAuthor && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {feedData.feedAuthor}
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {L.author || 'Auteur'}: {feedData.feedAuthor}
                           </p>
                         )}
                         {feedData.episodeCount != null && (
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
-                            {feedData.episodeCount} {L.episodes || 'episodes'}
+                          <p className="text-sm text-purple-600 dark:text-purple-400 font-medium mt-1">
+                            {feedData.episodeCount} {L.episodes || 'épisodes'} {L.toImport || 'à importer'}
+                          </p>
+                        )}
+                        {feedData.feedDescription && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
+                            {feedData.feedDescription}
                           </p>
                         )}
                       </div>
@@ -1179,23 +1222,43 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-end gap-2 pt-2">
+                {/* Action buttons */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
                     onClick={handleCancelPodcastForm}
-                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    disabled={savingPodcast}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50"
                   >
                     {L.cancel}
                   </button>
-                  <button
-                    type="submit"
-                    disabled={savingPodcast}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {savingPodcast ? (L.saving || 'Saving...') : validatingRss ? (L.validating || 'Validating...') : L.save}
-                  </button>
+                  {feedData && !validatingRss && (
+                    <button
+                      type="button"
+                      onClick={handleSavePodcast}
+                      disabled={savingPodcast}
+                      className="px-6 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {savingPodcast ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                          </svg>
+                          {L.importing || 'Importation...'}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          {L.importPodcast || 'Importer le podcast'}
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-              </form>
+              </div>
             </div>
           )}
 
