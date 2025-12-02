@@ -32,9 +32,21 @@ export async function generateMetadata({ params }) {
   try {
     // Find podcast by id or slug
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    let podcastQuery = supabase.from('user_podcasts').select('id, title, image_url, author');
+    let podcastQuery = supabase.from('user_podcasts').select('id, title, image_url, author').eq('is_active', true);
     podcastQuery = isUUID ? podcastQuery.eq('id', id) : podcastQuery.eq('slug', id);
-    const { data: podcast } = await podcastQuery.single();
+    const { data: podcastData, error: podcastError } = await podcastQuery.single();
+
+    let podcast = podcastData;
+
+    // If not found by UUID or slug, try matching by generated slug from title
+    if (podcastError || !podcastData) {
+      const { data: allPodcasts } = await supabase
+        .from('user_podcasts')
+        .select('id, title, image_url, author')
+        .eq('is_active', true);
+
+      podcast = allPodcasts?.find(p => generateSlug(p.title) === id);
+    }
 
     if (!podcast) {
       return { title: 'Episode Not Found', description: 'The requested episode could not be found.' };

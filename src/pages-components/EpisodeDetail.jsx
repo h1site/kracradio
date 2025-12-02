@@ -85,7 +85,6 @@ export default function EpisodeDetail() {
   const { lang } = useI18n();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
   const { playPodcast, pauseAudio, isPlaying, currentTrack } = useAudio();
-  const { sidebarOpen, isDesktop, sidebarWidth } = useUI();
 
   const [podcast, setPodcast] = useState(null);
   const [episode, setEpisode] = useState(null);
@@ -254,7 +253,7 @@ export default function EpisodeDetail() {
                 {pubDate && (
                   <div className="flex items-center gap-2">
                     <FaCalendar className="text-sm" />
-                    <span>
+                    <span suppressHydrationWarning>
                       {pubDate.toLocaleDateString(lang, {
                         day: 'numeric',
                         month: 'long',
@@ -339,12 +338,6 @@ export default function EpisodeDetail() {
                 <span className="ml-2 text-gray-900 dark:text-white">{podcast.category}</span>
               </div>
             )}
-            {episode.guid && (
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">GUID:</span>
-                <span className="ml-2 text-gray-600 dark:text-gray-400 text-xs font-mono break-all">{episode.guid}</span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -360,43 +353,81 @@ export default function EpisodeDetail() {
                 const prevEpImage = prevEp.image_url || podcast.image_url;
                 const prevPubDate = prevEp.pub_date ? new Date(prevEp.pub_date) : null;
 
+                const handlePlayPrevEp = (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  playPodcast({
+                    episodeId: prevEp.id,
+                    title: prevEp.title,
+                    audioUrl: prevEp.audio_url,
+                    image: prevEpImage,
+                    podcastTitle: podcast.title,
+                    podcastImage: podcast.image_url,
+                    duration: prevEp.duration_seconds,
+                  });
+                };
+
                 return (
-                  <Link
+                  <div
                     key={prevEp.id}
-                    href={`/podcast/${podcastSlug}/episode/${prevEpSlug}`}
-                    className="group flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
+                    className="group relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-200 dark:border-gray-800"
                   >
-                    <img
-                      src={prevEpImage}
-                      alt={prevEp.title}
-                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-1">
-                        {prevEp.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {prevPubDate && (
-                          <span>
-                            {prevPubDate.toLocaleDateString(lang, {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        )}
-                        {prevEp.duration_seconds && (
-                          <>
-                            <span>•</span>
-                            <span>{formatDuration(prevEp.duration_seconds)}</span>
-                          </>
-                        )}
+                    <div className="flex items-center gap-4 p-4">
+                      {/* Episode Image with Play Overlay */}
+                      <div className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
+                        <img
+                          src={prevEpImage}
+                          alt={prevEp.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={handlePlayPrevEp}
+                          className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`${L.play} ${prevEp.title}`}
+                        >
+                          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-600 text-white">
+                            <FaPlay className="text-lg ml-1" />
+                          </div>
+                        </button>
                       </div>
+
+                      {/* Episode Info */}
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          href={`/podcast/${podcastSlug}/episode/${prevEpSlug}`}
+                          className="font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-1 block"
+                        >
+                          {prevEp.title}
+                        </Link>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {prevPubDate && (
+                            <span suppressHydrationWarning>
+                              {prevPubDate.toLocaleDateString(lang, {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          )}
+                          {prevEp.duration_seconds && (
+                            <>
+                              <span>•</span>
+                              <span>{formatDuration(prevEp.duration_seconds)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Play Button (Desktop) */}
+                      <button
+                        onClick={handlePlayPrevEp}
+                        className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors flex-shrink-0"
+                        aria-label={`${L.play} ${prevEp.title}`}
+                      >
+                        <FaPlay className="text-sm ml-1" />
+                      </button>
                     </div>
-                    <div className="flex-shrink-0 text-red-600 dark:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <FaPlay />
-                    </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

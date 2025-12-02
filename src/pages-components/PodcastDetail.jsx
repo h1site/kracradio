@@ -104,18 +104,32 @@ export default function PodcastDetail() {
 
         const { data: podcastData, error: podcastError } = await podcastQuery.single();
 
-        if (podcastError) throw podcastError;
-        setPodcast(podcastData);
+        let foundPodcast = podcastData;
 
-        if (podcastData) {
-          const { data: episodesData, error: episodesError } = await supabase
-            .from('podcast_episodes')
+        // If not found by UUID or slug, try matching by generated slug from title
+        if (podcastError || !podcastData) {
+          const { data: allPodcasts } = await supabase
+            .from('user_podcasts')
             .select('*')
-            .eq('podcast_id', podcastData.id)
-            .order('pub_date', { ascending: false });
-          if (episodesError) throw episodesError;
-          setEpisodes(episodesData || []);
+            .eq('is_active', true);
+
+          foundPodcast = allPodcasts?.find(p => generateSlug(p.title) === id);
         }
+
+        if (!foundPodcast) {
+          setPodcast(null);
+          return;
+        }
+
+        setPodcast(foundPodcast);
+
+        const { data: episodesData, error: episodesError } = await supabase
+          .from('podcast_episodes')
+          .select('*')
+          .eq('podcast_id', foundPodcast.id)
+          .order('pub_date', { ascending: false });
+        if (episodesError) throw episodesError;
+        setEpisodes(episodesData || []);
       } catch (error) {
         console.error('Error loading podcast details:', error);
         setPodcast(null);
