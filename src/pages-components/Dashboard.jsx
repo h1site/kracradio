@@ -468,16 +468,30 @@ export default function Dashboard() {
         // Check if podcast already exists GLOBALLY (not just for this user)
         const { data: existingPodcast } = await supabase
           .from('user_podcasts')
-          .select('id, user_id')
+          .select('id, user_id, is_active')
           .eq('rss_url', podcastForm.rss_url)
           .single();
 
+        console.log('[Dashboard] Existing podcast check:', existingPodcast, 'Current user:', user.id);
+
         if (existingPodcast) {
           if (existingPodcast.user_id === user.id) {
-            // Same user already has this podcast, just import episodes
+            // Same user already has this podcast
             podcastId = existingPodcast.id;
             isExisting = true;
-            console.log('[Dashboard] User already has this podcast, will import episodes:', podcastId);
+
+            // Always update the podcast data (reactivate if needed, update metadata)
+            console.log('[Dashboard] Updating existing podcast:', podcastId, 'was_active:', existingPodcast.is_active);
+            const { error: updateError } = await supabase
+              .from('user_podcasts')
+              .update({ is_active: true, ...podcastData })
+              .eq('id', podcastId);
+
+            if (updateError) {
+              console.error('[Dashboard] Error updating podcast:', updateError);
+              throw updateError;
+            }
+            console.log('[Dashboard] Podcast updated successfully, will import episodes:', podcastId);
           } else {
             // Another user has this podcast - show error
             setMessage({ type: 'error', text: L.podcastAlreadyExists || 'Ce podcast est déjà importé par un autre utilisateur' });
