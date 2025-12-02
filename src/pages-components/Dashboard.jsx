@@ -395,6 +395,7 @@ export default function Dashboard() {
     setFeedData(null);
 
     try {
+      console.log('[Dashboard] Validating RSS:', url);
       const response = await fetch('/api/validate-rss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -402,6 +403,7 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
+      console.log('[Dashboard] RSS validation result:', result);
 
       if (result.valid) {
         setFeedData(result);
@@ -411,8 +413,8 @@ export default function Dashboard() {
         return null;
       }
     } catch (error) {
-      console.error('RSS validation error:', error);
-      setMessage({ type: 'error', text: error.message });
+      console.error('[Dashboard] RSS validation error:', error);
+      setMessage({ type: 'error', text: error.message || 'Network error' });
       return null;
     } finally {
       setValidatingRss(false);
@@ -477,7 +479,8 @@ export default function Dashboard() {
       loadPodcasts();
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      console.error('Error saving podcast:', error);
+      setMessage({ type: 'error', text: error.message || 'Error saving podcast' });
     } finally {
       setSavingPodcast(false);
     }
@@ -1186,10 +1189,10 @@ export default function Dashboard() {
                   </button>
                   <button
                     type="submit"
-                    disabled={savingPodcast || validatingRss}
+                    disabled={savingPodcast}
                     className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    {savingPodcast ? '...' : L.save}
+                    {savingPodcast ? (L.saving || 'Saving...') : validatingRss ? (L.validating || 'Validating...') : L.save}
                   </button>
                 </div>
               </form>
