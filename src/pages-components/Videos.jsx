@@ -186,11 +186,14 @@ function VideoCard({ video, L }) {
         <div className="p-5">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 line-clamp-2">{video.title}</h3>
           {video.artist_name && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{video.artist_name}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{video.artist_name}</p>
+          )}
+          {video.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 line-clamp-2">{video.description}</p>
           )}
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mt-3">
             <div className="flex items-center gap-1">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
