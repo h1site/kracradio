@@ -1,7 +1,7 @@
 'use client';
 // src/pages/VideoDetail.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
@@ -70,9 +70,10 @@ const STRINGS = {
 
 // Generate or get session ID for anonymous likes
 function getSessionId() {
+  if (typeof window === 'undefined') return null;
   let sessionId = localStorage.getItem('krac_session_id');
   if (!sessionId) {
-    sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+    sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
     localStorage.setItem('krac_session_id', sessionId);
   }
   return sessionId;
@@ -81,13 +82,17 @@ function getSessionId() {
 export default function VideoDetail() {
   const { slug } = useParams();
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { lang } = useI18n();
   const { user } = useAuth();
   const { showNotification } = useNotification();
   const L = useMemo(() => STRINGS[lang] || STRINGS.fr, [lang]);
-  const sessionId = useMemo(() => getSessionId(), []);
+  const [sessionId, setSessionId] = React.useState(null);
+
+  // Initialize sessionId on client side only
+  useEffect(() => {
+    setSessionId(getSessionId());
+  }, []);
 
   // Check if we should autoplay (coming from ended video) - use query param instead of location.state
   const shouldAutoplay = searchParams?.get('autoplay') === 'true';
