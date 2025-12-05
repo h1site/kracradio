@@ -99,6 +99,15 @@ const STRINGS = {
     videoApprovalTime: 'Délai d\'approbation : 2-3 jours ouvrables.',
     myMusicSubmissions: 'Soumissions musicales',
     noMusicSubmissions: 'Aucune soumission',
+    podcastUpload: 'Upload d\'émissions',
+    uploadEpisode: 'Uploader une émission',
+    selectFiles: 'Sélectionner des fichiers MP3',
+    dragDropFiles: 'Glissez-déposez vos fichiers MP3 ici',
+    uploading: 'Upload en cours...',
+    uploadSuccess: 'Fichiers uploadés avec succès',
+    uploadError: 'Erreur lors de l\'upload',
+    noFilesSelected: 'Aucun fichier sélectionné',
+    uploadTo: 'Destination',
   },
   en: {
     metaTitle: 'My Dashboard — KracRadio',
@@ -160,6 +169,15 @@ const STRINGS = {
     videoApprovalTime: 'Approval time: 2-3 business days.',
     myMusicSubmissions: 'Music Submissions',
     noMusicSubmissions: 'No submissions',
+    podcastUpload: 'Episode Upload',
+    uploadEpisode: 'Upload episode',
+    selectFiles: 'Select MP3 files',
+    dragDropFiles: 'Drag and drop your MP3 files here',
+    uploading: 'Uploading...',
+    uploadSuccess: 'Files uploaded successfully',
+    uploadError: 'Upload error',
+    noFilesSelected: 'No files selected',
+    uploadTo: 'Destination',
   },
   es: {
     metaTitle: 'Mi panel — KracRadio',
@@ -217,6 +235,15 @@ const STRINGS = {
     videoApprovalTime: 'Tiempo de aprobación: 2-3 días hábiles.',
     myMusicSubmissions: 'Envíos de música',
     noMusicSubmissions: 'Sin envíos',
+    podcastUpload: 'Subir episodios',
+    uploadEpisode: 'Subir episodio',
+    selectFiles: 'Seleccionar archivos MP3',
+    dragDropFiles: 'Arrastra y suelta tus archivos MP3 aquí',
+    uploading: 'Subiendo...',
+    uploadSuccess: 'Archivos subidos exitosamente',
+    uploadError: 'Error de subida',
+    noFilesSelected: 'Ningún archivo seleccionado',
+    uploadTo: 'Destino',
   },
 };
 
@@ -254,6 +281,12 @@ export default function Dashboard() {
   const [editingVideoId, setEditingVideoId] = useState(null);
   const [editVideoForm, setEditVideoForm] = useState({});
 
+  // Podcast upload state
+  const [podcastUploadEnabled, setPodcastUploadEnabled] = useState(false);
+  const [podcastUploadFolder, setPodcastUploadFolder] = useState('');
+  const [uploadingPodcast, setUploadingPodcast] = useState(false);
+  const [podcastFiles, setPodcastFiles] = useState([]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -265,11 +298,31 @@ export default function Dashboard() {
       loadPodcasts();
       loadArticles();
       loadVideos();
+      loadPodcastUploadPermissions();
     } else {
       // Reset loading si pas de user
       setLoading(false);
     }
   }, [user]);
+
+  const loadPodcastUploadPermissions = async () => {
+    if (!user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('podcast_upload_enabled, podcast_upload_folder')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setPodcastUploadEnabled(data.podcast_upload_enabled || false);
+        setPodcastUploadFolder(data.podcast_upload_folder || '');
+      }
+    } catch (error) {
+      console.error('Error loading podcast upload permissions:', error);
+    }
+  };
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -685,6 +738,54 @@ export default function Dashboard() {
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  // Podcast upload functions
+  const handlePodcastFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    const mp3Files = files.filter(f => f.type === 'audio/mpeg' || f.name.toLowerCase().endsWith('.mp3'));
+    setPodcastFiles(mp3Files);
+  };
+
+  const handlePodcastUpload = async () => {
+    if (podcastFiles.length === 0) {
+      setMessage({ type: 'error', text: L.noFilesSelected });
+      return;
+    }
+
+    setUploadingPodcast(true);
+    try {
+      // Upload each file to Dropbox via Edge Function
+      for (const file of podcastFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', podcastUploadFolder);
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dropbox-upload-podcast`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Upload failed');
+        }
+      }
+
+      setMessage({ type: 'success', text: `${L.uploadSuccess} (${podcastFiles.length} fichiers)` });
+      setPodcastFiles([]);
+      // Reset file input
+      const fileInput = document.getElementById('podcast-file-input');
+      if (fileInput) fileInput.value = '';
+    } catch (error) {
+      console.error('Podcast upload error:', error);
+      setMessage({ type: 'error', text: `${L.uploadError}: ${error.message}` });
+    } finally {
+      setUploadingPodcast(false);
     }
   };
 
@@ -1380,6 +1481,97 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        {/* Podcast Upload Section - Only for approved users */}
+        {podcastUploadEnabled && podcastUploadFolder && (
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="currentColor">
+                  <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                </svg>
+              </div>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">{L.podcastUpload}</h2>
+            </div>
+
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-orange-200 dark:border-orange-800 p-6">
+              {/* Destination info */}
+              <div className="mb-4 px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-sm">
+                <span className="text-gray-600 dark:text-gray-400">{L.uploadTo}: </span>
+                <span className="font-mono text-orange-700 dark:text-orange-300">
+                  podcasts/{podcastUploadFolder}/
+                </span>
+              </div>
+
+              {/* File input */}
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-6 text-center hover:border-orange-400 dark:hover:border-orange-600 transition-colors">
+                <input
+                  id="podcast-file-input"
+                  type="file"
+                  accept=".mp3,audio/mpeg"
+                  multiple
+                  onChange={handlePodcastFileSelect}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="podcast-file-input"
+                  className="cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="currentColor">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                  </svg>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{L.dragDropFiles}</p>
+                  <span className="inline-block px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    {L.selectFiles}
+                  </span>
+                </label>
+              </div>
+
+              {/* Selected files */}
+              {podcastFiles.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {podcastFiles.length} fichier(s) sélectionné(s):
+                  </p>
+                  <ul className="space-y-1">
+                    {podcastFiles.map((file, idx) => (
+                      <li key={idx} className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-orange-500" fill="currentColor">
+                          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                        </svg>
+                        {file.name}
+                        <span className="text-gray-400">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={handlePodcastUpload}
+                    disabled={uploadingPodcast}
+                    className="mt-4 w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {uploadingPodcast ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        {L.uploading}
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                          <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                        </svg>
+                        {L.uploadEpisode}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Music Submissions Section */}
         <section>

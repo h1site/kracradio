@@ -107,6 +107,18 @@ const STRINGS = {
     hostName: 'Animateur',
     episodeCount: 'Épisodes',
     kracradioImport: 'Import KracRadio',
+    podcastUploaders: 'Podcast Uploaders',
+    noPodcastUploaders: 'Aucun uploader de podcast',
+    addPodcastUploader: 'Ajouter un uploader',
+    userEmail: 'Email utilisateur',
+    dropboxFolder: 'Dossier Dropbox',
+    folderPlaceholder: 'nom_du_dossier',
+    enableUpload: 'Activer',
+    disableUpload: 'Désactiver',
+    uploadEnabled: 'Upload activé',
+    uploadDisabled: 'Upload désactivé',
+    savePodcastUploader: 'Enregistrer',
+    removePodcastUploader: 'Retirer',
   },
   en: {
     title: 'Admin Panel',
@@ -205,6 +217,18 @@ const STRINGS = {
     hostName: 'Host',
     episodeCount: 'Episodes',
     kracradioImport: 'KracRadio Import',
+    podcastUploaders: 'Podcast Uploaders',
+    noPodcastUploaders: 'No podcast uploaders',
+    addPodcastUploader: 'Add uploader',
+    userEmail: 'User email',
+    dropboxFolder: 'Dropbox folder',
+    folderPlaceholder: 'folder_name',
+    enableUpload: 'Enable',
+    disableUpload: 'Disable',
+    uploadEnabled: 'Upload enabled',
+    uploadDisabled: 'Upload disabled',
+    savePodcastUploader: 'Save',
+    removePodcastUploader: 'Remove',
   },
   es: {
     title: 'Panel de Administración',
@@ -303,6 +327,18 @@ const STRINGS = {
     hostName: 'Presentador',
     episodeCount: 'Episodios',
     kracradioImport: 'Importación KracRadio',
+    podcastUploaders: 'Podcast Uploaders',
+    noPodcastUploaders: 'Sin uploaders de podcast',
+    addPodcastUploader: 'Agregar uploader',
+    userEmail: 'Email del usuario',
+    dropboxFolder: 'Carpeta Dropbox',
+    folderPlaceholder: 'nombre_carpeta',
+    enableUpload: 'Activar',
+    disableUpload: 'Desactivar',
+    uploadEnabled: 'Upload activado',
+    uploadDisabled: 'Upload desactivado',
+    savePodcastUploader: 'Guardar',
+    removePodcastUploader: 'Quitar',
   },
 };
 
@@ -342,6 +378,12 @@ export default function AdminPanel() {
   const [podcastRssUrl, setPodcastRssUrl] = useState('');
   const [importingExternalPodcast, setImportingExternalPodcast] = useState(false);
   const [podcastFilter, setPodcastFilter] = useState('');
+
+  // Podcast uploaders states
+  const [podcastUploaders, setPodcastUploaders] = useState([]);
+  const [newUploaderEmail, setNewUploaderEmail] = useState('');
+  const [newUploaderFolder, setNewUploaderFolder] = useState('');
+  const [savingUploader, setSavingUploader] = useState(false);
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -418,13 +460,20 @@ export default function AdminPanel() {
             .select('*')
             .order('created_at', { ascending: false });
 
-          const [usersResult, rssResult, articlesResult, artistsResult, videosResult, podcastsResult] = await Promise.all([
+          // Users with podcast upload permissions
+          const podcastUploadersPromise = supabase
+            .from('profiles')
+            .select('id, podcast_upload_enabled, podcast_upload_folder')
+            .eq('podcast_upload_enabled', true);
+
+          const [usersResult, rssResult, articlesResult, artistsResult, videosResult, podcastsResult, podcastUploadersResult] = await Promise.all([
             usersPromise,
             rssPromise,
             articlesPromise,
             artistsPromise,
             videosPromise,
-            podcastsPromise
+            podcastsPromise,
+            podcastUploadersPromise
           ]);
 
           // Charger les emails depuis auth
@@ -458,6 +507,16 @@ export default function AdminPanel() {
           if (podcastsResult.data) {
             console.log('[AdminPanel] Podcasts loaded:', podcastsResult.data.length);
             setPodcasts(podcastsResult.data);
+          }
+
+          // Podcast uploaders loading - merge with auth emails
+          if (podcastUploadersResult.data && podcastUploadersResult.data.length > 0) {
+            const { data: authUsers } = await supabase.auth.admin.listUsers();
+            const uploadersWithEmails = podcastUploadersResult.data.map(uploader => {
+              const authUser = authUsers?.users?.find(au => au.id === uploader.id);
+              return { ...uploader, email: authUser?.email || 'Unknown' };
+            });
+            setPodcastUploaders(uploadersWithEmails);
           }
         } catch (error) {
           console.error('[AdminPanel] Error loading data:', error);
@@ -602,6 +661,98 @@ export default function AdminPanel() {
       await loadUsers();
     } catch (error) {
       console.error('Error changing role:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  // Podcast uploaders functions
+  const handleAddPodcastUploader = async () => {
+    if (!newUploaderEmail.trim() || !newUploaderFolder.trim()) {
+      setMessage({ type: 'error', text: 'Email and folder are required' });
+      return;
+    }
+
+    setSavingUploader(true);
+    try {
+      // Find user by email
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      const authUser = authUsers?.users?.find(u => u.email?.toLowerCase() === newUploaderEmail.toLowerCase().trim());
+
+      if (!authUser) {
+        setMessage({ type: 'error', text: 'User not found with this email' });
+        setSavingUploader(false);
+        return;
+      }
+
+      // Update profile with podcast upload permissions
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          podcast_upload_enabled: true,
+          podcast_upload_folder: newUploaderFolder.trim()
+        })
+        .eq('id', authUser.id);
+
+      if (error) throw error;
+
+      // Add to local state
+      setPodcastUploaders(prev => [...prev, {
+        id: authUser.id,
+        email: authUser.email,
+        podcast_upload_enabled: true,
+        podcast_upload_folder: newUploaderFolder.trim()
+      }]);
+
+      setNewUploaderEmail('');
+      setNewUploaderFolder('');
+      setMessage({ type: 'success', text: `Podcast upload enabled for ${authUser.email}` });
+    } catch (error) {
+      console.error('Error adding podcast uploader:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setSavingUploader(false);
+    }
+  };
+
+  const handleRemovePodcastUploader = async (userId, email) => {
+    if (!window.confirm(`Remove podcast upload permission for ${email}?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          podcast_upload_enabled: false,
+          podcast_upload_folder: null
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setPodcastUploaders(prev => prev.filter(u => u.id !== userId));
+      setMessage({ type: 'success', text: `Podcast upload disabled for ${email}` });
+    } catch (error) {
+      console.error('Error removing podcast uploader:', error);
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleUpdateUploaderFolder = async (userId, email, newFolder) => {
+    if (!newFolder.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ podcast_upload_folder: newFolder.trim() })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setPodcastUploaders(prev => prev.map(u =>
+        u.id === userId ? { ...u, podcast_upload_folder: newFolder.trim() } : u
+      ));
+      setMessage({ type: 'success', text: `Folder updated for ${email}` });
+    } catch (error) {
+      console.error('Error updating folder:', error);
       setMessage({ type: 'error', text: error.message });
     }
   };
@@ -1217,6 +1368,16 @@ export default function AdminPanel() {
           }`}
         >
           🎙️ {L.podcasts} ({podcasts.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('podcastUploaders')}
+          className={`px-4 py-2 text-sm font-semibold transition ${
+            activeTab === 'podcastUploaders'
+              ? 'border-b-2 border-red-600 text-red-600'
+              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          📤 {L.podcastUploaders} ({podcastUploaders.length})
         </button>
         <Link
           href="/admin/store"
@@ -1986,6 +2147,89 @@ export default function AdminPanel() {
                 <p className="p-8 text-center text-gray-500">{L.noPodcasts}</p>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Podcast Uploaders Section */}
+      {activeTab === 'podcastUploaders' && (
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
+          {/* Add new uploader form */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h3 className="text-sm font-semibold mb-3">{L.addPodcastUploader}</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                placeholder={L.userEmail}
+                value={newUploaderEmail}
+                onChange={(e) => setNewUploaderEmail(e.target.value)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
+              />
+              <input
+                type="text"
+                placeholder={L.folderPlaceholder}
+                value={newUploaderFolder}
+                onChange={(e) => setNewUploaderFolder(e.target.value)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
+              />
+              <button
+                onClick={handleAddPodcastUploader}
+                disabled={savingUploader || !newUploaderEmail.trim() || !newUploaderFolder.trim()}
+                className="rounded-lg bg-green-600 px-6 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingUploader ? '...' : L.savePodcastUploader}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Dropbox path: podcasts/{newUploaderFolder || L.folderPlaceholder}/
+            </p>
+          </div>
+
+          {/* Uploaders list */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">{L.email}</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">{L.dropboxFolder}</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold">{L.actions}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {podcastUploaders.map((uploader) => (
+                  <tr key={uploader.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                    <td className="px-4 py-3 text-sm">{uploader.email}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">podcasts/</span>
+                        <input
+                          type="text"
+                          defaultValue={uploader.podcast_upload_folder}
+                          onBlur={(e) => {
+                            if (e.target.value !== uploader.podcast_upload_folder) {
+                              handleUpdateUploaderFolder(uploader.id, uploader.email, e.target.value);
+                            }
+                          }}
+                          className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-red-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
+                        />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">/</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleRemovePodcastUploader(uploader.id, uploader.email)}
+                        className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                      >
+                        {L.removePodcastUploader}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {podcastUploaders.length === 0 && (
+              <p className="p-8 text-center text-gray-500">{L.noPodcastUploaders}</p>
+            )}
           </div>
         </div>
       )}
