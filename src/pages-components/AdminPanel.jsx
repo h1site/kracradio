@@ -389,6 +389,7 @@ export default function AdminPanel() {
   const [userSuggestions, setUserSuggestions] = useState([]);
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [authUsers, setAuthUsers] = useState([]); // All users from auth.users
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -521,6 +522,18 @@ export default function AdminPanel() {
               email: uploader.email || uploader.username || uploader.id?.substring(0, 8)
             }));
             setPodcastUploaders(uploadersWithEmails);
+          }
+
+          // Load auth users for podcast uploader autocomplete
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            const response = await fetch('/api/admin/users', {
+              headers: { 'Authorization': `Bearer ${session.access_token}` }
+            });
+            if (response.ok) {
+              const { users: authUsersData } = await response.json();
+              setAuthUsers(authUsersData || []);
+            }
           }
         } catch (error) {
           console.error('[AdminPanel] Error loading data:', error);
@@ -656,14 +669,15 @@ export default function AdminPanel() {
     }
   };
 
-  // Filter users for autocomplete suggestions
+  // Filter users for autocomplete suggestions (use authUsers which has ALL registered users)
   const handleEmailInputChange = (value) => {
     setNewUploaderEmail(value);
     setSelectedUserId(null);
 
     if (value.trim().length >= 2) {
       const searchTerm = value.toLowerCase();
-      const filtered = users.filter(u =>
+      // Use authUsers (from auth.users) instead of users (from profiles)
+      const filtered = authUsers.filter(u =>
         (u.email?.toLowerCase().includes(searchTerm) ||
          u.username?.toLowerCase().includes(searchTerm)) &&
         !podcastUploaders.some(pu => pu.id === u.id) // Exclude already added
@@ -690,13 +704,13 @@ export default function AdminPanel() {
       return;
     }
 
-    // Find user by ID (if selected) or by email/username
+    // Find user by ID (if selected) or by email/username (search in authUsers)
     let targetUser = null;
     if (selectedUserId) {
-      targetUser = users.find(u => u.id === selectedUserId);
+      targetUser = authUsers.find(u => u.id === selectedUserId);
     } else if (newUploaderEmail.trim()) {
       const searchTerm = newUploaderEmail.toLowerCase().trim();
-      targetUser = users.find(u =>
+      targetUser = authUsers.find(u =>
         u.email?.toLowerCase() === searchTerm ||
         u.username?.toLowerCase() === searchTerm
       );
