@@ -1,55 +1,82 @@
 'use client';
 // src/pages/Schedule.jsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '../i18n';
 import { channels } from '../data/channels';
 import { useUI } from '../context/UIContext';
-import { fetchStationSchedule, pickCurrentAndNext, fmtTime } from '../utils/azura';
+import { fmtTime } from '../utils/azura';
 
 const KRAC_KEY = 'kracradio';
 
-// Mapping des noms de playlists AzuraCast vers les images
+// Mapping des noms de playlists AzuraCast vers les images (Unsplash)
 const PLAYLIST_IMAGES = {
-  'electronic music': '/schedule/electronic-music.webp',
-  'electronic': '/schedule/electronic-music.webp',
-  'electro': '/schedule/electronic-music.webp',
-  'jazz & instrumental': '/schedule/jazz-instrumental.webp',
-  'jazz instrumental': '/schedule/jazz-instrumental.webp',
-  'jazz': '/schedule/jazz-instrumental.webp',
-  'franco matin': '/schedule/franco-matin.webp',
-  'francophonie': '/schedule/franco-matin.webp',
-  'soft rock et folk': '/schedule/soft-rock-et-folk.webp',
-  'soft rock': '/schedule/soft-rock-et-folk.webp',
-  'folk': '/schedule/soft-rock-et-folk.webp',
-  'rock alternatif': '/schedule/rock-alternatif.webp',
-  'alternative rock': '/schedule/rock-alternatif.webp',
-  'indie pop rock': '/schedule/indie-pop-rock.webp',
-  'indie pop': '/schedule/indie-pop-rock.webp',
-  'indie rock': '/schedule/indie-pop-rock.webp',
-  'hip-hop': '/schedule/hip-hop.webp',
-  'hip hop': '/schedule/hip-hop.webp',
-  'rap': '/schedule/hip-hop.webp',
-  'post-punk & cold wave': '/schedule/post-punk-cold-wave.webp',
-  'post-punk': '/schedule/post-punk-cold-wave.webp',
-  'cold wave': '/schedule/post-punk-cold-wave.webp',
-  'coldwave': '/schedule/post-punk-cold-wave.webp',
-  'electro pop rock': '/schedule/electro-pop-rock.webp',
-  'electro pop': '/schedule/electro-pop-rock.webp',
-  'musique québec': '/schedule/musique-quebec.webp',
-  'musique quebec': '/schedule/musique-quebec.webp',
-  'québec': '/schedule/musique-quebec.webp',
-  'quebec': '/schedule/musique-quebec.webp',
-  'ebm industrial': '/schedule/ebm-industrial.webp',
-  'ebm': '/schedule/ebm-industrial.webp',
-  'industrial': '/schedule/ebm-industrial.webp',
-  'gothic moose': '/schedule/ebm-industrial.webp',
-  'metal': '/schedule/metal.webp',
-  'rock': '/schedule/rock.webp',
+  // Electronic / EDM
+  'electronic music': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
+  'electronic': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
+  'electro': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
+
+  // Jazz
+  'jazz & instrumental': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop',
+  'jazz instrumental': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop',
+  'jazz': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop',
+
+  // Franco / Quebec
+  'franco matin': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop',
+  'francophonie': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop',
+  'musique québec': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+  'musique quebec': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+  'québec': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+  'quebec': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+
+  // Rock / Folk
+  'soft rock et folk': 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop',
+  'soft rock': 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop',
+  'folk': 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop',
+  'rock alternatif': 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=800&h=600&fit=crop',
+  'alternative rock': 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=800&h=600&fit=crop',
+  'rock': 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=800&h=600&fit=crop',
+
+  // Indie
+  'indie pop rock': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop',
+  'indie pop': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop',
+  'indie rock': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop',
+  'indie': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop',
+
+  // Hip-Hop
+  'hip-hop': 'https://images.unsplash.com/photo-1547355253-ff0740f6e8c1?w=800&h=600&fit=crop',
+  'hip hop': 'https://images.unsplash.com/photo-1547355253-ff0740f6e8c1?w=800&h=600&fit=crop',
+  'rap': 'https://images.unsplash.com/photo-1547355253-ff0740f6e8c1?w=800&h=600&fit=crop',
+
+  // Post-punk / Cold Wave
+  'post-punk & cold wave': 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=800&h=600&fit=crop',
+  'post-punk': 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=800&h=600&fit=crop',
+  'cold wave': 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=800&h=600&fit=crop',
+  'coldwave': 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=800&h=600&fit=crop',
+
+  // Electro Pop
+  'electro pop rock': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
+  'electro pop': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
+
+  // Gothic / EBM / Industrial
+  'gothic moose': 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&h=600&fit=crop',
+  'gothic': 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&h=600&fit=crop',
+  'ebm industrial': 'https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=800&h=600&fit=crop',
+  'ebm': 'https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=800&h=600&fit=crop',
+  'industrial': 'https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=800&h=600&fit=crop',
+
+  // Metal
+  'metal': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+};
+
+// Noms des jours de la semaine
+const WEEKDAYS = {
+  fr: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
 };
 
 function getPlaylistImage(title, fallbackImage) {
   const key = (title || '').toLowerCase().trim();
-  // Cherche une correspondance exacte ou partielle
   if (PLAYLIST_IMAGES[key]) return PLAYLIST_IMAGES[key];
   for (const [k, v] of Object.entries(PLAYLIST_IMAGES)) {
     if (key.includes(k) || k.includes(key)) return v;
@@ -61,12 +88,21 @@ function fmtRange(start, end, lang) {
   return `${fmtTime(start, lang)} — ${fmtTime(end, lang)}`;
 }
 
+// Get date for a specific day offset (0 = today, 1 = tomorrow, etc.)
+function getDateForOffset(offset) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
 export default function Schedule() {
   const { lang, t } = useI18n();
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
   const [segments, setSegments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDayOffset, setSelectedDayOffset] = useState(0); // 0 = today
 
   const containerStyle = {
     paddingLeft: isDesktop ? (sidebarOpen ? sidebarWidth + 32 : 32) : 32,
@@ -76,84 +112,80 @@ export default function Schedule() {
 
   const krac = useMemo(() => channels.find((c) => c.key === KRAC_KEY), []);
   const kracImage = krac?.image || '/channels/kracradio.webp';
-  const kracApiUrl = krac?.apiUrl;
 
-  // Fetch schedule directly from AzuraCast API (simpler, returns current day schedule)
-  useEffect(() => {
-    async function loadSchedule() {
-      if (!kracApiUrl) {
-        setError('No API URL configured');
-        setLoading(false);
-        return;
+  // Load schedule for selected day
+  const loadSchedule = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Calculate start and end dates for the selected day
+      const startDate = getDateForOffset(selectedDayOffset);
+      const endDate = getDateForOffset(selectedDayOffset + 1);
+
+      const params = new URLSearchParams({
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+      });
+
+      const scheduleUrl = `https://stream.kracradio.com/api/station/1/schedule?${params}`;
+      const response = await fetch(scheduleUrl, { cache: 'no-store' });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      try {
-        setLoading(true);
+      const rawData = await response.json();
 
-        // Call AzuraCast schedule API directly (without date params = today's schedule)
-        const scheduleUrl = 'https://stream.kracradio.com/api/station/1/schedule';
-        const response = await fetch(scheduleUrl, { cache: 'no-store' });
+      if (rawData && rawData.length > 0) {
+        const withImages = rawData.map((it, idx) => {
+          const start = new Date(it.start);
+          const end = new Date(it.end);
+          return {
+            id: it.id || `${start.toISOString()}-${idx}`,
+            title: it.title || it.name || 'Programme',
+            description: it.description || '',
+            start,
+            end,
+            isPlaying: Boolean(it.is_now),
+            image: getPlaylistImage(it.title || it.name, kracImage),
+          };
+        }).sort((a, b) => a.start - b.start);
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const rawData = await response.json();
-
-        if (rawData && rawData.length > 0) {
-          // Normaliser et ajouter les images aux segments
-          const withImages = rawData.map((it, idx) => {
-            const start = new Date(it.start);
-            const end = new Date(it.end);
-            return {
-              id: it.id || `${start.toISOString()}-${idx}`,
-              title: it.title || it.name || 'Programme',
-              description: it.description || '',
-              start,
-              end,
-              isPlaying: Boolean(it.is_now),
-              image: getPlaylistImage(it.title || it.name, kracImage),
-            };
-          }).sort((a, b) => a.start - b.start);
-
-          setSegments(withImages);
-          setError(null);
-        } else {
-          setError('No schedule data available');
-        }
-      } catch (err) {
-        console.error('Error fetching schedule:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setSegments(withImages);
+        setError(null);
+      } else {
+        setSegments([]);
+        setError(null);
       }
+    } catch (err) {
+      console.error('Error fetching schedule:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  }, [selectedDayOffset, kracImage]);
 
+  useEffect(() => {
     loadSchedule();
-    // Refresh every 5 minutes
     const interval = setInterval(loadSchedule, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [kracApiUrl, kracImage]);
+  }, [loadSchedule]);
 
   // Now & Next - use null initially to avoid hydration mismatch
   const [now, setNow] = useState(null);
-  const [todayLabel, setTodayLabel] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  // Set initial values on client only
   useEffect(() => {
+    setMounted(true);
     setNow(new Date());
-    setTodayLabel(new Intl.DateTimeFormat(lang, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    }).format(new Date()));
-
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
-  }, [lang]);
+  }, []);
 
   const { current, next } = useMemo(() => {
-    // D'abord chercher celui qui a is_now = true (from API)
+    // Only show current/next for today
+    if (selectedDayOffset !== 0) return { current: null, next: null };
+
     const playing = segments.find(s => s.isPlaying);
     if (playing) {
       const playingIdx = segments.indexOf(playing);
@@ -162,7 +194,6 @@ export default function Schedule() {
         next: segments[playingIdx + 1] || null
       };
     }
-    // Sinon, calculer basé sur l'heure (si now est disponible)
     if (!now) return { current: null, next: null };
 
     let cur = null;
@@ -180,7 +211,38 @@ export default function Schedule() {
       }
     }
     return { current: cur, next: nxt };
-  }, [segments, now]);
+  }, [segments, now, selectedDayOffset]);
+
+  // Generate day labels
+  const dayLabels = useMemo(() => {
+    if (!mounted) return [];
+    const weekdays = WEEKDAYS[lang] || WEEKDAYS.en;
+    return [-1, 0, 1, 2, 3, 4, 5, 6].map(offset => {
+      const date = getDateForOffset(offset);
+      const dayName = weekdays[date.getDay()];
+      const dayNum = date.getDate();
+      const isToday = offset === 0;
+      const isYesterday = offset === -1;
+      const isTomorrow = offset === 1;
+
+      let label = dayName;
+      if (isToday) label = t?.schedule?.today || "Aujourd'hui";
+      else if (isYesterday) label = t?.schedule?.yesterday || 'Hier';
+      else if (isTomorrow) label = t?.schedule?.tomorrow || 'Demain';
+
+      return { offset, label, dayName, dayNum, isToday };
+    });
+  }, [mounted, lang, t]);
+
+  const selectedDayLabel = useMemo(() => {
+    if (!mounted) return '';
+    const date = getDateForOffset(selectedDayOffset);
+    return new Intl.DateTimeFormat(lang, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    }).format(date);
+  }, [mounted, lang, selectedDayOffset]);
 
   return (
     <div style={containerStyle} className="min-h-screen">
@@ -198,13 +260,37 @@ export default function Schedule() {
           <h1 className="text-4xl md:text-6xl font-black uppercase text-white">
             {t?.nav?.schedule || 'Horaire'}
           </h1>
-          {todayLabel && (
-            <p className="text-lg text-gray-200 font-semibold mt-4">
-              {todayLabel}
+          {selectedDayLabel && (
+            <p className="text-lg text-gray-200 font-semibold mt-4 capitalize">
+              {selectedDayLabel}
             </p>
           )}
         </div>
       </header>
+
+      {/* Day selector */}
+      {mounted && (
+        <div className="mb-6 -mx-2 overflow-x-auto">
+          <div className="flex gap-2 px-2 pb-2 min-w-max">
+            {dayLabels.map(({ offset, label, dayNum, isToday }) => (
+              <button
+                key={offset}
+                onClick={() => setSelectedDayOffset(offset)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  selectedDayOffset === offset
+                    ? 'bg-red-600 text-white shadow-lg'
+                    : isToday
+                    ? 'bg-red-600/20 text-red-500 hover:bg-red-600/30'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="block">{label}</span>
+                <span className="block text-xs opacity-70">{dayNum}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Loading state */}
       {loading && (
@@ -218,7 +304,16 @@ export default function Schedule() {
         <div className="text-center py-20">
           <p className="text-red-500 mb-4">{error}</p>
           <p className="text-gray-500 dark:text-gray-400">
-            {t?.schedule?.errorLoading || 'Impossible de charger l\'horaire'}
+            {t?.schedule?.errorLoading || "Impossible de charger l'horaire"}
+          </p>
+        </div>
+      )}
+
+      {/* No schedule */}
+      {!loading && !error && segments.length === 0 && (
+        <div className="text-center py-20">
+          <p className="text-gray-500 dark:text-gray-400">
+            {t?.schedule?.noSchedule || "Aucun programme prévu pour cette journée"}
           </p>
         </div>
       )}
@@ -247,7 +342,7 @@ export default function Schedule() {
 
                   {isCurrent && (
                     <div className="absolute top-4 right-4">
-                      <span className="inline-block px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase tracking-wider">
+                      <span className="inline-block px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase tracking-wider animate-pulse">
                         {t?.schedule?.nowPlaying || 'En direct'}
                       </span>
                     </div>
