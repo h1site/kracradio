@@ -709,14 +709,15 @@ export default function AdminPanel() {
 
     setSavingUploader(true);
     try {
-      // Update profile with podcast upload permissions
+      // Upsert profile with podcast upload permissions (creates if doesn't exist)
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: targetUser.id,
+          email: targetUser.email,
           podcast_upload_enabled: true,
           podcast_upload_folder: newUploaderFolder.trim()
-        })
-        .eq('id', targetUser.id);
+        }, { onConflict: 'id' });
 
       if (error) throw error;
 
