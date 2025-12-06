@@ -723,17 +723,25 @@ export default function AdminPanel() {
 
     setSavingUploader(true);
     try {
-      // Upsert profile with podcast upload permissions (creates if doesn't exist)
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: targetUser.id,
+      // Use API to upsert profile (bypasses RLS with service role)
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: targetUser.id,
           email: targetUser.email,
-          podcast_upload_enabled: true,
-          podcast_upload_folder: newUploaderFolder.trim()
-        }, { onConflict: 'id' });
+          folder: newUploaderFolder.trim()
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add uploader');
+      }
 
       // Add to local state
       setPodcastUploaders(prev => [...prev, {
