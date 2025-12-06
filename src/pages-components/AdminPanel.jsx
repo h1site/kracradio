@@ -373,6 +373,8 @@ export default function AdminPanel() {
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [importingVideo, setImportingVideo] = useState(false);
   const [importingPlaylist, setImportingPlaylist] = useState(false);
+  const [videoPage, setVideoPage] = useState(1);
+  const videosPerPage = 10;
 
   // Podcast import states
   const [podcastRssUrl, setPodcastRssUrl] = useState('');
@@ -384,6 +386,9 @@ export default function AdminPanel() {
   const [newUploaderEmail, setNewUploaderEmail] = useState('');
   const [newUploaderFolder, setNewUploaderFolder] = useState('');
   const [savingUploader, setSavingUploader] = useState(false);
+  const [userSuggestions, setUserSuggestions] = useState([]);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -665,25 +670,53 @@ export default function AdminPanel() {
     }
   };
 
+  // Filter users for autocomplete suggestions
+  const handleEmailInputChange = (value) => {
+    setNewUploaderEmail(value);
+    setSelectedUserId(null);
+
+    if (value.trim().length >= 2) {
+      const filtered = users.filter(u =>
+        u.email?.toLowerCase().includes(value.toLowerCase()) &&
+        !podcastUploaders.some(pu => pu.id === u.id) // Exclude already added
+      ).slice(0, 8);
+      setUserSuggestions(filtered);
+      setShowUserSuggestions(filtered.length > 0);
+    } else {
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
+    }
+  };
+
+  const selectUserSuggestion = (user) => {
+    setNewUploaderEmail(user.email);
+    setSelectedUserId(user.id);
+    setShowUserSuggestions(false);
+    setUserSuggestions([]);
+  };
+
   // Podcast uploaders functions
   const handleAddPodcastUploader = async () => {
-    if (!newUploaderEmail.trim() || !newUploaderFolder.trim()) {
-      setMessage({ type: 'error', text: 'Email and folder are required' });
+    if (!newUploaderFolder.trim()) {
+      setMessage({ type: 'error', text: 'Folder is required' });
+      return;
+    }
+
+    // Find user by ID (if selected) or by email
+    let targetUser = null;
+    if (selectedUserId) {
+      targetUser = users.find(u => u.id === selectedUserId);
+    } else if (newUploaderEmail.trim()) {
+      targetUser = users.find(u => u.email?.toLowerCase() === newUploaderEmail.toLowerCase().trim());
+    }
+
+    if (!targetUser) {
+      setMessage({ type: 'error', text: 'User not found. Please select from the suggestions.' });
       return;
     }
 
     setSavingUploader(true);
     try {
-      // Find user by email
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-      const authUser = authUsers?.users?.find(u => u.email?.toLowerCase() === newUploaderEmail.toLowerCase().trim());
-
-      if (!authUser) {
-        setMessage({ type: 'error', text: 'User not found with this email' });
-        setSavingUploader(false);
-        return;
-      }
-
       // Update profile with podcast upload permissions
       const { error } = await supabase
         .from('profiles')
@@ -691,21 +724,22 @@ export default function AdminPanel() {
           podcast_upload_enabled: true,
           podcast_upload_folder: newUploaderFolder.trim()
         })
-        .eq('id', authUser.id);
+        .eq('id', targetUser.id);
 
       if (error) throw error;
 
       // Add to local state
       setPodcastUploaders(prev => [...prev, {
-        id: authUser.id,
-        email: authUser.email,
+        id: targetUser.id,
+        email: targetUser.email,
         podcast_upload_enabled: true,
         podcast_upload_folder: newUploaderFolder.trim()
       }]);
 
       setNewUploaderEmail('');
       setNewUploaderFolder('');
-      setMessage({ type: 'success', text: `Podcast upload enabled for ${authUser.email}` });
+      setSelectedUserId(null);
+      setMessage({ type: 'success', text: `Podcast upload enabled for ${targetUser.email}` });
     } catch (error) {
       console.error('Error adding podcast uploader:', error);
       setMessage({ type: 'error', text: error.message });
@@ -1873,11 +1907,75 @@ export default function AdminPanel() {
                 type="text"
                 placeholder={L.filter}
                 value={videoFilter}
-                onChange={(e) => setVideoFilter(e.target.value)}
+                onChange={(e) => {
+                  setVideoFilter(e.target.value);
+                  setVideoPage(1); // Reset to page 1 on filter change
+                }}
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
               />
             </div>
           <div className="overflow-x-auto">
+            {(() => {
+              const filteredVideos = videos.filter(v =>
+                v.title?.toLowerCase().includes(videoFilter.toLowerCase()) ||
+                v.artist_name?.toLowerCase().includes(videoFilter.toLowerCase())
+              );
+              const totalPages = Math.ceil(filteredVideos.length / videosPerPage);
+              const startIndex = (videoPage - 1) * videosPerPage;
+              const paginatedVideos = filteredVideos.slice(startIndex, startIndex + videosPerPage);
+
+              return (
+                <>
+                  {/* Pagination info */}
+                  <div className="px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {filteredVideos.length} {lang === 'fr' ? 'vidéos' : 'videos'}
+                      {filteredVideos.length > 0 && ` — Page ${videoPage} / ${totalPages}`}
+                    </span>
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setVideoPage(p => Math.max(1, p - 1))}
+                          disabled={videoPage === 1}
+                          className="px-3 py-1 text-sm rounded border border-gray-300 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          ←
+                        </button>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (videoPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (videoPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = videoPage - 2 + i;
+                          }
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setVideoPage(pageNum)}
+                              className={`px-3 py-1 text-sm rounded ${
+                                videoPage === pageNum
+                                  ? 'bg-red-600 text-white'
+                                  : 'border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                        <button
+                          onClick={() => setVideoPage(p => Math.min(totalPages, p + 1))}
+                          disabled={videoPage === totalPages}
+                          className="px-3 py-1 text-sm rounded border border-gray-300 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          →
+                        </button>
+                      </div>
+                    )}
+                  </div>
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
@@ -1891,12 +1989,7 @@ export default function AdminPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {videos
-                  .filter(v =>
-                    v.title?.toLowerCase().includes(videoFilter.toLowerCase()) ||
-                    v.artist_name?.toLowerCase().includes(videoFilter.toLowerCase())
-                  )
-                  .map((video) => (
+                {paginatedVideos.map((video) => (
                   <tr key={video.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
                     <td className="px-4 py-3">
                       <button
@@ -1978,12 +2071,12 @@ export default function AdminPanel() {
                 ))}
               </tbody>
             </table>
-            {videos.filter(v =>
-              v.title?.toLowerCase().includes(videoFilter.toLowerCase()) ||
-              v.artist_name?.toLowerCase().includes(videoFilter.toLowerCase())
-            ).length === 0 && (
+            {filteredVideos.length === 0 && (
               <p className="p-8 text-center text-gray-500">{L.noVideos}</p>
             )}
+                </>
+              );
+            })()}
           </div>
           </div>
         </div>
@@ -2158,13 +2251,46 @@ export default function AdminPanel() {
           <div className="p-4 border-b border-gray-200 dark:border-gray-800">
             <h3 className="text-sm font-semibold mb-3">{L.addPodcastUploader}</h3>
             <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder={L.userEmail}
-                value={newUploaderEmail}
-                onChange={(e) => setNewUploaderEmail(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:border-gray-700 dark:bg-gray-900"
-              />
+              {/* Email input with autocomplete */}
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder={L.userEmail}
+                  value={newUploaderEmail}
+                  onChange={(e) => handleEmailInputChange(e.target.value)}
+                  onFocus={() => {
+                    if (userSuggestions.length > 0) setShowUserSuggestions(true);
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on suggestion
+                    setTimeout(() => setShowUserSuggestions(false), 200);
+                  }}
+                  className={`w-full rounded-lg border px-4 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/30 dark:bg-gray-900 ${
+                    selectedUserId
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : 'border-gray-300 dark:border-gray-700'
+                  }`}
+                />
+                {selectedUserId && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">✓</span>
+                )}
+                {/* Suggestions dropdown */}
+                {showUserSuggestions && userSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {userSuggestions.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => selectUserSuggestion(user)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-between"
+                      >
+                        <span className="text-sm">{user.email}</span>
+                        <span className="text-xs text-gray-400">{user.role}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input
                 type="text"
                 placeholder={L.folderPlaceholder}
