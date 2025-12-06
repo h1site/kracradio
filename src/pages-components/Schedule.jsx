@@ -11,9 +11,9 @@ const KRAC_KEY = 'kracradio';
 // Mapping des noms de playlists AzuraCast vers les images (Unsplash)
 const PLAYLIST_IMAGES = {
   // Electronic / EDM
-  'electronic music': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
-  'electronic': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
-  'electro': 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=800&h=600&fit=crop',
+  'electronic music': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
+  'electronic': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
+  'electro': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
 
   // Jazz
   'jazz & instrumental': 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop',
