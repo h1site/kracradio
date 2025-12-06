@@ -280,6 +280,8 @@ export default function Dashboard() {
   const [savingVideo, setSavingVideo] = useState(false);
   const [editingVideoId, setEditingVideoId] = useState(null);
   const [editVideoForm, setEditVideoForm] = useState({});
+  const [videoPage, setVideoPage] = useState(1);
+  const videosPerPage = 10;
 
   // Podcast upload state
   const [podcastUploadEnabled, setPodcastUploadEnabled] = useState(false);
@@ -1015,8 +1017,33 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{L.noVideosDesc}</p>
             </div>
           ) : videos.length > 0 && (
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
-              {videos.map((video) => {
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+              {/* Pagination header */}
+              {videos.length > videosPerPage && (
+                <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Page {videoPage} / {Math.ceil(videos.length / videosPerPage)}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setVideoPage(p => Math.max(1, p - 1))}
+                      disabled={videoPage === 1}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Précédent
+                    </button>
+                    <button
+                      onClick={() => setVideoPage(p => Math.min(Math.ceil(videos.length / videosPerPage), p + 1))}
+                      disabled={videoPage >= Math.ceil(videos.length / videosPerPage)}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {videos.slice((videoPage - 1) * videosPerPage, videoPage * videosPerPage).map((video) => {
                 const isEditing = editingVideoId === video.id;
                 return (
                   <div key={video.id} className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -1179,6 +1206,31 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+              </div>
+              {/* Pagination footer */}
+              {videos.length > videosPerPage && (
+                <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {videos.length} vidéos au total
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setVideoPage(p => Math.max(1, p - 1))}
+                      disabled={videoPage === 1}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Précédent
+                    </button>
+                    <button
+                      onClick={() => setVideoPage(p => Math.min(Math.ceil(videos.length / videosPerPage), p + 1))}
+                      disabled={videoPage >= Math.ceil(videos.length / videosPerPage)}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

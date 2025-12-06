@@ -3,12 +3,39 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const DROPBOX_ACCESS_TOKEN = Deno.env.get("DROPBOX_ACCESS_TOKEN");
+const DROPBOX_REFRESH_TOKEN = Deno.env.get("DROPBOX_REFRESH_TOKEN");
+const DROPBOX_APP_KEY = Deno.env.get("DROPBOX_APP_KEY");
+const DROPBOX_APP_SECRET = Deno.env.get("DROPBOX_APP_SECRET");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Get a fresh access token using the refresh token
+async function getAccessToken(): Promise<string> {
+  const response = await fetch("https://api.dropboxapi.com/oauth2/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: DROPBOX_REFRESH_TOKEN!,
+      client_id: DROPBOX_APP_KEY!,
+      client_secret: DROPBOX_APP_SECRET!,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Token refresh error:", errorText);
+    throw new Error(`Failed to refresh Dropbox token: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -17,9 +44,12 @@ serve(async (req) => {
   }
 
   try {
-    if (!DROPBOX_ACCESS_TOKEN) {
-      throw new Error("DROPBOX_ACCESS_TOKEN not configured");
+    if (!DROPBOX_REFRESH_TOKEN || !DROPBOX_APP_KEY || !DROPBOX_APP_SECRET) {
+      throw new Error("Dropbox credentials not configured (DROPBOX_REFRESH_TOKEN, DROPBOX_APP_KEY, DROPBOX_APP_SECRET)");
     }
+
+    // Get fresh access token
+    const accessToken = await getAccessToken();
 
     // Parse multipart form data
     const formData = await req.formData();
@@ -50,7 +80,7 @@ serve(async (req) => {
     const uploadResponse = await fetch("https://content.dropboxapi.com/2/files/upload", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/octet-stream",
         "Dropbox-API-Arg": JSON.stringify({
           path: dropboxPath,
