@@ -408,7 +408,7 @@ export default function AdminPanel() {
           // Charger toutes les données en parallèle
           const usersPromise = supabase
             .from('profiles')
-            .select('id, role, created_at')
+            .select('id, role, created_at, email, username')
             .order('created_at', { ascending: false });
 
           const rssPromise = supabase
@@ -468,7 +468,7 @@ export default function AdminPanel() {
           // Users with podcast upload permissions
           const podcastUploadersPromise = supabase
             .from('profiles')
-            .select('id, podcast_upload_enabled, podcast_upload_folder')
+            .select('id, podcast_upload_enabled, podcast_upload_folder, email, username')
             .eq('podcast_upload_enabled', true);
 
           const [usersResult, rssResult, articlesResult, artistsResult, videosResult, podcastsResult, podcastUploadersResult] = await Promise.all([
@@ -481,13 +481,13 @@ export default function AdminPanel() {
             podcastUploadersPromise
           ]);
 
-          // Charger les emails depuis auth
+          // Users already have email from profiles table
           if (usersResult.data) {
-            const { data: authUsers } = await supabase.auth.admin.listUsers();
-            const usersWithEmails = usersResult.data.map(profile => {
-              const authUser = authUsers?.users?.find(au => au.id === profile.id);
-              return { ...profile, email: authUser?.email || 'Unknown' };
-            });
+            // Use email if available, otherwise fallback to username or id
+            const usersWithEmails = usersResult.data.map(profile => ({
+              ...profile,
+              email: profile.email || profile.username || profile.id?.substring(0, 8)
+            }));
             setUsers(usersWithEmails);
           }
 
@@ -514,13 +514,12 @@ export default function AdminPanel() {
             setPodcasts(podcastsResult.data);
           }
 
-          // Podcast uploaders loading - merge with auth emails
+          // Podcast uploaders loading - email is already in profiles
           if (podcastUploadersResult.data && podcastUploadersResult.data.length > 0) {
-            const { data: authUsers } = await supabase.auth.admin.listUsers();
-            const uploadersWithEmails = podcastUploadersResult.data.map(uploader => {
-              const authUser = authUsers?.users?.find(au => au.id === uploader.id);
-              return { ...uploader, email: authUser?.email || 'Unknown' };
-            });
+            const uploadersWithEmails = podcastUploadersResult.data.map(uploader => ({
+              ...uploader,
+              email: uploader.email || uploader.username || uploader.id?.substring(0, 8)
+            }));
             setPodcastUploaders(uploadersWithEmails);
           }
         } catch (error) {
@@ -543,29 +542,16 @@ export default function AdminPanel() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          role,
-          created_at,
-          users:id (
-            email
-          )
-        `)
+        .select('id, role, created_at, email, username')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch emails from auth.users separately since we can't join
-      const userIds = data.map(u => u.id);
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-
-      const usersWithEmails = data.map(profile => {
-        const authUser = authUsers?.users?.find(au => au.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || 'Unknown'
-        };
-      });
+      // Use email if available, otherwise fallback to username or id
+      const usersWithEmails = data.map(profile => ({
+        ...profile,
+        email: profile.email || profile.username || profile.id?.substring(0, 8)
+      }));
 
       setUsers(usersWithEmails || []);
     } catch (error) {
@@ -676,8 +662,10 @@ export default function AdminPanel() {
     setSelectedUserId(null);
 
     if (value.trim().length >= 2) {
+      const searchTerm = value.toLowerCase();
       const filtered = users.filter(u =>
-        u.email?.toLowerCase().includes(value.toLowerCase()) &&
+        (u.email?.toLowerCase().includes(searchTerm) ||
+         u.username?.toLowerCase().includes(searchTerm)) &&
         !podcastUploaders.some(pu => pu.id === u.id) // Exclude already added
       ).slice(0, 8);
       setUserSuggestions(filtered);
@@ -702,12 +690,16 @@ export default function AdminPanel() {
       return;
     }
 
-    // Find user by ID (if selected) or by email
+    // Find user by ID (if selected) or by email/username
     let targetUser = null;
     if (selectedUserId) {
       targetUser = users.find(u => u.id === selectedUserId);
     } else if (newUploaderEmail.trim()) {
-      targetUser = users.find(u => u.email?.toLowerCase() === newUploaderEmail.toLowerCase().trim());
+      const searchTerm = newUploaderEmail.toLowerCase().trim();
+      targetUser = users.find(u =>
+        u.email?.toLowerCase() === searchTerm ||
+        u.username?.toLowerCase() === searchTerm
+      );
     }
 
     if (!targetUser) {
@@ -2282,10 +2274,12 @@ export default function AdminPanel() {
                         key={user.id}
                         type="button"
                         onClick={() => selectUserSuggestion(user)}
-                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-between"
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col"
                       >
-                        <span className="text-sm">{user.email}</span>
-                        <span className="text-xs text-gray-400">{user.role}</span>
+                        <span className="text-sm font-medium">{user.email}</span>
+                        {user.username && user.username !== user.email && (
+                          <span className="text-xs text-gray-500">@{user.username}</span>
+                        )}
                       </button>
                     ))}
                   </div>
