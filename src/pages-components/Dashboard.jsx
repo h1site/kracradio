@@ -756,6 +756,10 @@ export default function Dashboard() {
 
     setUploadingPodcast(true);
     try {
+      // Get session token for authorization
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
       // Upload each file to Dropbox via Edge Function
       for (const file of podcastFiles) {
         const formData = new FormData();
@@ -766,6 +770,9 @@ export default function Dashboard() {
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dropbox-upload-podcast`,
           {
             method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
             body: formData,
           }
         );
