@@ -15,9 +15,9 @@ const CHANNELS = [
 ];
 
 const SIZES = [
-  { key: 'small', name: 'Petit', width: 300, height: 140 },
-  { key: 'medium', name: 'Moyen', width: 400, height: 160 },
-  { key: 'large', name: 'Grand', width: 500, height: 180 }
+  { key: 'small', name: 'Petit', width: 350, height: 200 },
+  { key: 'medium', name: 'Moyen', width: 420, height: 220 },
+  { key: 'large', name: 'Grand', width: 500, height: 240 }
 ];
 
 export default function WidgetPage() {
