@@ -8,6 +8,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { LikedSongsProvider } from '../context/LikedSongsContext';
 import { PlaylistProvider } from '../context/PlaylistContext';
+import { NowPlayingProvider } from '../context/NowPlayingContext';
 
 export default function Providers({ children }) {
   return (
@@ -19,7 +20,9 @@ export default function Providers({ children }) {
               <NotificationProvider>
                 <LikedSongsProvider>
                   <PlaylistProvider>
-                    {children}
+                    <NowPlayingProvider>
+                      {children}
+                    </NowPlayingProvider>
                   </PlaylistProvider>
                 </LikedSongsProvider>
               </NotificationProvider>

@@ -16,7 +16,7 @@ import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
 import { useNotification } from '../context/NotificationContext';
 import { useLikedSongs } from '../context/LikedSongsContext';
-import NowPlayingPopup from './NowPlayingPopup';
+import { useNowPlayingPopup } from '../context/NowPlayingContext';
 
 export default function PlayerBar() {
   const {
@@ -41,8 +41,9 @@ export default function PlayerBar() {
   const shareMenuRef = useRef(null);
   const shareMenuTimerRef = useRef(null);
   const [showChannelMenu, setShowChannelMenu] = useState(false);
-  const [showNowPlayingPopup, setShowNowPlayingPopup] = useState(false);
+  const { showPopup: showNowPlayingPopup } = useNowPlayingPopup();
   const lastSongRef = useRef(null);
+  const lastChannelRef = useRef(null);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -120,22 +121,31 @@ export default function PlayerBar() {
     }
 
     let poll;
-    let isFirstLoad = true;
+    const channelKey = current?.key || current?.apiUrl;
+    const isChannelChange = channelKey !== lastChannelRef.current;
+
     async function load() {
       if (!current?.apiUrl) return;
       try {
         const np = await getNowPlaying(current.apiUrl);
 
-        // Check if song changed and show popup
+        // Check if song changed or channel changed
         const currentSongId = np?.title + np?.artist;
         const songChanged = currentSongId && lastSongRef.current && currentSongId !== lastSongRef.current;
-        const isNewChannel = isFirstLoad && currentSongId;
 
-        if ((songChanged || isNewChannel) && playing) {
-          setShowNowPlayingPopup(true);
+        // Show popup on channel change or song change (only if playing)
+        if ((songChanged || isChannelChange) && currentSongId && playing) {
+          console.log('[NowPlaying] Showing popup - songChanged:', songChanged, 'channelChange:', isChannelChange);
+          showNowPlayingPopup({
+            channelName: current?.name,
+            title: np?.title,
+            artist: np?.artist,
+            coverArt: np?.art
+          });
         }
+
         lastSongRef.current = currentSongId;
-        isFirstLoad = false;
+        lastChannelRef.current = channelKey;
 
         setMeta(np);
 
@@ -148,7 +158,9 @@ export default function PlayerBar() {
         const d = typeof now.duration === 'number' ? now.duration : null;
         setElapsed(e ?? 0);
         setDuration(d && d > 0 ? d : null);
-      } catch {}
+      } catch (err) {
+        console.error('[NowPlaying] Error loading:', err);
+      }
     }
     load();
     if (current?.apiUrl) poll = setInterval(load, 15000);
@@ -856,16 +868,6 @@ export default function PlayerBar() {
           </div>
         </div>
       </div>
-
-      {/* Now Playing Popup */}
-      <NowPlayingPopup
-        isVisible={showNowPlayingPopup}
-        onClose={() => setShowNowPlayingPopup(false)}
-        channelName={current?.name}
-        title={meta?.title}
-        artist={meta?.artist}
-        coverArt={meta?.art}
-      />
     </div>
   );
 }

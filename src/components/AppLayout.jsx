@@ -6,10 +6,13 @@ import Sidebar from './Sidebar';
 import PlayerBar from './PlayerBar';
 import Footer from './Footer';
 import NotificationPopup from './NotificationPopup';
+import NowPlayingPopup from './NowPlayingPopup';
 import { useUI } from '../context/UIContext';
+import { useNowPlayingPopup } from '../context/NowPlayingContext';
 
 export default function AppLayout({ children }) {
   const { isDesktop, sidebarOpen, sidebarWidth } = useUI();
+  const { isVisible, songInfo, hidePopup } = useNowPlayingPopup();
   const pathname = usePathname();
 
   // Pages pleine largeur sans marge (Schedule uniquement)
@@ -33,6 +36,14 @@ export default function AppLayout({ children }) {
       </main>
       <Footer />
       <PlayerBar />
+      <NowPlayingPopup
+        isVisible={isVisible}
+        onClose={hidePopup}
+        channelName={songInfo.channelName}
+        title={songInfo.title}
+        artist={songInfo.artist}
+        coverArt={songInfo.coverArt}
+      />
     </div>
   );
 }
