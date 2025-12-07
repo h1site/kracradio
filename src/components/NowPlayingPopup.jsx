@@ -36,10 +36,18 @@ export default function NowPlayingPopup({
   coverArt,
   autoHideDuration = 8000
 }) {
+  const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const timerRef = useRef(null);
 
+  // Prevent hydration mismatch
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     if (isVisible) {
       setShow(true);
 
@@ -56,13 +64,15 @@ export default function NowPlayingPopup({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isVisible, autoHideDuration, onClose]);
+  }, [isVisible, autoHideDuration, onClose, mounted]);
 
   const handleClose = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setShow(false);
     onClose?.();
   };
+
+  if (!mounted) return null;
 
   return (
     <AnimatePresence>
