@@ -14,30 +14,25 @@ const CHANNELS = [
   { key: 'rock', name: 'Rock' }
 ];
 
-const SIZES = [
-  { key: 'small', name: 'Petit', width: 350, height: 200 },
-  { key: 'medium', name: 'Moyen', width: 420, height: 220 },
-  { key: 'large', name: 'Grand', width: 500, height: 240 }
+const THEMES = [
+  { key: 'dark', name: 'Sombre' },
+  { key: 'light', name: 'Clair' }
+];
+
+const WIDTHS = [
+  { key: '350', name: 'Petit (350px)' },
+  { key: '400', name: 'Moyen (400px)' },
+  { key: '450', name: 'Grand (450px)' }
 ];
 
 export default function WidgetPage() {
   const { t } = useI18n();
   const [selectedChannel, setSelectedChannel] = useState('kracradio');
-  const [selectedSize, setSelectedSize] = useState('medium');
+  const [selectedTheme, setSelectedTheme] = useState('dark');
+  const [selectedWidth, setSelectedWidth] = useState('400');
   const [copied, setCopied] = useState(false);
 
-  const size = SIZES.find(s => s.key === selectedSize);
-  const embedUrl = `https://kracradio.com/embed/${selectedChannel}`;
-
-  const embedCode = `<iframe
-  src="${embedUrl}"
-  width="${size.width}"
-  height="${size.height}"
-  frameborder="0"
-  allow="autoplay; encrypted-media"
-  style="border-radius: 12px; overflow: hidden;"
-  title="KracRadio Player"
-></iframe>`;
+  const embedCode = `<script src="https://kracradio.com/embed.js" data-channel="${selectedChannel}" data-theme="${selectedTheme}" data-width="${selectedWidth}"></script>`;
 
   const copyCode = () => {
     navigator.clipboard.writeText(embedCode);
@@ -52,7 +47,7 @@ export default function WidgetPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Widget KracRadio</h1>
           <p className="text-gray-400 text-lg">
-            Ajoutez notre lecteur radio sur votre site web
+            Ajoutez notre lecteur radio sur votre site web avec une simple ligne de code
           </p>
         </div>
 
@@ -75,22 +70,41 @@ export default function WidgetPage() {
               </select>
             </div>
 
-            {/* Size Selection */}
+            {/* Theme Selection */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Taille</h2>
-              <div className="grid grid-cols-3 gap-3">
-                {SIZES.map(s => (
+              <h2 className="text-lg font-semibold mb-4">Thème</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {THEMES.map(th => (
                   <button
-                    key={s.key}
-                    onClick={() => setSelectedSize(s.key)}
+                    key={th.key}
+                    onClick={() => setSelectedTheme(th.key)}
                     className={`py-3 px-4 rounded-lg border transition-all ${
-                      selectedSize === s.key
+                      selectedTheme === th.key
                         ? 'bg-red-600 border-red-600 text-white'
                         : 'bg-white/5 border-white/20 text-gray-300 hover:border-white/40'
                     }`}
                   >
-                    <div className="font-medium">{s.name}</div>
-                    <div className="text-xs opacity-70">{s.width}x{s.height}</div>
+                    {th.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Width Selection */}
+            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+              <h2 className="text-lg font-semibold mb-4">Largeur</h2>
+              <div className="grid grid-cols-3 gap-3">
+                {WIDTHS.map(w => (
+                  <button
+                    key={w.key}
+                    onClick={() => setSelectedWidth(w.key)}
+                    className={`py-3 px-4 rounded-lg border transition-all text-sm ${
+                      selectedWidth === w.key
+                        ? 'bg-red-600 border-red-600 text-white'
+                        : 'bg-white/5 border-white/20 text-gray-300 hover:border-white/40'
+                    }`}
+                  >
+                    {w.name}
                   </button>
                 ))}
               </div>
@@ -111,56 +125,71 @@ export default function WidgetPage() {
                   {copied ? '✓ Copié!' : 'Copier'}
                 </button>
               </div>
-              <pre className="bg-black/50 rounded-lg p-4 overflow-x-auto text-sm text-gray-300 font-mono">
+              <pre className="bg-black/50 rounded-lg p-4 overflow-x-auto text-sm text-green-400 font-mono whitespace-pre-wrap break-all">
                 {embedCode}
               </pre>
+              <p className="mt-3 text-xs text-gray-500">
+                Collez ce code dans le HTML de votre site, là où vous voulez afficher le widget.
+              </p>
             </div>
           </div>
 
           {/* Preview */}
           <div className="space-y-6">
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Aperçu</h2>
+              <h2 className="text-lg font-semibold mb-4">Aperçu en direct</h2>
               <div
-                className="bg-gray-800 rounded-xl p-4 flex items-center justify-center"
-                style={{ minHeight: size.height + 40 }}
+                className={`rounded-xl p-4 flex items-center justify-center ${
+                  selectedTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'
+                }`}
+                style={{ minHeight: '220px' }}
               >
-                <iframe
-                  src={embedUrl}
-                  width={size.width}
-                  height={size.height}
-                  frameBorder="0"
-                  allow="autoplay; encrypted-media"
-                  style={{ borderRadius: '12px', overflow: 'hidden' }}
-                  title="KracRadio Player Preview"
+                {/* Live preview using the actual script */}
+                <div
+                  id="widget-preview"
+                  key={`${selectedChannel}-${selectedTheme}-${selectedWidth}`}
+                  dangerouslySetInnerHTML={{
+                    __html: `<script src="/embed.js" data-channel="${selectedChannel}" data-theme="${selectedTheme}" data-width="${selectedWidth}"></script>`
+                  }}
                 />
               </div>
+              <p className="mt-3 text-xs text-gray-500 text-center">
+                Aperçu fonctionnel - cliquez sur play pour tester!
+              </p>
             </div>
 
             {/* Features */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Caractéristiques</h2>
+              <h2 className="text-lg font-semibold mb-4">Avantages</h2>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  Affiche la chanson en cours
+                  <span><strong>Une seule ligne de code</strong> - Simple à intégrer</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  Lecture en un clic
+                  <span><strong>Backlink garanti</strong> - Le code ne peut pas être modifié</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  Design responsive
+                  <span>Affiche la chanson en cours avec pochette</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  Lien vers kracradio.com (backlink)
+                  <span>Contrôle du volume intégré</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-green-500">✓</span>
+                  <span>Thème sombre ou clair</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-green-500">✓</span>
+                  <span>Mise à jour automatique des infos</span>
                 </li>
                 {selectedChannel === 'all' && (
                   <li className="flex items-center gap-3">
                     <span className="text-green-500">✓</span>
-                    Sélecteur de chaînes intégré
+                    <span>Navigation entre toutes les chaînes</span>
                   </li>
                 )}
               </ul>
@@ -178,6 +207,25 @@ export default function WidgetPage() {
               >
                 Nous contacter →
               </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Technical Info */}
+        <div className="mt-12 bg-white/5 rounded-xl p-6 border border-white/10">
+          <h2 className="text-lg font-semibold mb-4">Informations techniques</h2>
+          <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-400">
+            <div>
+              <h3 className="font-medium text-white mb-2">Compatibilité</h3>
+              <p>Fonctionne sur tous les navigateurs modernes (Chrome, Firefox, Safari, Edge)</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-white mb-2">Performance</h3>
+              <p>Script léger (~8KB), chargement asynchrone, aucun impact sur votre SEO</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-white mb-2">Sécurité</h3>
+              <p>Aucune donnée collectée, pas de cookies, respecte la vie privée</p>
             </div>
           </div>
         </div>
