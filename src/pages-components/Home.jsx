@@ -962,6 +962,66 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Section Widget - Intégrez la radio sur votre site */}
+      <section
+        className="py-16 relative"
+        style={{
+          backgroundImage: 'url(/images/concert-bg.jpg)',
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(30, 30, 30, 0.95)' }} />
+        <div className="max-w-4xl mx-auto px-5 relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-10">
+            {/* Left: Icon/Visual */}
+            <SlideIn direction="left" className="flex-shrink-0">
+              <motion.div
+                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-2xl"
+                whileHover={{ scale: 1.05, rotate: -3 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <svg className="w-16 h-16 md:w-20 md:h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </motion.div>
+            </SlideIn>
+
+            {/* Right: Content */}
+            <div className="flex-1 text-center md:text-left">
+              <FadeIn direction="up">
+                <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                  {lang === 'en' ? 'Radio on Your Website' : lang === 'es' ? 'Radio en tu Sitio Web' : 'La radio sur votre site web'}
+                </h2>
+              </FadeIn>
+              <FadeIn direction="up" delay={0.1}>
+                <p className="text-lg text-white/80 mb-8 max-w-xl">
+                  {lang === 'en'
+                    ? 'Integrate the KracRadio player on your website or web application with a single line of code. Display now playing information, album art, and let your visitors listen to our stations.'
+                    : lang === 'es'
+                    ? 'Integra el reproductor de KracRadio en tu sitio web o aplicación web con una sola línea de código. Muestra la información de lo que suena, la portada del álbum y deja que tus visitantes escuchen nuestras estaciones.'
+                    : 'Intégrez le lecteur KracRadio sur votre site internet ou application web avec une seule ligne de code. Affichez les informations en cours de lecture, la pochette de l\'album et laissez vos visiteurs écouter nos chaînes.'}
+                </p>
+              </FadeIn>
+              <FadeIn direction="up" delay={0.2}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/widget"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-red-600 text-white rounded-full font-bold text-lg hover:bg-red-700 transition-all shadow-xl hover:shadow-2xl"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    {lang === 'en' ? 'Get the Widget' : lang === 'es' ? 'Obtener el Widget' : 'Obtenir le widget'}
+                  </Link>
+                </motion.div>
+              </FadeIn>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Espacement en bas - 30px sur mobile au lieu de la cale pour le player */}
       <div className="pb-[30px] sm:pb-0" />
     </div>

@@ -55,27 +55,6 @@ const CHANNELS_DATA = {
   }
 };
 
-const CHANNELS = [
-  { key: 'all', name: 'Toutes les chaînes (avec sélecteur)' },
-  { key: 'kracradio', name: 'KracRadio (principale)' },
-  { key: 'ebm_industrial', name: 'EBM Industrial' },
-  { key: 'electro', name: 'Electro' },
-  { key: 'francophonie', name: 'Francophonie' },
-  { key: 'jazz', name: 'Jazz' },
-  { key: 'metal', name: 'Metal' },
-  { key: 'rock', name: 'Rock' }
-];
-
-const THEMES = [
-  { key: 'dark', name: 'Sombre' },
-  { key: 'light', name: 'Clair' }
-];
-
-const WIDTHS = [
-  { key: '350', name: 'Petit (350px)' },
-  { key: '400', name: 'Moyen (400px)' },
-  { key: '450', name: 'Grand (450px)' }
-];
 
 // Preview Widget Component
 function WidgetPreview({ channel, theme, width }) {
@@ -162,21 +141,19 @@ function WidgetPreview({ channel, theme, width }) {
     <div
       style={{
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        background: isDark
-          ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)'
-          : 'linear-gradient(135deg, #f8f8f8 0%, #ffffff 50%, #f0f0f0 100%)',
-        color: isDark ? 'white' : '#1a1a1a',
+        background: isDark ? '#121212' : '#f5f5f5',
+        color: isDark ? '#ffffff' : '#1a1a1a',
         width: `${width}px`,
         padding: '16px',
         boxSizing: 'border-box',
-        borderRadius: '16px',
-        overflow: 'hidden'
+        borderRadius: '12px',
+        border: isDark ? '1px solid #333' : '1px solid #ddd'
       }}
     >
       {/* Main Content */}
-      <div style={{ display: 'flex', gap: '16px' }}>
+      <div style={{ display: 'flex', gap: '14px' }}>
         {/* Cover Art */}
-        <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+        <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
           <img
             src={nowPlaying.art || '/icon.png'}
             alt="Cover"
@@ -184,9 +161,8 @@ function WidgetPreview({ channel, theme, width }) {
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: '12px',
-              objectFit: 'cover',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+              borderRadius: '8px',
+              objectFit: 'cover'
             }}
           />
           {isAllChannels && (
@@ -196,21 +172,21 @@ function WidgetPreview({ channel, theme, width }) {
                 disabled={currentIndex === 0}
                 style={{
                   position: 'absolute',
-                  left: '4px',
+                  left: '2px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  width: '24px',
-                  height: '24px',
+                  width: '22px',
+                  height: '22px',
                   border: 'none',
                   borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.6)',
+                  background: 'rgba(0,0,0,0.7)',
                   color: 'white',
                   cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
                   opacity: currentIndex === 0 ? 0.3 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '14px'
+                  fontSize: '12px'
                 }}
               >
                 ‹
@@ -220,21 +196,21 @@ function WidgetPreview({ channel, theme, width }) {
                 disabled={currentIndex === channelKeys.length - 1}
                 style={{
                   position: 'absolute',
-                  right: '4px',
+                  right: '2px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  width: '24px',
-                  height: '24px',
+                  width: '22px',
+                  height: '22px',
                   border: 'none',
                   borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.6)',
+                  background: 'rgba(0,0,0,0.7)',
                   color: 'white',
                   cursor: currentIndex === channelKeys.length - 1 ? 'not-allowed' : 'pointer',
                   opacity: currentIndex === channelKeys.length - 1 ? 0.3 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '14px'
+                  fontSize: '12px'
                 }}
               >
                 ›
@@ -248,28 +224,28 @@ function WidgetPreview({ channel, theme, width }) {
           {/* Channel + Frequency */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <span style={{
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              color: currentChannel.color
+              color: isDark ? '#999' : '#666'
             }}>
               {currentChannel.name}
             </span>
             <span style={{
-              fontSize: '10px',
+              fontSize: '9px',
               fontFamily: 'monospace',
-              color: '#ef4444',
+              color: isDark ? '#666' : '#999',
               letterSpacing: '1px'
             }}>
               {currentChannel.frequency} MHz
             </span>
             {playing && (
               <span style={{
-                width: '6px',
-                height: '6px',
+                width: '5px',
+                height: '5px',
                 borderRadius: '50%',
-                background: '#ef4444',
+                background: '#22c55e',
                 animation: 'pulse 2s infinite'
               }} />
             )}
@@ -277,12 +253,13 @@ function WidgetPreview({ channel, theme, width }) {
 
           {/* Title */}
           <div style={{
-            fontSize: '15px',
+            fontSize: '14px',
             fontWeight: 'bold',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            marginBottom: '2px'
+            marginBottom: '2px',
+            color: isDark ? '#fff' : '#1a1a1a'
           }}>
             {nowPlaying.title || 'Chargement...'}
           </div>
@@ -290,7 +267,7 @@ function WidgetPreview({ channel, theme, width }) {
           {/* Artist */}
           <div style={{
             fontSize: '12px',
-            color: isDark ? '#aaa' : '#666',
+            color: isDark ? '#888' : '#666',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -305,12 +282,12 @@ function WidgetPreview({ channel, theme, width }) {
             <button
               onClick={togglePlay}
               style={{
-                width: '40px',
-                height: '40px',
+                width: '36px',
+                height: '36px',
                 border: 'none',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #ef4444, #f97316)',
-                color: 'white',
+                background: isDark ? '#fff' : '#1a1a1a',
+                color: isDark ? '#1a1a1a' : '#fff',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -319,12 +296,12 @@ function WidgetPreview({ channel, theme, width }) {
               }}
             >
               {playing ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="4" width="4" height="16" rx="1"/>
                   <rect x="14" y="4" width="4" height="16" rx="1"/>
                 </svg>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               )}
@@ -332,7 +309,7 @@ function WidgetPreview({ channel, theme, width }) {
 
             {/* Volume */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill={isDark ? '#888' : '#666'}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={isDark ? '#666' : '#999'}>
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
               </svg>
               <input
@@ -343,16 +320,16 @@ function WidgetPreview({ channel, theme, width }) {
                 onChange={handleVolumeChange}
                 style={{
                   flex: 1,
-                  height: '4px',
+                  height: '3px',
                   WebkitAppearance: 'none',
                   appearance: 'none',
-                  background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                  background: isDark ? '#333' : '#ddd',
                   borderRadius: '2px',
                   outline: 'none',
                   cursor: 'pointer'
                 }}
               />
-              <span style={{ fontSize: '10px', color: isDark ? '#888' : '#666', width: '28px' }}>
+              <span style={{ fontSize: '9px', color: isDark ? '#666' : '#999', width: '26px' }}>
                 {volume}%
               </span>
             </div>
@@ -362,9 +339,9 @@ function WidgetPreview({ channel, theme, width }) {
 
       {/* Footer with backlink */}
       <div style={{
-        marginTop: '12px',
-        paddingTop: '10px',
-        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+        marginTop: '10px',
+        paddingTop: '8px',
+        borderTop: isDark ? '1px solid #333' : '1px solid #ddd',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between'
@@ -377,13 +354,13 @@ function WidgetPreview({ channel, theme, width }) {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+            color: isDark ? '#888' : '#666',
             textDecoration: 'none',
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: 500
           }}
         >
-          <img src="/icon.png" alt="KracRadio" style={{ width: '18px', height: '18px', borderRadius: '4px' }} />
+          <img src="/icon.png" alt="KracRadio" style={{ width: '16px', height: '16px', borderRadius: '3px' }} />
           KracRadio
         </a>
         <a
@@ -391,9 +368,9 @@ function WidgetPreview({ channel, theme, width }) {
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
+            color: isDark ? '#666' : '#999',
             textDecoration: 'none',
-            fontSize: '10px'
+            fontSize: '9px'
           }}
         >
           Ouvrir le site →
@@ -412,6 +389,7 @@ function WidgetPreview({ channel, theme, width }) {
 
 export default function WidgetPage() {
   const { t } = useI18n();
+  const txt = t.widget || {};
   const [selectedChannel, setSelectedChannel] = useState('kracradio');
   const [selectedTheme, setSelectedTheme] = useState('dark');
   const [selectedWidth, setSelectedWidth] = useState('400');
@@ -425,14 +403,37 @@ export default function WidgetPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Translated channel names
+  const channelsTranslated = [
+    { key: 'all', name: txt.allChannels || 'All channels' },
+    { key: 'kracradio', name: txt.mainChannel || 'KracRadio (main)' },
+    { key: 'ebm_industrial', name: 'EBM Industrial' },
+    { key: 'electro', name: 'Electro' },
+    { key: 'francophonie', name: 'Francophonie' },
+    { key: 'jazz', name: 'Jazz' },
+    { key: 'metal', name: 'Metal' },
+    { key: 'rock', name: 'Rock' }
+  ];
+
+  const themesTranslated = [
+    { key: 'dark', name: txt.dark || 'Dark' },
+    { key: 'light', name: txt.light || 'Light' }
+  ];
+
+  const widthsTranslated = [
+    { key: '350', name: txt.small || 'Small (350px)' },
+    { key: '400', name: txt.medium || 'Medium (400px)' },
+    { key: '450', name: txt.large || 'Large (450px)' }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Widget KracRadio</h1>
+          <h1 className="text-4xl font-bold mb-4">{txt.title || 'KracRadio Widget'}</h1>
           <p className="text-gray-400 text-lg">
-            Ajoutez notre lecteur radio sur votre site web avec une simple ligne de code
+            {txt.subtitle || 'Add our radio player to your website with a single line of code'}
           </p>
         </div>
 
@@ -441,13 +442,13 @@ export default function WidgetPage() {
           <div className="space-y-6">
             {/* Channel Selection */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Chaîne</h2>
+              <h2 className="text-lg font-semibold mb-4">{txt.channel || 'Channel'}</h2>
               <select
                 value={selectedChannel}
                 onChange={(e) => setSelectedChannel(e.target.value)}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500"
               >
-                {CHANNELS.map(ch => (
+                {channelsTranslated.map(ch => (
                   <option key={ch.key} value={ch.key} className="bg-gray-900">
                     {ch.name}
                   </option>
@@ -457,9 +458,9 @@ export default function WidgetPage() {
 
             {/* Theme Selection */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Thème</h2>
+              <h2 className="text-lg font-semibold mb-4">{txt.theme || 'Theme'}</h2>
               <div className="grid grid-cols-2 gap-3">
-                {THEMES.map(th => (
+                {themesTranslated.map(th => (
                   <button
                     key={th.key}
                     onClick={() => setSelectedTheme(th.key)}
@@ -477,9 +478,9 @@ export default function WidgetPage() {
 
             {/* Width Selection */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Largeur</h2>
+              <h2 className="text-lg font-semibold mb-4">{txt.width || 'Width'}</h2>
               <div className="grid grid-cols-3 gap-3">
-                {WIDTHS.map(w => (
+                {widthsTranslated.map(w => (
                   <button
                     key={w.key}
                     onClick={() => setSelectedWidth(w.key)}
@@ -498,7 +499,7 @@ export default function WidgetPage() {
             {/* Embed Code */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Code à copier</h2>
+                <h2 className="text-lg font-semibold">{txt.codeToCopy || 'Code to copy'}</h2>
                 <button
                   onClick={copyCode}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
@@ -507,14 +508,14 @@ export default function WidgetPage() {
                       : 'bg-red-600 text-white hover:bg-red-700'
                   }`}
                 >
-                  {copied ? '✓ Copié!' : 'Copier'}
+                  {copied ? (txt.copied || '✓ Copied!') : (txt.copy || 'Copy')}
                 </button>
               </div>
               <pre className="bg-black/50 rounded-lg p-4 overflow-x-auto text-sm text-green-400 font-mono whitespace-pre-wrap break-all">
                 {embedCode}
               </pre>
               <p className="mt-3 text-xs text-gray-500">
-                Collez ce code dans le HTML de votre site, là où vous voulez afficher le widget.
+                {txt.pasteHint || 'Paste this code in the HTML of your site, where you want to display the widget.'}
               </p>
             </div>
           </div>
@@ -522,7 +523,7 @@ export default function WidgetPage() {
           {/* Preview */}
           <div className="space-y-6">
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Aperçu en direct</h2>
+              <h2 className="text-lg font-semibold mb-4">{txt.livePreview || 'Live Preview'}</h2>
               <div
                 className={`rounded-xl p-4 flex items-center justify-center ${
                   selectedTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'
@@ -536,42 +537,42 @@ export default function WidgetPage() {
                 />
               </div>
               <p className="mt-3 text-xs text-gray-500 text-center">
-                Aperçu fonctionnel - cliquez sur play pour tester!
+                {txt.previewHint || 'Functional preview - click play to test!'}
               </p>
             </div>
 
             {/* Features */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold mb-4">Avantages</h2>
+              <h2 className="text-lg font-semibold mb-4">{txt.benefits || 'Benefits'}</h2>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span><strong>Une seule ligne de code</strong> - Simple à intégrer</span>
+                  <span dangerouslySetInnerHTML={{ __html: txt.benefit1 || '<strong>Single line of code</strong> - Easy to integrate' }} />
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span><strong>Backlink garanti</strong> - Le code ne peut pas être modifié</span>
+                  <span dangerouslySetInnerHTML={{ __html: txt.benefit2 || '<strong>Guaranteed backlink</strong> - Code cannot be modified' }} />
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span>Affiche la chanson en cours avec pochette</span>
+                  <span>{txt.benefit3 || 'Shows current song with album art'}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span>Contrôle du volume intégré</span>
+                  <span>{txt.benefit4 || 'Built-in volume control'}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span>Thème sombre ou clair</span>
+                  <span>{txt.benefit5 || 'Dark or light theme'}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-500">✓</span>
-                  <span>Mise à jour automatique des infos</span>
+                  <span>{txt.benefit6 || 'Auto-updating information'}</span>
                 </li>
                 {selectedChannel === 'all' && (
                   <li className="flex items-center gap-3">
                     <span className="text-green-500">✓</span>
-                    <span>Navigation entre toutes les chaînes</span>
+                    <span>{txt.benefit7 || 'Navigate between all channels'}</span>
                   </li>
                 )}
               </ul>
@@ -579,15 +580,15 @@ export default function WidgetPage() {
 
             {/* Support */}
             <div className="bg-gradient-to-r from-red-600/20 to-pink-600/20 rounded-xl p-6 border border-red-500/30">
-              <h3 className="font-semibold mb-2">Besoin d'aide?</h3>
+              <h3 className="font-semibold mb-2">{txt.needHelp || 'Need help?'}</h3>
               <p className="text-gray-300 text-sm mb-3">
-                Si vous avez des questions sur l'intégration du widget, contactez-nous.
+                {txt.helpText || 'If you have questions about widget integration, contact us.'}
               </p>
               <a
                 href="/contact"
                 className="text-red-400 hover:text-red-300 text-sm font-medium"
               >
-                Nous contacter →
+                {txt.contactUs || 'Contact us →'}
               </a>
             </div>
           </div>
@@ -595,19 +596,19 @@ export default function WidgetPage() {
 
         {/* Technical Info */}
         <div className="mt-12 bg-white/5 rounded-xl p-6 border border-white/10">
-          <h2 className="text-lg font-semibold mb-4">Informations techniques</h2>
+          <h2 className="text-lg font-semibold mb-4">{txt.techInfo || 'Technical Information'}</h2>
           <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-400">
             <div>
-              <h3 className="font-medium text-white mb-2">Compatibilité</h3>
-              <p>Fonctionne sur tous les navigateurs modernes (Chrome, Firefox, Safari, Edge)</p>
+              <h3 className="font-medium text-white mb-2">{txt.compatibility || 'Compatibility'}</h3>
+              <p>{txt.compatibilityText || 'Works on all modern browsers (Chrome, Firefox, Safari, Edge)'}</p>
             </div>
             <div>
-              <h3 className="font-medium text-white mb-2">Performance</h3>
-              <p>Script léger (~8KB), chargement asynchrone, aucun impact sur votre SEO</p>
+              <h3 className="font-medium text-white mb-2">{txt.performance || 'Performance'}</h3>
+              <p>{txt.performanceText || 'Lightweight script (~8KB), async loading, no impact on your SEO'}</p>
             </div>
             <div>
-              <h3 className="font-medium text-white mb-2">Sécurité</h3>
-              <p>Aucune donnée collectée, pas de cookies, respecte la vie privée</p>
+              <h3 className="font-medium text-white mb-2">{txt.security || 'Security'}</h3>
+              <p>{txt.securityText || 'No data collected, no cookies, respects privacy'}</p>
             </div>
           </div>
         </div>

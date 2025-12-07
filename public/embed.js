@@ -220,20 +220,18 @@
       this.container.innerHTML = `
         <div class="krac-widget" style="
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: ${isDark
-            ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)'
-            : 'linear-gradient(135deg, #f8f8f8 0%, #ffffff 50%, #f0f0f0 100%)'};
-          color: ${isDark ? 'white' : '#1a1a1a'};
+          background: ${isDark ? '#121212' : '#f5f5f5'};
+          color: ${isDark ? '#ffffff' : '#1a1a1a'};
           width: ${width}px;
           padding: 16px;
           box-sizing: border-box;
-          border-radius: 16px;
-          overflow: hidden;
+          border-radius: 12px;
+          border: 1px solid ${isDark ? '#333' : '#ddd'};
         ">
           <!-- Main Content -->
-          <div style="display: flex; gap: 16px;">
+          <div style="display: flex; gap: 14px;">
             <!-- Cover Art -->
-            <div style="position: relative; width: 100px; height: 100px; flex-shrink: 0;">
+            <div style="position: relative; width: 90px; height: 90px; flex-shrink: 0;">
               <img
                 class="krac-art"
                 src="${this.nowPlaying.art || 'https://kracradio.com/icon.png'}"
@@ -242,45 +240,44 @@
                 style="
                   width: 100%;
                   height: 100%;
-                  border-radius: 12px;
+                  border-radius: 8px;
                   object-fit: cover;
-                  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
                 "
               />
               ${this.isAllChannels ? `
                 <button class="krac-prev" style="
                   position: absolute;
-                  left: 4px;
+                  left: 2px;
                   top: 50%;
                   transform: translateY(-50%);
-                  width: 24px;
-                  height: 24px;
+                  width: 22px;
+                  height: 22px;
                   border: none;
                   border-radius: 50%;
-                  background: rgba(0,0,0,0.6);
+                  background: rgba(0,0,0,0.7);
                   color: white;
                   cursor: pointer;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  font-size: 14px;
+                  font-size: 12px;
                 ">&lsaquo;</button>
                 <button class="krac-next" style="
                   position: absolute;
-                  right: 4px;
+                  right: 2px;
                   top: 50%;
                   transform: translateY(-50%);
-                  width: 24px;
-                  height: 24px;
+                  width: 22px;
+                  height: 22px;
                   border: none;
                   border-radius: 50%;
-                  background: rgba(0,0,0,0.6);
+                  background: rgba(0,0,0,0.7);
                   color: white;
                   cursor: pointer;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  font-size: 14px;
+                  font-size: 12px;
                 ">&rsaquo;</button>
               ` : ''}
             </div>
@@ -290,23 +287,23 @@
               <!-- Channel + Frequency -->
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                 <span class="krac-channel-name" style="
-                  font-size: 11px;
+                  font-size: 10px;
                   font-weight: 600;
                   text-transform: uppercase;
                   letter-spacing: 0.5px;
-                  color: ${this.channel.color};
+                  color: ${isDark ? '#999' : '#666'};
                 ">${this.channel.name}</span>
                 <span class="krac-frequency" style="
-                  font-size: 10px;
+                  font-size: 9px;
                   font-family: monospace;
-                  color: #ef4444;
+                  color: ${isDark ? '#666' : '#999'};
                   letter-spacing: 1px;
                 ">${this.channel.frequency} MHz</span>
                 <span class="krac-live" style="
-                  width: 6px;
-                  height: 6px;
+                  width: 5px;
+                  height: 5px;
                   border-radius: 50%;
-                  background: #ef4444;
+                  background: #22c55e;
                   display: none;
                   animation: krac-pulse 2s infinite;
                 "></span>
@@ -314,18 +311,19 @@
 
               <!-- Title -->
               <div class="krac-title" style="
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: bold;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 margin-bottom: 2px;
+                color: ${isDark ? '#fff' : '#1a1a1a'};
               ">${this.nowPlaying.title}</div>
 
               <!-- Artist -->
               <div class="krac-artist" style="
                 font-size: 12px;
-                color: ${isDark ? '#aaa' : '#666'};
+                color: ${isDark ? '#888' : '#666'};
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -336,12 +334,12 @@
               <div style="display: flex; align-items: center; gap: 10px;">
                 <!-- Play/Pause -->
                 <button class="krac-play-btn" style="
-                  width: 40px;
-                  height: 40px;
+                  width: 36px;
+                  height: 36px;
                   border: none;
                   border-radius: 50%;
-                  background: linear-gradient(135deg, #ef4444, #f97316);
-                  color: white;
+                  background: ${isDark ? '#fff' : '#1a1a1a'};
+                  color: ${isDark ? '#1a1a1a' : '#fff'};
                   cursor: pointer;
                   display: flex;
                   align-items: center;
@@ -351,7 +349,7 @@
 
                 <!-- Volume -->
                 <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="${isDark ? '#888' : '#666'}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="${isDark ? '#666' : '#999'}">
                     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
                   </svg>
                   <input
@@ -362,16 +360,16 @@
                     value="${this.volume}"
                     style="
                       flex: 1;
-                      height: 4px;
+                      height: 3px;
                       -webkit-appearance: none;
                       appearance: none;
-                      background: ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+                      background: ${isDark ? '#333' : '#ddd'};
                       border-radius: 2px;
                       outline: none;
                       cursor: pointer;
                     "
                   />
-                  <span class="krac-volume-text" style="font-size: 10px; color: ${isDark ? '#888' : '#666'}; width: 28px;">
+                  <span class="krac-volume-text" style="font-size: 9px; color: ${isDark ? '#666' : '#999'}; width: 26px;">
                     ${this.volume}%
                   </span>
                 </div>
@@ -381,9 +379,9 @@
 
           <!-- Footer with backlink -->
           <div style="
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid ${isDark ? '#333' : '#ddd'};
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -395,22 +393,22 @@
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                color: ${isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)'};
+                color: ${isDark ? '#888' : '#666'};
                 text-decoration: none;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 500;
               "
             >
-              <img src="https://kracradio.com/icon.png" alt="KracRadio" style="width: 18px; height: 18px; border-radius: 4px;" />
+              <img src="https://kracradio.com/icon.png" alt="KracRadio" style="width: 16px; height: 16px; border-radius: 3px;" />
               KracRadio
             </a>
             <a
               href="https://kracradio.com"
               target="_blank"
               style="
-                color: ${isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'};
+                color: ${isDark ? '#666' : '#999'};
                 text-decoration: none;
-                font-size: 10px;
+                font-size: 9px;
               "
             >
               Ouvrir le site &rarr;
@@ -426,17 +424,16 @@
           .krac-widget input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 12px;
-            height: 12px;
-            background: white;
+            width: 10px;
+            height: 10px;
+            background: ${isDark ? '#fff' : '#1a1a1a'};
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
           }
           .krac-widget input[type="range"]::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
-            background: white;
+            width: 10px;
+            height: 10px;
+            background: ${isDark ? '#fff' : '#1a1a1a'};
             border-radius: 50%;
             cursor: pointer;
             border: none;
