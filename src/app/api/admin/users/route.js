@@ -1,14 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Admin client with service role to access auth.users and bypass RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Create admin client lazily to avoid build-time errors
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(url, key);
+}
 
 // Verify user is admin
-async function verifyAdmin(request) {
+async function verifyAdmin(request, supabaseAdmin) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
@@ -38,7 +42,8 @@ async function verifyAdmin(request) {
 // GET - List all auth users
 export async function GET(request) {
   try {
-    const adminUser = await verifyAdmin(request);
+    const supabaseAdmin = getSupabaseAdmin();
+    const adminUser = await verifyAdmin(request, supabaseAdmin);
     if (!adminUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -71,7 +76,8 @@ export async function GET(request) {
 // POST - Add podcast uploader (upsert profile with admin privileges to bypass RLS)
 export async function POST(request) {
   try {
-    const adminUser = await verifyAdmin(request);
+    const supabaseAdmin = getSupabaseAdmin();
+    const adminUser = await verifyAdmin(request, supabaseAdmin);
     if (!adminUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

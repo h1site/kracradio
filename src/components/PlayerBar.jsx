@@ -16,6 +16,7 @@ import { channels } from '../data/channels';
 import NewFeatureTooltip from './NewFeatureTooltip';
 import { useNotification } from '../context/NotificationContext';
 import { useLikedSongs } from '../context/LikedSongsContext';
+import NowPlayingPopup from './NowPlayingPopup';
 
 export default function PlayerBar() {
   const {
@@ -40,6 +41,8 @@ export default function PlayerBar() {
   const shareMenuRef = useRef(null);
   const shareMenuTimerRef = useRef(null);
   const [showChannelMenu, setShowChannelMenu] = useState(false);
+  const [showNowPlayingPopup, setShowNowPlayingPopup] = useState(false);
+  const lastSongRef = useRef(null);
   const { t } = useI18n();
   const player = t?.player ?? {};
   const site = t?.site ?? {};
@@ -121,6 +124,14 @@ export default function PlayerBar() {
       if (!current?.apiUrl) return;
       try {
         const np = await getNowPlaying(current.apiUrl);
+
+        // Check if song changed and show popup
+        const currentSongId = np?.title + np?.artist;
+        if (currentSongId && lastSongRef.current && currentSongId !== lastSongRef.current && playing) {
+          setShowNowPlayingPopup(true);
+        }
+        lastSongRef.current = currentSongId;
+
         setMeta(np);
 
         // Essayer d'obtenir elapsed/duration si dispo
@@ -137,7 +148,7 @@ export default function PlayerBar() {
     load();
     if (current?.apiUrl) poll = setInterval(load, 15000);
     return () => clearInterval(poll);
-  }, [current, currentType]);
+  }, [current, currentType, playing]);
 
   // Pour les podcasts, utiliser les métadonnées fournies
   useEffect(() => {
@@ -840,6 +851,16 @@ export default function PlayerBar() {
           </div>
         </div>
       </div>
+
+      {/* Now Playing Popup */}
+      <NowPlayingPopup
+        isVisible={showNowPlayingPopup}
+        onClose={() => setShowNowPlayingPopup(false)}
+        channelName={current?.name}
+        title={meta?.title}
+        artist={meta?.artist}
+        coverArt={meta?.art}
+      />
     </div>
   );
 }
