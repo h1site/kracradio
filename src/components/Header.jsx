@@ -105,6 +105,17 @@ export default function Header() {
             >
               📱<span className="hidden xl:inline">Android</span>
             </a>
+            {/* Widget */}
+            <Link
+              href="/widget"
+              className="px-2 py-1 text-[11px] bg-white/10 hover:bg-white/20 text-white transition-colors rounded border border-white/20 flex items-center gap-1"
+              title="Widget"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span className="hidden xl:inline">Widget</span>
+            </Link>
 
             {/* Submit Music - visible pour tous */}
             <Link

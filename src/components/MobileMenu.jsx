@@ -319,6 +319,17 @@ export default function MobileMenu({ open, onClose }) {
             📱 <span>Android APK</span>
           </a>
 
+          <Link
+            href="/widget"
+            onClick={onClose}
+            className="mx-1 mb-2 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/10 text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            <span>Widget</span>
+          </Link>
+
           {/* External Links */}
           <div className="flex items-center gap-2 px-1">
             <a
