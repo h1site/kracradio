@@ -120,6 +120,7 @@ export default function PlayerBar() {
     }
 
     let poll;
+    let isFirstLoad = true;
     async function load() {
       if (!current?.apiUrl) return;
       try {
@@ -127,10 +128,14 @@ export default function PlayerBar() {
 
         // Check if song changed and show popup
         const currentSongId = np?.title + np?.artist;
-        if (currentSongId && lastSongRef.current && currentSongId !== lastSongRef.current && playing) {
+        const songChanged = currentSongId && lastSongRef.current && currentSongId !== lastSongRef.current;
+        const isNewChannel = isFirstLoad && currentSongId;
+
+        if ((songChanged || isNewChannel) && playing) {
           setShowNowPlayingPopup(true);
         }
         lastSongRef.current = currentSongId;
+        isFirstLoad = false;
 
         setMeta(np);
 
