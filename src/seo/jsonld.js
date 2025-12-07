@@ -22,7 +22,7 @@ export function organizationJsonLd() {
     '@type': 'Organization',
     url: SITE_URL,
     name: siteName,
-    logo: absoluteUrl('/logo-og.png')
+    logo: absoluteUrl('/icon.png')
   };
 }
 
@@ -32,7 +32,7 @@ export function radioStationJsonLd(channel, lang = 'fr') {
     '@type': 'RadioStation',
     name: channel?.name || 'Radio',
     url: absoluteUrl(`/channel/${channel?.key || ''}`),
-    image: channel?.image ? absoluteUrl(channel.image) : absoluteUrl('/logo-og.png'),
+    image: channel?.image ? absoluteUrl(channel.image) : absoluteUrl('/icon.png'),
     inLanguage: lang,
     broadcastService: {
       '@type': 'BroadcastService',

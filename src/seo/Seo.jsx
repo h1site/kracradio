@@ -25,7 +25,7 @@ export default function Seo({
   const canonical = absoluteUrl(path);
   const ogImage = image
     ? (image.startsWith('http') ? image : absoluteUrl(image))
-    : absoluteUrl('/logo-og.png');
+    : absoluteUrl('/icon.png');
 
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
   const jsonLdList = Array.isArray(jsonLd) ? jsonLd : (jsonLd ? [jsonLd] : []);

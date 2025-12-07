@@ -36,7 +36,7 @@ export async function generateMetadata({ params }) {
     const description = podcast.description
       ? podcast.description.slice(0, 160) + (podcast.description.length > 160 ? '...' : '')
       : `Listen to ${podcast.title} podcast on KracRadio`;
-    const coverImage = podcast.cover_image || '/logo-og.png';
+    const coverImage = podcast.cover_image || '/icon.png';
     const podcastUrl = `${siteUrl}/podcast/${id}`;
 
     return {

@@ -175,7 +175,7 @@
 
       if (titleEl) titleEl.textContent = this.nowPlaying.title;
       if (artistEl) artistEl.textContent = this.nowPlaying.artist;
-      if (artEl) artEl.src = this.nowPlaying.art || 'https://kracradio.com/logo192.png';
+      if (artEl) artEl.src = this.nowPlaying.art || 'https://kracradio.com/icon.png';
       if (channelName) {
         channelName.textContent = this.channel.name;
         channelName.style.color = this.channel.color;
@@ -236,9 +236,9 @@
             <div style="position: relative; width: 100px; height: 100px; flex-shrink: 0;">
               <img
                 class="krac-art"
-                src="${this.nowPlaying.art || 'https://kracradio.com/logo192.png'}"
+                src="${this.nowPlaying.art || 'https://kracradio.com/icon.png'}"
                 alt="Cover"
-                onerror="this.src='https://kracradio.com/logo192.png'"
+                onerror="this.src='https://kracradio.com/icon.png'"
                 style="
                   width: 100%;
                   height: 100%;
@@ -401,7 +401,7 @@
                 font-weight: 500;
               "
             >
-              <img src="https://kracradio.com/logo192.png" alt="KracRadio" style="width: 18px; height: 18px; border-radius: 4px;" />
+              <img src="https://kracradio.com/icon.png" alt="KracRadio" style="width: 18px; height: 18px; border-radius: 4px;" />
               KracRadio
             </a>
             <a

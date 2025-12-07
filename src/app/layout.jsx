@@ -41,7 +41,7 @@ export const metadata = {
     description: 'Discover diverse music channels, podcasts, music videos, and connect with independent artists on KracRadio.',
     images: [
       {
-        url: '/logo-og.png',
+        url: '/icon.png',
         width: 1200,
         height: 630,
         alt: 'KracRadio - Online Radio & Music Community',
@@ -55,7 +55,7 @@ export const metadata = {
     creator: '@KracRadio',
     title: 'KracRadio - Online Radio & Music Community',
     description: 'Discover diverse music channels, podcasts, music videos, and connect with independent artists.',
-    images: ['/logo-og.png'],
+    images: ['/icon.png'],
   },
   robots: {
     index: true,

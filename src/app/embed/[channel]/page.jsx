@@ -165,9 +165,9 @@ export default function EmbedWidget() {
         {/* Cover Art */}
         <div style={{ position: 'relative', width: '120px', height: '120px', flexShrink: 0 }}>
           <img
-            src={nowPlaying.art || 'https://kracradio.com/logo192.png'}
+            src={nowPlaying.art || 'https://kracradio.com/icon.png'}
             alt="Cover"
-            onError={(e) => { e.target.src = 'https://kracradio.com/logo192.png'; }}
+            onError={(e) => { e.target.src = 'https://kracradio.com/icon.png'; }}
             style={{
               width: '100%',
               height: '100%',

@@ -56,7 +56,7 @@ export async function generateMetadata({ params }) {
     }
 
     const description = stripHtml(article.content, 160);
-    const ogImage = article.cover_image || '/logo-og.png';
+    const ogImage = article.cover_image || '/icon.png';
     const articleUrl = `${siteUrl}/article/${slug}`;
 
     return {

@@ -45,7 +45,7 @@ export async function generateMetadata({ params }) {
   const channel = channelInfo[key] || {
     title: 'Radio Channel',
     description: 'Listen to music on KracRadio.',
-    image: '/logo-og.png',
+    image: '/icon.png',
   };
 
   return {

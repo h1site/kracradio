@@ -178,9 +178,9 @@ function WidgetPreview({ channel, theme, width }) {
         {/* Cover Art */}
         <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
           <img
-            src={nowPlaying.art || '/logo192.png'}
+            src={nowPlaying.art || '/icon.png'}
             alt="Cover"
-            onError={(e) => { e.target.src = '/logo192.png'; }}
+            onError={(e) => { e.target.src = '/icon.png'; }}
             style={{
               width: '100%',
               height: '100%',
@@ -383,7 +383,7 @@ function WidgetPreview({ channel, theme, width }) {
             fontWeight: 500
           }}
         >
-          <img src="/logo192.png" alt="KracRadio" style={{ width: '18px', height: '18px', borderRadius: '4px' }} />
+          <img src="/icon.png" alt="KracRadio" style={{ width: '18px', height: '18px', borderRadius: '4px' }} />
           KracRadio
         </a>
         <a

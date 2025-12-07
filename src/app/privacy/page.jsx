@@ -11,7 +11,7 @@ export const metadata = {
     title: 'Privacy Policy | KracRadio',
     description: 'Read KracRadio\'s privacy policy and learn how we protect your data.',
     images: [{
-      url: '/logo-og.png',
+      url: '/icon.png',
       width: 1200,
       height: 630,
       alt: 'KracRadio Privacy Policy',
@@ -21,7 +21,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Privacy Policy | KracRadio',
     description: 'Read KracRadio\'s privacy policy.',
-    images: ['/logo-og.png'],
+    images: ['/icon.png'],
   },
 };
 

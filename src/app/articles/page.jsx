@@ -10,13 +10,13 @@ export const metadata = {
     url: `${siteUrl}/articles`,
     title: 'Articles - KracRadio',
     description: 'Read the latest music news, interviews, and articles from the KracRadio community.',
-    images: [{ url: '/logo-og.png', width: 1200, height: 630, alt: 'KracRadio Articles' }],
+    images: [{ url: '/icon.png', width: 1200, height: 630, alt: 'KracRadio Articles' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Articles - KracRadio',
     description: 'Read the latest music news, interviews, and articles.',
-    images: ['/logo-og.png'],
+    images: ['/icon.png'],
   },
   alternates: {
     canonical: `${siteUrl}/articles`,

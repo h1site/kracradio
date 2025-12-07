@@ -16,7 +16,7 @@ export const organizationSchema = {
   url: SITE_URL,
   logo: {
     '@type': 'ImageObject',
-    url: `${SITE_URL}/logo512.png`,
+    url: `${SITE_URL}/icon.png`,
     width: 512,
     height: 512,
   },
@@ -63,8 +63,8 @@ export const radioStationSchema = {
   '@id': `${SITE_URL}/#radiostation`,
   name: siteName,
   url: SITE_URL,
-  logo: `${SITE_URL}/logo512.png`,
-  image: `${SITE_URL}/logo-og.png`,
+  logo: `${SITE_URL}/icon.png`,
+  image: `${SITE_URL}/icon.png`,
   description: 'Radio en ligne avec plusieurs chaînes musicales: Chill, Hits, Hip-Hop, Rock, Country, Oldies, Latino, Lo-Fi',
   broadcastDisplayName: siteName,
   broadcastTimezone: 'America/Montreal',
@@ -87,7 +87,7 @@ export function radioChannelSchema(channel) {
     description: channel.description || `Écoutez ${channel.name} sur ${siteName}`,
     broadcastDisplayName: channel.name,
     inBroadcastLineup: { '@id': `${SITE_URL}/#radiostation` },
-    image: channel.image || `${SITE_URL}/logo-og.png`,
+    image: channel.image || `${SITE_URL}/icon.png`,
   };
 }
 
@@ -180,7 +180,7 @@ export function musicGroupSchema(profile) {
     name: profile.username,
     url: absoluteUrl(`/profile/${profile.artist_slug || profile.id}`),
     description: profile.bio || `Artiste musical sur ${siteName}`,
-    image: profile.avatar_url || `${SITE_URL}/logo-og.png`,
+    image: profile.avatar_url || `${SITE_URL}/icon.png`,
     genre: profile.genres || [],
     foundingLocation: profile.location ? {
       '@type': 'Place',

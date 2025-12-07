@@ -2170,7 +2170,7 @@ export default function AdminPanel() {
                       <td className="px-4 py-3">
                         <div className="relative">
                           <img
-                            src={podcast.image_url || '/logo-og.png'}
+                            src={podcast.image_url || '/icon.png'}
                             alt={podcast.title}
                             className="w-16 h-16 object-cover rounded-lg"
                           />

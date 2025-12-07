@@ -10,13 +10,13 @@ export const metadata = {
     url: `${siteUrl}/artists`,
     title: 'Artists & Members - KracRadio',
     description: 'Discover independent artists and community members. Browse profiles and connect with musicians.',
-    images: [{ url: '/logo-og.png', width: 1200, height: 630, alt: 'KracRadio Artists' }],
+    images: [{ url: '/icon.png', width: 1200, height: 630, alt: 'KracRadio Artists' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Artists & Members - KracRadio',
     description: 'Discover independent artists on KracRadio.',
-    images: ['/logo-og.png'],
+    images: ['/icon.png'],
   },
   alternates: {
     canonical: `${siteUrl}/artists`,

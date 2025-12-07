@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="KracRadio" />
   <title>KracRadio Player</title>
   <link rel="manifest" href="/player-manifest.json" />
-  <link rel="apple-touch-icon" href="/logo192.png" />
+  <link rel="apple-touch-icon" href="/icon.png" />
   <style>
     * {
       margin: 0;
@@ -354,7 +354,7 @@
 <body>
   <div class="player-container">
     <div class="album-art-container">
-      <img id="albumArt" class="album-art" src="/logo192.png" alt="Album Art" />
+      <img id="albumArt" class="album-art" src="/icon.png" alt="Album Art" />
       <!-- Carousel navigation on top of image (Radio only) -->
       <div id="artCarouselNav" class="art-carousel-nav hidden">
         <button id="artCarouselPrev" class="art-carousel-btn">
@@ -378,7 +378,7 @@
 
     <!-- Now Playing (Radio only) -->
     <div id="nowPlaying" class="now-playing hidden">
-      <img id="nowPlayingImg" class="now-playing-img" src="/logo192.png" alt="Station" />
+      <img id="nowPlayingImg" class="now-playing-img" src="/icon.png" alt="Station" />
       <div class="now-playing-info">
         <div class="now-playing-label">📻 Station</div>
         <div id="nowPlayingTitle" class="now-playing-title">—</div>
@@ -549,7 +549,7 @@
         currentType = 'podcast';
         trackTitle.textContent = data.title || 'Podcast';
         trackArtist.textContent = data.subtitle || '';
-        albumArt.src = data.image || '/logo192.png';
+        albumArt.src = data.image || '/icon.png';
         radioFrequency.classList.add('hidden');
         progressContainer.classList.remove('hidden');
         prevBtn.classList.remove('hidden');
@@ -576,9 +576,9 @@
         radioFrequency.textContent = `${frequency} MHz`;
         radioFrequency.classList.remove('hidden');
         // Show channel image in "Now Playing" section
-        nowPlayingImg.src = data.image || '/logo192.png';
+        nowPlayingImg.src = data.image || '/icon.png';
         // Album art starts with channel image, will be updated by fetchNowPlaying if song art is available
-        albumArt.src = data.image || '/logo192.png';
+        albumArt.src = data.image || '/icon.png';
         progressContainer.classList.add('hidden');
         prevBtn.classList.add('hidden');
         nextBtn.classList.add('hidden');
@@ -623,10 +623,10 @@
           if (song.art) {
             albumArt.src = song.art;
             albumArt.onerror = () => {
-              albumArt.src = currentChannel.image || '/logo192.png';
+              albumArt.src = currentChannel.image || '/icon.png';
             };
           } else {
-            albumArt.src = currentChannel.image || '/logo192.png';
+            albumArt.src = currentChannel.image || '/icon.png';
           }
 
           // Check for text overflow on track info

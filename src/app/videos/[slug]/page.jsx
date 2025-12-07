@@ -47,7 +47,7 @@ export async function generateMetadata({ params }) {
     }
 
     const description = video.description || `Watch ${video.title} by ${artistName} on KracRadio`;
-    const thumbnail = video.thumbnail_url || (video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg` : '/logo-og.png');
+    const thumbnail = video.thumbnail_url || (video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg` : '/icon.png');
     const videoUrl = `${siteUrl}/videos/${slug}`;
 
     return {

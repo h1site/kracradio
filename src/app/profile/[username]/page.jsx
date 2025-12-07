@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
     const description = profile.bio
       ? profile.bio.slice(0, 160) + (profile.bio.length > 160 ? '...' : '')
       : `Discover ${name} on KracRadio - ${profile.genre || 'Music'} artist${profile.country ? ` from ${profile.country}` : ''}`;
-    const avatar = profile.avatar_url || '/logo-og.png';
+    const avatar = profile.avatar_url || '/icon.png';
     const profileUrl = `${siteUrl}/profile/${username}`;
 
     // Collect social links for sameAs
