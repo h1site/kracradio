@@ -21,6 +21,7 @@ const STRINGS = {
     heroTitle: 'Vidéos',
     heroSubtitle: 'Les clips musicaux de notre communauté',
     noVideos: 'Aucune vidéo pour le moment',
+    noResults: 'Aucun résultat pour',
     loading: 'Chargement...',
     likes: 'likes',
     comments: 'commentaires',
@@ -31,6 +32,8 @@ const STRINGS = {
     by: 'par',
     submittedBy: 'Soumis par',
     loadMore: 'Charger plus',
+    searchPlaceholder: 'Rechercher une vidéo...',
+    clearSearch: 'Effacer',
   },
   en: {
     metaTitle: 'Videos — KracRadio',
@@ -39,6 +42,7 @@ const STRINGS = {
     heroTitle: 'Videos',
     heroSubtitle: 'Music videos from our community',
     noVideos: 'No videos yet',
+    noResults: 'No results for',
     loading: 'Loading...',
     likes: 'likes',
     comments: 'comments',
@@ -49,6 +53,8 @@ const STRINGS = {
     by: 'by',
     submittedBy: 'Submitted by',
     loadMore: 'Load more',
+    searchPlaceholder: 'Search videos...',
+    clearSearch: 'Clear',
   },
   es: {
     metaTitle: 'Videos — KracRadio',
@@ -57,6 +63,7 @@ const STRINGS = {
     heroTitle: 'Videos',
     heroSubtitle: 'Videos musicales de nuestra comunidad',
     noVideos: 'No hay videos todavía',
+    noResults: 'Sin resultados para',
     loading: 'Cargando...',
     likes: 'me gusta',
     comments: 'comentarios',
@@ -67,6 +74,8 @@ const STRINGS = {
     by: 'por',
     submittedBy: 'Enviado por',
     loadMore: 'Cargar más',
+    searchPlaceholder: 'Buscar videos...',
+    clearSearch: 'Borrar',
   },
 };
 
@@ -220,7 +229,9 @@ export default function Videos() {
   const [allVideos, setAllVideos] = useState([]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_LOAD);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const loaderRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const loadVideos = useCallback(async () => {
     try {
@@ -257,8 +268,24 @@ export default function Videos() {
     return () => observer.disconnect();
   }, [loading, visibleCount, allVideos.length]);
 
-  const visibleVideos = allVideos.slice(0, visibleCount);
-  const hasMore = visibleCount < allVideos.length;
+  // Filter videos based on search query
+  const filteredVideos = useMemo(() => {
+    if (!searchQuery.trim()) return allVideos;
+    const query = searchQuery.toLowerCase().trim();
+    return allVideos.filter(video =>
+      video.title?.toLowerCase().includes(query) ||
+      video.artist_name?.toLowerCase().includes(query) ||
+      video.description?.toLowerCase().includes(query)
+    );
+  }, [allVideos, searchQuery]);
+
+  const visibleVideos = filteredVideos.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredVideos.length;
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(INITIAL_LOAD);
+  }, [searchQuery]);
 
   return (
     <>
@@ -310,6 +337,43 @@ export default function Videos() {
               <p className="mt-4 max-w-3xl text-lg text-gray-200">
                 {L.heroSubtitle}
               </p>
+
+              {/* Search Bar */}
+              <div className="mt-6 max-w-xl">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={L.searchPlaceholder}
+                    className="w-full pl-12 pr-12 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        searchInputRef.current?.focus();
+                      }}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <p className="mt-2 text-sm text-gray-300">
+                    {filteredVideos.length} {filteredVideos.length === 1 ? 'video' : 'videos'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -322,6 +386,19 @@ export default function Videos() {
           ) : allVideos.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 dark:text-gray-400">{L.noVideos}</p>
+            </div>
+          ) : filteredVideos.length === 0 ? (
+            <div className="text-center py-20">
+              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p className="text-gray-500 dark:text-gray-400">{L.noResults} &quot;{searchQuery}&quot;</p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                {L.clearSearch}
+              </button>
             </div>
           ) : (
             <>

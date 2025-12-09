@@ -258,33 +258,66 @@ export default function VideoDetail() {
     }
   };
 
+  // Update document title immediately when video changes (for client-side navigation)
+  useEffect(() => {
+    if (video) {
+      const title = video.artist_name
+        ? `${video.title} - ${video.artist_name} | KracRadio`
+        : `${video.title} | KracRadio`;
+      document.title = title;
+      // Also update og:title for consistency
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', title);
+    } else if (loading) {
+      document.title = 'Loading... | KracRadio';
+    } else {
+      document.title = `${L.notFound} | KracRadio`;
+    }
+  }, [video, loading, L.notFound]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-red-500/20 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-red-500 rounded-full animate-spin"></div>
+      <>
+        <Seo
+          lang={lang}
+          title={L.loading}
+          description={L.metaDesc}
+          path={`/videos/${slug}`}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-black">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-red-500/20 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-red-500 rounded-full animate-spin"></div>
+            </div>
+            <span className="text-gray-400 text-sm tracking-wider uppercase">{L.loading}</span>
           </div>
-          <span className="text-gray-400 text-sm tracking-wider uppercase">{L.loading}</span>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!video) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">{L.notFound}</h1>
-          <button
-            onClick={() => router.push('/videos')}
-            className="px-6 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
-          >
-            {L.goBack}
-          </button>
+      <>
+        <Seo
+          lang={lang}
+          title={L.notFound}
+          description={L.metaDesc}
+          path={`/videos/${slug}`}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-black">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white mb-4">{L.notFound}</h1>
+            <button
+              onClick={() => router.push('/videos')}
+              className="px-6 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+            >
+              {L.goBack}
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

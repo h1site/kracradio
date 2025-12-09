@@ -79,42 +79,84 @@ async function generate(prompt, options = {}) {
   return data.response?.trim() || '';
 }
 
-// Enrichir description
-async function enrichDescription(title, currentDesc, genres) {
-  const prompt = `Tu es un rédacteur de descriptions de vidéos musicales pour KracRadio, une radio de musique caribéenne et du monde.
+// Enrichir description - Version SANS LLM pour éviter hallucinations
+function enrichDescription(title, currentDesc, genres) {
+  // Nettoyer le titre (enlever [Official Video], (HD), etc.)
+  const cleanTitle = title
+    .replace(/\[.*?\]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/official|video|clip|music|hd|4k|lyrics|audio|live/gi, '')
+    .trim();
 
-Écris une description engageante et optimisée SEO pour ce clip vidéo.
+  // Essayer d'extraire artiste et chanson (format: "Artiste - Chanson")
+  let artist = '';
+  let song = '';
 
-Titre de la vidéo: "${title}"
+  if (cleanTitle.includes(' - ')) {
+    const parts = cleanTitle.split(' - ');
+    artist = parts[0].trim();
+    song = parts.slice(1).join(' - ').trim();
+  } else if (cleanTitle.includes(' – ')) {
+    const parts = cleanTitle.split(' – ');
+    artist = parts[0].trim();
+    song = parts.slice(1).join(' – ').trim();
+  } else {
+    // Pas de séparateur, utiliser le titre complet
+    song = cleanTitle;
+  }
 
-Consignes:
-- Écris 2-3 paragraphes (150-200 mots au total)
-- Mentionne l'artiste et le titre de la chanson
-- Décris le style musical et l'ambiance de la vidéo
-- Utilise des mots-clés pertinents pour le référencement
-- N'utilise PAS de hashtags ni d'emojis
-- Écris UNIQUEMENT le texte de la description, sans titre
-- Écris en français
+  // Nettoyer les guillemets
+  song = song.replace(/^["']|["']$/g, '').trim();
+  artist = artist.replace(/^["']|["']$/g, '').trim();
 
-Description:`;
-
-  const response = await generate(prompt, { temperature: 0.8 });
-  return response.replace(/^["']|["']$/g, '').replace(/^Description:\s*/i, '');
+  // Générer la description
+  if (artist && song) {
+    return `Regardez le clip "${song}" de ${artist} sur KracRadio.`;
+  } else if (song) {
+    return `Regardez "${song}" sur KracRadio.`;
+  } else {
+    return `Regardez ce clip sur KracRadio.`;
+  }
 }
 
-// Traduire description
-async function translateDescription(description, targetLang) {
-  const langName = { en: 'English', es: 'Spanish' }[targetLang];
+// Traduire description - Version SANS LLM pour éviter les erreurs
+function translateDescription(description, targetLang) {
+  // Templates de traduction fixes
+  const templates = {
+    en: {
+      prefix: 'Watch the music video',
+      by: 'by',
+      on: 'on KracRadio.',
+      simple: 'Watch this video on KracRadio.',
+    },
+    es: {
+      prefix: 'Mira el video musical',
+      by: 'de',
+      on: 'en KracRadio.',
+      simple: 'Mira este video en KracRadio.',
+    },
+  };
 
-  const prompt = `Translate the following music video description to ${langName}. Keep the same tone and style. Return ONLY the translated text, nothing else.
+  const t = templates[targetLang];
+  if (!t) return description;
 
-Original (French):
-${description}
+  // Extraire le titre et l'artiste de la description FR
+  // Format: Regardez le clip "TITRE" de ARTISTE sur KracRadio.
+  const matchFull = description.match(/Regardez le clip "(.+?)" de (.+?) sur KracRadio\./);
+  if (matchFull) {
+    const [, song, artist] = matchFull;
+    return `${t.prefix} "${song}" ${t.by} ${artist} ${t.on}`;
+  }
 
-Translation in ${langName}:`;
+  // Format: Regardez "TITRE" sur KracRadio.
+  const matchSimple = description.match(/Regardez "(.+?)" sur KracRadio\./);
+  if (matchSimple) {
+    const [, song] = matchSimple;
+    return `${t.prefix} "${song}" ${t.on}`;
+  }
 
-  const response = await generate(prompt, { temperature: 0.3 });
-  return response.trim();
+  // Fallback
+  return t.simple;
 }
 
 // Traiter une vidéo
@@ -130,20 +172,20 @@ async function processVideo(video) {
   }
 
   try {
-    // 1. Enrichir en français
+    // 1. Générer description en français (sans LLM)
     console.log('   🇫🇷 Génération description FR...');
-    const descFr = await enrichDescription(video.title, video.description, '');
+    const descFr = enrichDescription(video.title, video.description, '');
     console.log(`   ✓ FR: ${descFr.substring(0, 80)}...`);
 
-    // 2. Traduire en anglais
+    // 2. Traduire en anglais (sans LLM)
     console.log('   🇬🇧 Traduction EN...');
-    const descEn = await translateDescription(descFr, 'en');
-    console.log(`   ✓ EN: ${descEn.substring(0, 80)}...`);
+    const descEn = translateDescription(descFr, 'en');
+    console.log(`   ✓ EN: ${descEn}`);
 
-    // 3. Traduire en espagnol
+    // 3. Traduire en espagnol (sans LLM)
     console.log('   🇪🇸 Traduction ES...');
-    const descEs = await translateDescription(descFr, 'es');
-    console.log(`   ✓ ES: ${descEs.substring(0, 80)}...`);
+    const descEs = translateDescription(descFr, 'es');
+    console.log(`   ✓ ES: ${descEs}`);
 
     if (DRY_RUN) {
       console.log('   🏃 Dry run - pas de sauvegarde');
