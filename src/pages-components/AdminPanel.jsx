@@ -119,6 +119,11 @@ const STRINGS = {
     uploadDisabled: 'Upload désactivé',
     savePodcastUploader: 'Enregistrer',
     removePodcastUploader: 'Retirer',
+    enrichAI: 'Enrichir avec IA',
+    enriching: 'Enrichissement...',
+    enrichSuccess: 'Description enrichie avec succès',
+    enrichError: 'Erreur d\'enrichissement',
+    ollamaNotAvailable: 'Ollama n\'est pas disponible. Lancez: ollama serve',
   },
   en: {
     title: 'Admin Panel',
@@ -229,6 +234,11 @@ const STRINGS = {
     uploadDisabled: 'Upload disabled',
     savePodcastUploader: 'Save',
     removePodcastUploader: 'Remove',
+    enrichAI: 'Enrich with AI',
+    enriching: 'Enriching...',
+    enrichSuccess: 'Description enriched successfully',
+    enrichError: 'Enrichment error',
+    ollamaNotAvailable: 'Ollama is not available. Run: ollama serve',
   },
   es: {
     title: 'Panel de Administración',
@@ -339,6 +349,11 @@ const STRINGS = {
     uploadDisabled: 'Upload desactivado',
     savePodcastUploader: 'Guardar',
     removePodcastUploader: 'Quitar',
+    enrichAI: 'Enriquecer con IA',
+    enriching: 'Enriqueciendo...',
+    enrichSuccess: 'Descripción enriquecida con éxito',
+    enrichError: 'Error de enriquecimiento',
+    ollamaNotAvailable: 'Ollama no está disponible. Ejecute: ollama serve',
   },
 };
 
@@ -390,6 +405,9 @@ export default function AdminPanel() {
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [authUsers, setAuthUsers] = useState([]); // All users from auth.users
+
+  // AI enrichment states
+  const [enrichingVideoId, setEnrichingVideoId] = useState(null);
 
   // Protection stricte: vérifier le rôle exactement (DOIT être avant les early returns)
   useEffect(() => {
@@ -1028,6 +1046,50 @@ export default function AdminPanel() {
     } catch (error) {
       console.error('Error deleting video:', error);
       setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  // Enrich video description with Ollama AI
+  const handleEnrichDescription = async (video) => {
+    setEnrichingVideoId(video.id);
+    try {
+      const res = await fetch('/api/ollama', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'enrich',
+          title: video.title,
+          description: video.description || '',
+          genres: video.genres || '',
+          language: lang,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || L.enrichError);
+      }
+
+      // Update video in database
+      const { error } = await supabase
+        .from('videos')
+        .update({
+          description: data.description,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', video.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setVideos(videos.map(v => v.id === video.id ? { ...v, description: data.description } : v));
+      setMessage({ type: 'success', text: L.enrichSuccess });
+    } catch (error) {
+      console.error('Error enriching video:', error);
+      setMessage({ type: 'error', text: error.message || L.enrichError });
+    } finally {
+      setEnrichingVideoId(null);
     }
   };
 
@@ -2074,6 +2136,14 @@ export default function AdminPanel() {
                             ✗ {L.reject}
                           </button>
                         )}
+                        <button
+                          onClick={() => handleEnrichDescription(video)}
+                          disabled={enrichingVideoId === video.id}
+                          className="rounded bg-purple-600 px-3 py-1 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={L.enrichAI}
+                        >
+                          {enrichingVideoId === video.id ? '⏳' : '✨'} {enrichingVideoId === video.id ? L.enriching : 'IA'}
+                        </button>
                         <button
                           onClick={() => handleDeleteVideo(video.id, video.title)}
                           className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
