@@ -1,13 +1,13 @@
 'use client';
 // src/pages/Dashboard.jsx
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
 import Seo from '../seo/Seo';
-import { supabase, listUserArticles, deleteArticleById, submitVideo, getUserVideos, deleteVideo, updateVideo, extractYouTubeId } from '../lib/supabase';
+import { supabase, listUserArticles, deleteArticleById, submitVideo, getUserVideos, deleteVideo, updateVideo } from '../lib/supabase';
 import { importAllUserPodcasts, importPodcastEpisodes } from '../utils/podcastRssParser';
 import MusicSubmissionsManager from '../components/MusicSubmissionsManager';
 
@@ -676,8 +676,8 @@ export default function Dashboard() {
 
   const handleSaveVideo = async (e) => {
     e.preventDefault();
-    if (!videoUrl || !videoTitle || videoGenres.length === 0) {
-      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs requis' });
+    if (!videoUrl) {
+      setMessage({ type: 'error', text: 'URL YouTube requise' });
       return;
     }
 
@@ -685,9 +685,9 @@ export default function Dashboard() {
     try {
       await submitVideo({
         youtubeUrl: videoUrl,
-        title: videoTitle,
-        description: videoDescription,
-        genres: videoGenres.join(', '),
+        title: videoTitle || null, // Will be fetched from YouTube if null
+        description: videoDescription || null,
+        genres: videoGenres.length > 0 ? videoGenres.join(', ') : null,
         userId: user.id
       });
       setMessage({ type: 'success', text: L.videoSubmitted });
@@ -889,7 +889,7 @@ export default function Dashboard() {
                   <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">{L.videoApprovalTime}</p>
                 </div>
 
-                {/* YouTube URL */}
+                {/* YouTube URL - Only required field */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     {L.youtubeUrl} *
@@ -902,90 +902,9 @@ export default function Dashboard() {
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition"
                     placeholder="https://www.youtube.com/watch?v=..."
                   />
-                </div>
-
-                {/* Video Title */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {L.videoTitle} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={videoTitle}
-                    onChange={(e) => setVideoTitle(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition"
-                    placeholder="Ex: Mon nouveau clip 2024"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {L.videoDescription}
-                  </label>
-                  <textarea
-                    value={videoDescription}
-                    onChange={(e) => setVideoDescription(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition resize-none"
-                    placeholder="Description de votre vidéo..."
-                  />
-                </div>
-
-                {/* Genres */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    {L.videoGenres} * ({videoGenres.length}/3)
-                  </label>
-
-                  {/* Selected genres */}
-                  {videoGenres.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {videoGenres.map((genre) => (
-                        <span
-                          key={genre}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-pink-600 text-white rounded text-xs"
-                        >
-                          {genre}
-                          <button
-                            type="button"
-                            onClick={() => setVideoGenres(videoGenres.filter(g => g !== genre))}
-                            className="hover:text-pink-200 transition-colors"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Genre selector */}
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && videoGenres.length < 3 && !videoGenres.includes(e.target.value)) {
-                        setVideoGenres([...videoGenres, e.target.value]);
-                      }
-                    }}
-                    disabled={videoGenres.length >= 3}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition disabled:opacity-50"
-                  >
-                    <option value="">{L.selectGenres}</option>
-                    {MUSIC_GENRES.map((category) => (
-                      <optgroup key={category.category} label={category.category}>
-                        {category.genres.map((genre) => (
-                          <option
-                            key={genre}
-                            value={genre}
-                            disabled={videoGenres.includes(genre)}
-                          >
-                            {genre}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {lang === 'fr' ? 'Le titre sera récupéré automatiquement depuis YouTube' : lang === 'es' ? 'El título se obtendrá automáticamente de YouTube' : 'Title will be fetched automatically from YouTube'}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
