@@ -1,18 +1,13 @@
 'use client';
 // src/pages/PodcastsNew.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { supabase } from '../lib/supabase';
-import {
-  FadeIn,
-  StaggerContainer,
-  StaggerItem,
-  motion
-} from '../components/animations';
+import { motion } from '../components/animations';
 
 const STRINGS = {
   fr: {
@@ -72,16 +67,34 @@ export default function Podcasts() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-      const { data, error } = await supabase
-        .from('podcasts_with_stats')
+      // Get podcasts from user_podcasts table
+      const { data: podcastsData, error: podcastsError } = await supabase
+        .from('user_podcasts')
         .select('*')
-        .order('latest_episode_date', { ascending: false, nullsFirst: false })
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
         .abortSignal(controller.signal);
 
       clearTimeout(timeoutId);
 
-      if (error) throw error;
-      setPodcasts(data || []);
+      if (podcastsError) throw podcastsError;
+
+      // Get episode counts for each podcast
+      const podcastsWithStats = await Promise.all(
+        (podcastsData || []).map(async (podcast) => {
+          const { count } = await supabase
+            .from('podcast_episodes')
+            .select('*', { count: 'exact', head: true })
+            .eq('podcast_id', podcast.id);
+
+          return {
+            ...podcast,
+            episode_count: count || 0,
+          };
+        })
+      );
+
+      setPodcasts(podcastsWithStats);
     } catch (error) {
       console.error('Error loading podcasts:', error);
       setPodcasts([]);
