@@ -30,13 +30,13 @@ export async function generateMetadata({ params }) {
   try {
     const { data: article, error: articleError } = await supabase
       .from('articles')
-      .select('title, content, cover_image, created_at, updated_at, user_id, status')
+      .select('title, content, cover_image, featured_image, created_at, updated_at, user_id, status')
       .eq('slug', slug)
-      .maybeSingle();
+      .eq('status', 'published')
+      .single();
 
-    console.log('generateMetadata - slug:', slug, 'article:', article?.title, 'status:', article?.status, 'error:', articleError);
-
-    if (!article || article.status !== 'published') {
+    if (articleError || !article) {
+      console.log('generateMetadata - slug:', slug, 'error:', articleError?.message);
       return {
         title: 'Article Not Found',
         description: 'The requested article could not be found.',
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }) {
     }
 
     const description = stripHtml(article.content, 160);
-    const ogImage = article.cover_image || '/icon.png';
+    const ogImage = article.featured_image || article.cover_image || '/icon.png';
     const articleUrl = `${siteUrl}/article/${slug}`;
 
     return {
