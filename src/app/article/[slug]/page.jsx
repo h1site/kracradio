@@ -28,14 +28,15 @@ export async function generateMetadata({ params }) {
   }
 
   try {
-    const { data: article } = await supabase
+    const { data: article, error: articleError } = await supabase
       .from('articles')
-      .select('title, content, cover_image, created_at, updated_at, user_id')
+      .select('title, content, cover_image, created_at, updated_at, user_id, status')
       .eq('slug', slug)
-      .eq('status', 'published')
-      .single();
+      .maybeSingle();
 
-    if (!article) {
+    console.log('generateMetadata - slug:', slug, 'article:', article?.title, 'status:', article?.status, 'error:', articleError);
+
+    if (!article || article.status !== 'published') {
       return {
         title: 'Article Not Found',
         description: 'The requested article could not be found.',
