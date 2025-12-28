@@ -673,6 +673,96 @@ motion.a = function MotionA({
   );
 };
 
+motion.h1 = function MotionH1({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <h1 className={className} style={style} {...domProps}>{children}</h1>;
+};
+
+motion.h2 = function MotionH2({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <h2 className={className} style={style} {...domProps}>{children}</h2>;
+};
+
+motion.h3 = function MotionH3({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <h3 className={className} style={style} {...domProps}>{children}</h3>;
+};
+
+motion.p = function MotionP({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <p className={className} style={style} {...domProps}>{children}</p>;
+};
+
+motion.section = function MotionSection({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <section className={className} style={style} {...domProps}>{children}</section>;
+};
+
+motion.article = function MotionArticle({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <article className={className} style={style} {...domProps}>{children}</article>;
+};
+
+motion.li = function MotionLi({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <li className={className} style={style} {...domProps}>{children}</li>;
+};
+
+motion.ul = function MotionUl({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <ul className={className} style={style} {...domProps}>{children}</ul>;
+};
+
+motion.img = function MotionImg({ className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <img className={className} style={style} {...domProps} />;
+};
+
+motion.nav = function MotionNav({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <nav className={className} style={style} {...domProps}>{children}</nav>;
+};
+
+motion.header = function MotionHeader({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <header className={className} style={style} {...domProps}>{children}</header>;
+};
+
+motion.footer = function MotionFooter({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <footer className={className} style={style} {...domProps}>{children}</footer>;
+};
+
+motion.aside = function MotionAside({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <aside className={className} style={style} {...domProps}>{children}</aside>;
+};
+
+motion.form = function MotionForm({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <form className={className} style={style} {...domProps}>{children}</form>;
+};
+
+motion.input = function MotionInput({ className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <input className={className} style={style} {...domProps} />;
+};
+
+motion.label = function MotionLabel({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <label className={className} style={style} {...domProps}>{children}</label>;
+};
+
+motion.svg = function MotionSvg({ children, className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <svg className={className} style={style} {...domProps}>{children}</svg>;
+};
+
+motion.path = function MotionPath({ className = '', style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <path className={className} style={style} {...domProps} />;
+};
+
 // AnimatePresence replacement - just renders children
 export function AnimatePresence({ children }) {
   return <>{children}</>;
