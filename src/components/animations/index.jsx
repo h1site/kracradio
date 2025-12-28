@@ -2,7 +2,7 @@
 // src/components/animations/index.jsx
 // CSS-based animations - No framer-motion dependency
 
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 // CSS styles for animations - inject once
 const animationStyles = `
@@ -640,7 +640,3 @@ motion.a = function MotionA({
 export function AnimatePresence({ children }) {
   return <>{children}</>;
 }
-
-// Re-export for compatibility
-export { React };
-import React from 'react';
