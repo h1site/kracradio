@@ -1,0 +1,415 @@
+/* KracRadio Component Styles */
+
+/* Section Container */
+.kracradio-section {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kracradio-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.kracradio-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.kracradio-header h3 svg {
+  color: #f472b6;
+}
+
+.kracradio-credit {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.kracradio-credit:hover {
+  color: #f472b6;
+  text-decoration: underline;
+}
+
+/* Channel Grid */
+.kracradio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.kracradio-grid-compact {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.kracradio-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.kracradio-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.kracradio-card.active {
+  border-color: var(--channel-color, #f472b6);
+  background: rgba(244, 114, 182, 0.15);
+}
+
+.kracradio-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.kracradio-card .kracradio-dot {
+  width: 16px;
+  height: 16px;
+}
+
+.kracradio-card-name {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: white;
+  line-height: 1.2;
+}
+
+.kracradio-card-desc {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  line-height: 1.2;
+}
+
+.kracradio-grid-compact .kracradio-card {
+  padding: 0.5rem 0.25rem;
+}
+
+.kracradio-grid-compact .kracradio-card-name {
+  font-size: 0.7rem;
+}
+
+/* Dropdown Container (in-game) */
+.kracradio-dropdown-container {
+  position: relative;
+}
+
+.kracradio-mini-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kracradio-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.kracradio-mini-btn svg {
+  font-size: 1.1rem;
+}
+
+.kracradio-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 200px;
+  background: rgba(15, 20, 41, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 1002;
+  max-height: 300px;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.kracradio-dropdown.kracradio-dropdown-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.kracradio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kracradio-option:last-child {
+  border-bottom: none;
+}
+
+.kracradio-option:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: white;
+}
+
+.kracradio-option.active {
+  background: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+}
+
+.kracradio-option-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Toggle Button */
+.kracradio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kracradio-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.kracradio-toggle.active {
+  background: rgba(244, 114, 182, 0.2);
+  border-color: rgba(244, 114, 182, 0.4);
+  color: #f472b6;
+}
+
+.kracradio-toggle svg {
+  font-size: 1.1rem;
+}
+
+.kracradio-toggle span {
+  font-weight: 500;
+}
+
+/* Now Playing Popup */
+.kracradio-now-playing {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, rgba(15, 20, 41, 0.95) 0%, rgba(26, 31, 58, 0.95) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  max-width: 280px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 114, 182, 0.2);
+  z-index: 1100;
+  backdrop-filter: blur(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.kracradio-now-playing-hidden {
+  opacity: 0;
+  transform: translateX(100px) scale(0.9);
+  pointer-events: none;
+}
+
+.kracradio-now-playing-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.kracradio-now-playing-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kracradio-now-playing-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.kracradio-now-playing-content {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.kracradio-now-playing-art {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.kracradio-now-playing-art-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+}
+
+.kracradio-now-playing-art-placeholder svg {
+  font-size: 1.5rem;
+}
+
+.kracradio-now-playing-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.kracradio-now-playing-channel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kracradio-now-playing-channel svg {
+  font-size: 0.8rem;
+}
+
+.kracradio-now-playing-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kracradio-now-playing-artist {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kracradio-now-playing-album {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Equalizer Animation */
+.kracradio-equalizer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kracradio-equalizer-bar {
+  width: 4px;
+  background: linear-gradient(to top, #f472b6, #a855f7);
+  border-radius: 2px;
+  animation: kracradio-equalizer 0.8s ease-in-out infinite;
+}
+
+.kracradio-equalizer-bar:nth-child(1) { height: 8px; }
+.kracradio-equalizer-bar:nth-child(2) { height: 12px; }
+.kracradio-equalizer-bar:nth-child(3) { height: 16px; }
+.kracradio-equalizer-bar:nth-child(4) { height: 10px; }
+.kracradio-equalizer-bar:nth-child(5) { height: 6px; }
+
+@keyframes kracradio-equalizer {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.4); }
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .kracradio-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kracradio-grid-compact {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kracradio-card {
+    padding: 0.6rem 0.4rem;
+  }
+
+  .kracradio-card-name {
+    font-size: 0.75rem;
+  }
+
+  .kracradio-now-playing {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+}
