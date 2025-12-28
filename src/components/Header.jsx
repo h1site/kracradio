@@ -1,6 +1,6 @@
 // src/components/Header.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '../i18n';
 import { useTheme } from '../context/ThemeContext';
@@ -9,7 +9,6 @@ import { useProfile } from '../hooks/useCommunity';
 import { useUnreadMessages } from '../hooks/useUnreadMessages';
 import { useUI } from '../context/UIContext';
 import MobileMenu from './MobileMenu';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
   const { t, lang, setLang } = useI18n();
@@ -21,6 +20,11 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
@@ -29,22 +33,40 @@ export default function Header() {
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-        className="fixed top-0 inset-x-0 z-50 bg-[#0a0a0a] text-white border-b border-white/5 shadow-lg"
+      <style>{`
+        @keyframes slideDown {
+          from { transform: translateY(-100%); }
+          to { transform: translateY(0); }
+        }
+        .header-animate {
+          animation: slideDown 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        }
+        .logo-hover {
+          transition: transform 0.2s ease;
+        }
+        .logo-hover:hover {
+          transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .dropdown-animate {
+          animation: fadeIn 0.15s ease-out forwards;
+        }
+      `}</style>
+
+      <header
+        className={`fixed top-0 inset-x-0 z-50 bg-[#0a0a0a] text-white border-b border-white/5 shadow-lg ${mounted ? 'header-animate' : ''}`}
       >
         {/* Desktop (≥1024px) */}
         <div className="hidden lg:flex w-full h-16 items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center">
-              <motion.img
+            <Link href="/" className="flex items-center logo-hover">
+              <img
                 src="/logo-white.png"
                 alt="Logo"
                 className="h-10 w-auto object-contain"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: 'spring', stiffness: 400 }}
               />
             </Link>
             {/* Menu button with chevron - only show when sidebar is closed */}
@@ -201,24 +223,14 @@ export default function Header() {
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
                   </button>
-                  <AnimatePresence>
-                    {showPlaylistMenu && (
+                  {showPlaylistMenu && (
                     <>
                       {/* Backdrop to close menu when clicking outside */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                      <div
                         className="fixed inset-0 z-[100]"
                         onClick={() => setShowPlaylistMenu(false)}
                       />
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[101]"
-                      >
+                      <div className="dropdown-animate absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[101]">
                         <Link
                           href="/liked-songs"
                           className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
@@ -240,10 +252,9 @@ export default function Header() {
                           </svg>
                           <span className="text-sm font-medium">Playlist Vidéos</span>
                         </Link>
-                      </motion.div>
+                      </div>
                     </>
                   )}
-                  </AnimatePresence>
                 </div>
                 {/* Settings */}
                 <Link
@@ -362,7 +373,7 @@ export default function Header() {
             )}
           </button>
         </div>
-      </motion.header>
+      </header>
 
       {/* Menu Mobile overlay */}
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />

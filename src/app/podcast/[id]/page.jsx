@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import Script from 'next/script';
 import PodcastDetail from '../../../pages-components/PodcastDetail';
+import { podcastSeriesSchema, breadcrumbSchema } from '../../../seo/schemas';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
@@ -8,6 +10,41 @@ function getSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
   return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Fetch podcast data server-side for structured data
+async function getPodcastData(id) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+
+  try {
+    // Try to get from user_podcasts first (new table)
+    let podcast = null;
+    const { data: userPodcast } = await supabase
+      .from('user_podcasts')
+      .select('*')
+      .eq('id', id)
+      .eq('is_active', true)
+      .single();
+
+    if (userPodcast) {
+      podcast = userPodcast;
+    } else {
+      // Fallback to legacy podcasts table
+      const { data: legacyPodcast } = await supabase
+        .from('podcasts')
+        .select('*')
+        .eq('id', id)
+        .eq('status', 'approved')
+        .single();
+      podcast = legacyPodcast;
+    }
+
+    return podcast;
+  } catch (error) {
+    console.error('Error fetching podcast:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }) {
@@ -19,12 +56,35 @@ export async function generateMetadata({ params }) {
   }
 
   try {
-    const { data: podcast } = await supabase
-      .from('podcasts')
-      .select('title, description, cover_image, host_name, rss_feed, created_at, updated_at')
+    // Try user_podcasts first
+    let podcast = null;
+    const { data: userPodcast } = await supabase
+      .from('user_podcasts')
+      .select('title, description, image_url, author, feed_url, created_at, updated_at')
       .eq('id', id)
-      .eq('status', 'approved')
+      .eq('is_active', true)
       .single();
+
+    if (userPodcast) {
+      podcast = {
+        title: userPodcast.title,
+        description: userPodcast.description,
+        cover_image: userPodcast.image_url,
+        host_name: userPodcast.author,
+        rss_feed: userPodcast.feed_url,
+        created_at: userPodcast.created_at,
+        updated_at: userPodcast.updated_at,
+      };
+    } else {
+      // Fallback to legacy podcasts table
+      const { data: legacyPodcast } = await supabase
+        .from('podcasts')
+        .select('title, description, cover_image, host_name, rss_feed, created_at, updated_at')
+        .eq('id', id)
+        .eq('status', 'approved')
+        .single();
+      podcast = legacyPodcast;
+    }
 
     if (!podcast) {
       return {
@@ -89,6 +149,42 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function PodcastDetailPage() {
-  return <PodcastDetail />;
+export default async function PodcastDetailPage({ params }) {
+  const { id } = await params;
+  const podcast = await getPodcastData(id);
+
+  // Generate JSON-LD structured data
+  let jsonLdData = [];
+
+  if (podcast) {
+    // PodcastSeries schema
+    const podcastSchema = podcastSeriesSchema(podcast);
+    if (podcastSchema) {
+      jsonLdData.push(podcastSchema);
+    }
+  }
+
+  // Breadcrumb
+  jsonLdData.push(breadcrumbSchema([
+    { name: 'Accueil', url: '/' },
+    { name: 'Podcasts', url: '/podcasts' },
+    { name: podcast?.title || 'Podcast' }
+  ]));
+
+  return (
+    <>
+      {/* JSON-LD structured data for SEO */}
+      {jsonLdData.map((data, index) => (
+        <Script
+          key={index}
+          id={`podcast-jsonld-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+        />
+      ))}
+
+      {/* Client component for interactive podcast player */}
+      <PodcastDetail />
+    </>
+  );
 }

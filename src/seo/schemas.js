@@ -321,6 +321,33 @@ export function eventSchema(event) {
 }
 
 // =============================================================================
+// VIDEO OBJECT SCHEMA
+// =============================================================================
+export function videoObjectSchema(video) {
+  if (!video) return null;
+
+  const artistName = video.submitter?.username || video.submitter?.display_name || video.artist_name || 'KracRadio';
+  const thumbnail = video.thumbnail_url || (video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg` : `${SITE_URL}/icon.png`);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    '@id': absoluteUrl(`/videos/${video.slug}#video`),
+    name: video.title,
+    description: video.description || `Watch ${video.title} on ${siteName}`,
+    thumbnailUrl: thumbnail,
+    uploadDate: video.created_at,
+    contentUrl: video.youtube_id ? `https://www.youtube.com/watch?v=${video.youtube_id}` : undefined,
+    embedUrl: video.youtube_id ? `https://www.youtube.com/embed/${video.youtube_id}` : undefined,
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    author: {
+      '@type': 'Person',
+      name: artistName,
+    },
+  };
+}
+
+// =============================================================================
 // MUSIC PLAYLIST SCHEMA (for charts)
 // =============================================================================
 export function musicPlaylistSchema(name, description, tracks, channelKey) {

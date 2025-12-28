@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import Script from 'next/script';
 import VideoDetail from '../../../pages-components/VideoDetail';
+import { videoObjectSchema, breadcrumbSchema } from '../../../seo/schemas';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kracradio.com';
 
@@ -8,6 +10,40 @@ function getSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
   return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Fetch video data server-side for structured data
+async function getVideoData(slug) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+
+  try {
+    const { data: video } = await supabase
+      .from('videos')
+      .select('*')
+      .eq('slug', slug)
+      .eq('status', 'approved')
+      .single();
+
+    if (!video) return null;
+
+    // Fetch submitter info
+    if (video.submitter_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, display_name, artist_name, avatar_url')
+        .eq('id', video.submitter_id)
+        .single();
+      if (profile) {
+        video.submitter = profile;
+      }
+    }
+
+    return video;
+  } catch (error) {
+    console.error('Error fetching video:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }) {
@@ -103,6 +139,42 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function VideoDetailPage() {
-  return <VideoDetail />;
+export default async function VideoDetailPage({ params }) {
+  const { slug } = await params;
+  const video = await getVideoData(slug);
+
+  // Generate JSON-LD structured data
+  let jsonLdData = [];
+
+  if (video) {
+    // VideoObject schema
+    const videoSchema = videoObjectSchema(video);
+    if (videoSchema) {
+      jsonLdData.push(videoSchema);
+    }
+  }
+
+  // Breadcrumb
+  jsonLdData.push(breadcrumbSchema([
+    { name: 'Accueil', url: '/' },
+    { name: 'Videos', url: '/videos' },
+    { name: video?.title || 'Video' }
+  ]));
+
+  return (
+    <>
+      {/* JSON-LD structured data for SEO */}
+      {jsonLdData.map((data, index) => (
+        <Script
+          key={index}
+          id={`video-jsonld-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+        />
+      ))}
+
+      {/* Client component for interactive video player */}
+      <VideoDetail />
+    </>
+  );
 }

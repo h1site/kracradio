@@ -1,7 +1,139 @@
 'use client';
 // src/components/animations/index.jsx
-import { motion, useInView, useAnimation, AnimatePresence } from 'framer-motion';
+// CSS-based animations - No framer-motion dependency
+
 import { useRef, useEffect, useState } from 'react';
+
+// CSS styles for animations - inject once
+const animationStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-100px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(100px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-100px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(var(--pulse-scale, 1.05)); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(calc(var(--float-y, 10px) * -1)); }
+    50% { transform: translateY(var(--float-y, 10px)); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+  }
+
+  .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+  .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+  .animate-fade-in-down { animation: fadeInDown 0.5s ease-out forwards; }
+  .animate-fade-in-left { animation: fadeInLeft 0.5s ease-out forwards; }
+  .animate-fade-in-right { animation: fadeInRight 0.5s ease-out forwards; }
+  .animate-scale-in { animation: scaleIn 0.4s ease-out forwards; }
+  .animate-slide-in-left { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+  .animate-slide-in-right { animation: slideInRight 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+  .animate-slide-in-up { animation: slideInUp 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+  .animate-slide-in-down { animation: slideInDown 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+  .animate-pulse-custom { animation: pulse var(--pulse-duration, 2s) ease-in-out infinite; }
+  .animate-float { animation: float var(--float-duration, 3s) ease-in-out infinite; }
+  .animate-shake { animation: shake 0.5s ease-in-out; }
+
+  .hover-scale { transition: transform 0.2s ease; }
+  .hover-scale:hover { transform: scale(1.02); }
+  .hover-scale:active { transform: scale(0.98); }
+
+  .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .hover-lift:hover { transform: translateY(-5px) scale(1.02); }
+
+  .stagger-item { opacity: 0; }
+  .stagger-item.animate { animation: fadeInUp 0.4s ease-out forwards; }
+`;
+
+// Inject styles once
+let stylesInjected = false;
+function injectStyles() {
+  if (typeof document !== 'undefined' && !stylesInjected) {
+    const style = document.createElement('style');
+    style.textContent = animationStyles;
+    document.head.appendChild(style);
+    stylesInjected = true;
+  }
+}
+
+// Hook to observe when element is in view
+function useInView(ref, options = {}) {
+  const [isInView, setIsInView] = useState(false);
+  const { once = true, margin = '-50px' } = options;
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          if (once) observer.disconnect();
+        } else if (!once) {
+          setIsInView(false);
+        }
+      },
+      { rootMargin: margin }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref, once, margin]);
+
+  return isInView;
+}
 
 // Fade In animation wrapper
 export function FadeIn({
@@ -13,30 +145,30 @@ export function FadeIn({
   once = true
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once, margin: '-50px' });
+  const isInView = useInView(ref, { once });
 
-  const directionOffset = {
-    up: { y: 40 },
-    down: { y: -40 },
-    left: { x: 40 },
-    right: { x: -40 },
-  };
+  useEffect(() => {
+    injectStyles();
+  }, []);
 
-  const initial = {
-    opacity: 0,
-    ...(direction ? directionOffset[direction] : {}),
-  };
+  const animationClass = direction
+    ? `animate-fade-in-${direction}`
+    : 'animate-fade-in';
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={initial}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : initial}
-      transition={{ duration, delay, ease: 'easeOut' }}
       className={className}
+      style={{
+        opacity: isInView ? undefined : 0,
+        animationDelay: `${delay}s`,
+        animationDuration: `${duration}s`,
+      }}
     >
-      {children}
-    </motion.div>
+      <div className={isInView ? animationClass : ''} style={{ animationDelay: `${delay}s`, animationDuration: `${duration}s` }}>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -48,8 +180,12 @@ export function StaggerContainer({
   className = ''
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { once: true });
   const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    injectStyles();
+  }, []);
 
   useEffect(() => {
     if (isInView && !hasAnimated) {
@@ -58,24 +194,18 @@ export function StaggerContainer({
   }, [isInView, hasAnimated]);
 
   return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={hasAnimated ? 'visible' : 'hidden'}
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            delayChildren: delay,
-            staggerChildren: staggerDelay,
+    <div ref={ref} className={className}>
+      {React.Children.map(children, (child, index) => {
+        if (!React.isValidElement(child)) return child;
+        return React.cloneElement(child, {
+          style: {
+            ...child.props.style,
+            animationDelay: `${delay + index * staggerDelay}s`,
           },
-        },
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+          'data-animate': hasAnimated ? 'true' : 'false',
+        });
+      })}
+    </div>
   );
 }
 
@@ -85,47 +215,69 @@ export function StaggerItem({
   className = '',
   direction = 'up'
 }) {
-  const directionVariants = {
-    up: { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } },
-    down: { hidden: { opacity: 0, y: -30 }, visible: { opacity: 1, y: 0 } },
-    left: { hidden: { opacity: 0, x: 30 }, visible: { opacity: 1, x: 0 } },
-    right: { hidden: { opacity: 0, x: -30 }, visible: { opacity: 1, x: 0 } },
-    scale: { hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } },
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  const directionClass = {
+    up: 'animate-fade-in-up',
+    down: 'animate-fade-in-down',
+    left: 'animate-fade-in-left',
+    right: 'animate-fade-in-right',
+    scale: 'animate-scale-in',
   };
 
   return (
-    <motion.div
-      variants={directionVariants[direction]}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={className}
+    <div
+      className={`stagger-item ${className}`}
+      style={{ opacity: 0 }}
+      ref={(el) => {
+        if (el) {
+          const parent = el.closest('[data-animate]');
+          if (parent?.getAttribute('data-animate') === 'true') {
+            el.classList.add(directionClass[direction] || 'animate-fade-in-up');
+            el.style.opacity = '';
+          } else {
+            // Set up mutation observer to watch for parent animation
+            const observer = new MutationObserver(() => {
+              if (parent?.getAttribute('data-animate') === 'true') {
+                el.classList.add(directionClass[direction] || 'animate-fade-in-up');
+                el.style.opacity = '';
+                observer.disconnect();
+              }
+            });
+            if (parent) {
+              observer.observe(parent, { attributes: true });
+            }
+          }
+        }
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Scale on hover
+// Scale on hover - now uses CSS only
 export function ScaleOnHover({
   children,
   scale = 1.05,
   className = '',
   as = 'div'
 }) {
-  const Component = motion[as] || motion.div;
+  const Component = as;
 
   return (
     <Component
-      whileHover={{ scale }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      className={className}
+      className={`hover-scale ${className}`}
+      style={{ '--hover-scale': scale }}
     >
       {children}
     </Component>
   );
 }
 
-// Card with hover effects
+// Card with hover effects - CSS only
 export function AnimatedCard({
   children,
   className = '',
@@ -134,22 +286,17 @@ export function AnimatedCard({
   onClick
 }) {
   return (
-    <motion.div
-      whileHover={{
-        scale: hoverScale,
-        y: hoverY,
-        transition: { duration: 0.2 }
-      }}
-      whileTap={{ scale: 0.98 }}
-      className={className}
+    <div
+      className={`hover-lift ${className}`}
       onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : undefined }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Animated button
+// Animated button - CSS only
 export function AnimatedButton({
   children,
   className = '',
@@ -158,17 +305,14 @@ export function AnimatedButton({
   type = 'button'
 }) {
   return (
-    <motion.button
+    <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      className={className}
+      className={`hover-scale ${className}`}
     >
       {children}
-    </motion.button>
+    </button>
   );
 }
 
@@ -182,46 +326,42 @@ export function SlideIn({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
-  const variants = {
-    left: { initial: { x: -100, opacity: 0 }, animate: { x: 0, opacity: 1 } },
-    right: { initial: { x: 100, opacity: 0 }, animate: { x: 0, opacity: 1 } },
-    up: { initial: { y: 100, opacity: 0 }, animate: { y: 0, opacity: 1 } },
-    down: { initial: { y: -100, opacity: 0 }, animate: { y: 0, opacity: 1 } },
-  };
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  const animationClass = `animate-slide-in-${direction}`;
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={variants[direction].initial}
-      animate={isInView ? variants[direction].animate : variants[direction].initial}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
+      style={{ opacity: isInView ? undefined : 0 }}
     >
-      {children}
-    </motion.div>
+      <div
+        className={isInView ? animationClass : ''}
+        style={{ animationDelay: `${delay}s` }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 
-// Parallax scroll effect
+// Parallax scroll effect - simplified CSS version
 export function ParallaxScroll({
   children,
   speed = 0.5,
   className = ''
 }) {
   return (
-    <motion.div
-      initial={{ y: 0 }}
-      whileInView={{ y: 0 }}
-      viewport={{ once: false }}
-      style={{ willChange: 'transform' }}
-      className={className}
-    >
+    <div className={className} style={{ willChange: 'transform' }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Text reveal animation (letter by letter)
+// Text reveal animation - simplified CSS version
 export function TextReveal({
   text,
   className = '',
@@ -231,88 +371,74 @@ export function TextReveal({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: delay,
-        staggerChildren: staggerDelay,
-      },
-    },
-  };
-
-  const letterVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <motion.span
-      ref={ref}
-      variants={containerVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      className={className}
-      aria-label={text}
-    >
+    <span ref={ref} className={className} aria-label={text}>
       {text.split('').map((char, index) => (
-        <motion.span
+        <span
           key={index}
-          variants={letterVariants}
-          style={{ display: 'inline-block' }}
+          style={{
+            display: 'inline-block',
+            opacity: isInView ? 1 : 0,
+            transform: isInView ? 'translateY(0)' : 'translateY(20px)',
+            transition: `opacity 0.3s ease ${delay + index * staggerDelay}s, transform 0.3s ease ${delay + index * staggerDelay}s`,
+          }}
         >
           {char === ' ' ? '\u00A0' : char}
-        </motion.span>
+        </span>
       ))}
-    </motion.span>
+    </span>
   );
 }
 
-// Pulse animation
+// Pulse animation - CSS only
 export function Pulse({
   children,
   className = '',
   scale = 1.05,
   duration = 2
 }) {
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
   return (
-    <motion.div
-      animate={{
-        scale: [1, scale, 1],
+    <div
+      className={`animate-pulse-custom ${className}`}
+      style={{
+        '--pulse-scale': scale,
+        '--pulse-duration': `${duration}s`
       }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        ease: 'easeInOut'
-      }}
-      className={className}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Glow effect on hover
+// Glow effect on hover - CSS only
 export function GlowOnHover({
   children,
   className = '',
   glowColor = 'rgba(239, 68, 68, 0.5)'
 }) {
   return (
-    <motion.div
-      whileHover={{
-        boxShadow: `0 0 30px ${glowColor}`,
-      }}
-      transition={{ duration: 0.3 }}
+    <div
       className={className}
+      style={{
+        transition: 'box-shadow 0.3s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = `0 0 30px ${glowColor}`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '';
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Counter animation
+// Counter animation - CSS only
 export function AnimatedCounter({
   value,
   duration = 2,
@@ -320,41 +446,11 @@ export function AnimatedCounter({
 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
-  const controls = useAnimation();
-
-  useEffect(() => {
-    if (isInView) {
-      controls.start({
-        opacity: 1,
-        transition: { duration: 0.5 },
-      });
-    }
-  }, [isInView, controls]);
-
-  return (
-    <motion.span
-      ref={ref}
-      initial={{ opacity: 0 }}
-      animate={controls}
-      className={className}
-    >
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-      >
-        {isInView && (
-          <CountUp end={value} duration={duration} />
-        )}
-      </motion.span>
-    </motion.span>
-  );
-}
-
-// Simple count up component
-function CountUp({ end, duration }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    if (!isInView) return;
+
     let startTime;
     let animationFrame;
 
@@ -362,7 +458,7 @@ function CountUp({ end, duration }) {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
 
-      setCount(Math.floor(progress * end));
+      setCount(Math.floor(progress * value));
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
@@ -372,84 +468,179 @@ function CountUp({ end, duration }) {
     animationFrame = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
+  }, [isInView, value, duration]);
 
-  return count;
-}
-
-// Page transition wrapper
-export function PageTransition({ children }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      {children}
-    </motion.div>
+    <span ref={ref} className={className}>
+      {count}
+    </span>
   );
 }
 
-// Rotate on hover
+// Page transition wrapper - simplified
+export function PageTransition({ children }) {
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  return (
+    <div className="animate-fade-in-up">
+      {children}
+    </div>
+  );
+}
+
+// Rotate on hover - CSS only
 export function RotateOnHover({
   children,
   degrees = 5,
   className = ''
 }) {
   return (
-    <motion.div
-      whileHover={{ rotate: degrees }}
-      transition={{ type: 'spring', stiffness: 300 }}
+    <div
       className={className}
+      style={{ transition: 'transform 0.3s ease' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = `rotate(${degrees}deg)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = '';
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Shake animation (for errors, etc.)
+// Shake animation - CSS only
 export function Shake({
   children,
   trigger = false,
   className = ''
 }) {
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
   return (
-    <motion.div
-      animate={trigger ? {
-        x: [0, -10, 10, -10, 10, 0],
-        transition: { duration: 0.5 }
-      } : {}}
-      className={className}
-    >
+    <div className={`${trigger ? 'animate-shake' : ''} ${className}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Floating animation
+// Floating animation - CSS only
 export function Float({
   children,
   className = '',
   y = 10,
   duration = 3
 }) {
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
   return (
-    <motion.div
-      animate={{
-        y: [-y, y, -y],
+    <div
+      className={`animate-float ${className}`}
+      style={{
+        '--float-y': `${y}px`,
+        '--float-duration': `${duration}s`
       }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        ease: 'easeInOut'
-      }}
-      className={className}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Export AnimatePresence for page transitions
-export { AnimatePresence, motion };
+// Simple motion div replacement - just renders children with optional className
+export function motion({ children, className, ...props }) {
+  return <div className={className} {...props}>{children}</div>;
+}
+
+// Add common element types to motion
+motion.div = function MotionDiv({
+  children,
+  className = '',
+  initial,
+  animate,
+  transition,
+  whileHover,
+  whileTap,
+  variants,
+  ...props
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Convert whileHover to CSS
+  const hoverStyles = whileHover ? {
+    transform: [
+      whileHover.scale ? `scale(${whileHover.scale})` : '',
+      whileHover.y ? `translateY(${whileHover.y}px)` : '',
+      whileHover.x ? `translateX(${whileHover.x}px)` : '',
+      whileHover.rotate ? `rotate(${whileHover.rotate}deg)` : '',
+    ].filter(Boolean).join(' ') || undefined,
+  } : {};
+
+  return (
+    <div
+      className={className}
+      style={{
+        transition: 'transform 0.2s ease, opacity 0.3s ease',
+        ...(isHovered ? hoverStyles : {}),
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+motion.span = function MotionSpan({ children, className, ...props }) {
+  return <span className={className} {...props}>{children}</span>;
+};
+
+motion.button = function MotionButton({
+  children,
+  className = '',
+  whileHover,
+  whileTap,
+  ...props
+}) {
+  return (
+    <button
+      className={`hover-scale ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+motion.a = function MotionA({
+  children,
+  className = '',
+  whileHover,
+  whileTap,
+  ...props
+}) {
+  return (
+    <a
+      className={`hover-scale ${className}`}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+};
+
+// AnimatePresence replacement - just renders children
+export function AnimatePresence({ children }) {
+  return <>{children}</>;
+}
+
+// Re-export for compatibility
+export { React };
+import React from 'react';
