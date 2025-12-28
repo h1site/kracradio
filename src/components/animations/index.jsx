@@ -558,6 +558,19 @@ export function motion({ children, className, ...props }) {
   return <div className={className} {...props}>{children}</div>;
 }
 
+// Helper to filter out framer-motion specific props
+function filterMotionProps(props) {
+  const {
+    initial, animate, exit, transition, variants,
+    whileHover, whileTap, whileFocus, whileDrag, whileInView,
+    drag, dragConstraints, dragElastic, dragMomentum,
+    layout, layoutId, onAnimationStart, onAnimationComplete,
+    onDrag, onDragStart, onDragEnd, onPan, onPanStart, onPanEnd,
+    ...domProps
+  } = props;
+  return domProps;
+}
+
 // Add common element types to motion
 motion.div = function MotionDiv({
   children,
@@ -568,9 +581,11 @@ motion.div = function MotionDiv({
   whileHover,
   whileTap,
   variants,
+  style,
   ...props
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   // Convert whileHover to CSS
   const hoverStyles = whileHover ? {
@@ -582,24 +597,40 @@ motion.div = function MotionDiv({
     ].filter(Boolean).join(' ') || undefined,
   } : {};
 
+  // Convert whileTap to CSS
+  const tapStyles = whileTap ? {
+    transform: [
+      whileTap.scale ? `scale(${whileTap.scale})` : '',
+      whileTap.y ? `translateY(${whileTap.y}px)` : '',
+      whileTap.x ? `translateX(${whileTap.x}px)` : '',
+      whileTap.rotate ? `rotate(${whileTap.rotate}deg)` : '',
+    ].filter(Boolean).join(' ') || undefined,
+  } : {};
+
+  const domProps = filterMotionProps(props);
+
   return (
     <div
       className={className}
       style={{
+        ...style,
         transition: 'transform 0.2s ease, opacity 0.3s ease',
-        ...(isHovered ? hoverStyles : {}),
+        ...(isPressed ? tapStyles : isHovered ? hoverStyles : {}),
       }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      {...props}
+      onMouseLeave={() => { setIsHovered(false); setIsPressed(false); }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      {...domProps}
     >
       {children}
     </div>
   );
 };
 
-motion.span = function MotionSpan({ children, className, ...props }) {
-  return <span className={className} {...props}>{children}</span>;
+motion.span = function MotionSpan({ children, className, style, ...props }) {
+  const domProps = filterMotionProps(props);
+  return <span className={className} style={style} {...domProps}>{children}</span>;
 };
 
 motion.button = function MotionButton({
@@ -607,12 +638,15 @@ motion.button = function MotionButton({
   className = '',
   whileHover,
   whileTap,
+  style,
   ...props
 }) {
+  const domProps = filterMotionProps(props);
   return (
     <button
       className={`hover-scale ${className}`}
-      {...props}
+      style={style}
+      {...domProps}
     >
       {children}
     </button>
@@ -624,12 +658,15 @@ motion.a = function MotionA({
   className = '',
   whileHover,
   whileTap,
+  style,
   ...props
 }) {
+  const domProps = filterMotionProps(props);
   return (
     <a
       className={`hover-scale ${className}`}
-      {...props}
+      style={style}
+      {...domProps}
     >
       {children}
     </a>
