@@ -9,6 +9,8 @@ import { NotificationProvider } from '../context/NotificationContext';
 import { LikedSongsProvider } from '../context/LikedSongsContext';
 import { PlaylistProvider } from '../context/PlaylistContext';
 import { NowPlayingProvider } from '../context/NowPlayingContext';
+import { CartProvider } from '../context/CartContext';
+import CartDrawer from '../components/store/CartDrawer';
 
 export default function Providers({ children }) {
   return (
@@ -21,7 +23,10 @@ export default function Providers({ children }) {
                 <LikedSongsProvider>
                   <PlaylistProvider>
                     <NowPlayingProvider>
-                      {children}
+                      <CartProvider>
+                        {children}
+                        <CartDrawer />
+                      </CartProvider>
                     </NowPlayingProvider>
                   </PlaylistProvider>
                 </LikedSongsProvider>
