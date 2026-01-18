@@ -24,11 +24,20 @@ function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [commentsCount, setCommentsCount] = useState(post.comments_count || 0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track mount state to avoid hydration mismatch with dates
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const author = post.author;
   const isOwner = currentUser?.id === post.user_id;
 
   const formatDate = (dateString) => {
+    // Return placeholder during SSR to avoid hydration mismatch
+    if (!isMounted) return '...';
+
     const date = new Date(dateString);
     const now = new Date();
     const diff = now - date;

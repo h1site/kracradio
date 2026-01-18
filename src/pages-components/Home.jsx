@@ -251,6 +251,12 @@ export default function Home() {
     loadStoreProducts();
   }, []);
 
+  // Track if component is mounted to avoid hydration mismatch
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const segments = useMemo(() => {
     const arr = (daily || [])
       .map((it, idx) => {
@@ -269,6 +275,10 @@ export default function Home() {
   }, [kracImage]);
 
   const { currentSeg, nextSeg } = useMemo(() => {
+    // Return null during SSR to avoid hydration mismatch
+    if (!isMounted) {
+      return { currentSeg: null, nextSeg: null };
+    }
     const now = Date.now();
     let cur = null;
     let nxt = null;
@@ -285,7 +295,7 @@ export default function Home() {
       nxt = after || segments[0];
     }
     return { currentSeg: cur, nextSeg: nxt };
-  }, [segments]);
+  }, [segments, isMounted]);
 
   const isKracPlaying = playing && current?.key === KRAC_KEY;
 
@@ -630,6 +640,8 @@ export default function Home() {
               const author = post.author;
               const profileLink = author?.artist_slug ? `/profile/${author.artist_slug}` : post.user_id ? `/profile/${post.user_id}` : '#';
               const getRelativeTime = (dateString) => {
+                // Return placeholder during SSR to avoid hydration mismatch
+                if (!isMounted) return '...';
                 const diff = Date.now() - new Date(dateString).getTime();
                 const minutes = Math.floor(diff / 60000);
                 const hours = Math.floor(diff / 3600000);
