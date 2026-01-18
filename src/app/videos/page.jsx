@@ -17,39 +17,35 @@ function getSupabaseClient() {
 // Fetch approved videos server-side
 async function getApprovedVideos() {
   const supabase = getSupabaseClient();
-  if (!supabase) return [];
+  if (!supabase) {
+    console.log('[Videos SSR] No supabase client available');
+    return [];
+  }
 
   try {
+    console.log('[Videos SSR] Fetching approved videos...');
     const { data: videos, error } = await supabase
       .from('videos')
-      .select(`
-        id,
-        title,
-        description,
-        youtube_id,
-        thumbnail_url,
-        slug,
-        artist_name,
-        submitter_id,
-        created_at
-      `)
+      .select('*')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
+    console.log('[Videos SSR] Result:', { count: videos?.length, error: error?.message });
+
     if (error || !videos) {
-      console.error('Error fetching videos:', error);
+      console.error('[Videos SSR] Error fetching videos:', error);
       return [];
     }
 
-    // Get submitter info
-    const submitterIds = [...new Set(videos.map(v => v.submitter_id).filter(Boolean))];
+    // Get submitter info - use user_id field
+    const userIds = [...new Set(videos.map(v => v.user_id).filter(Boolean))];
 
     let submitterMap = {};
-    if (submitterIds.length > 0) {
+    if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role')
-        .in('id', submitterIds);
+        .in('id', userIds);
 
       if (profiles) {
         profiles.forEach(p => {
@@ -60,10 +56,10 @@ async function getApprovedVideos() {
 
     return videos.map(video => ({
       ...video,
-      submitter: submitterMap[video.submitter_id] || null
+      submitter: submitterMap[video.user_id] || null
     }));
   } catch (error) {
-    console.error('Failed to load videos:', error);
+    console.error('[Videos SSR] Failed to load videos:', error);
     return [];
   }
 }
