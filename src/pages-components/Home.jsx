@@ -91,12 +91,15 @@ export default function Home() {
   // Charger les 4 derniers blogs
   useEffect(() => {
     const loadLatestBlogs = async () => {
-      const { data } = await supabase
+      console.log('[Home] Loading latest articles...');
+      const { data, error } = await supabase
         .from('articles')
         .select('id, slug, title, excerpt, content, cover_url, featured_image, user_id, created_at')
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(4);
+
+      console.log('[Home] Articles result:', { count: data?.length, error: error?.message });
 
       if (data && data.length > 0) {
         // Charger les auteurs avec leur avatar
@@ -191,13 +194,16 @@ export default function Home() {
   // Charger les 5 derniers posts du feed
   useEffect(() => {
     const loadLatestPosts = async () => {
-      const { data: postsData } = await supabase
+      console.log('[Home] Loading latest posts...');
+      const { data: postsData, error } = await supabase
         .from('posts')
         .select('*')
         .is('deleted_at', null)
         .is('reply_to_id', null)
         .order('created_at', { ascending: false })
         .limit(5);
+
+      console.log('[Home] Posts result:', { count: postsData?.length, error: error?.message });
 
       if (postsData && postsData.length > 0) {
         const userIds = [...new Set(postsData.map(p => p.user_id))];
@@ -529,37 +535,44 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          <StaggerContainer staggerDelay={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {latestBlogs.slice(0, 4).map((article, idx) => (
-              <StaggerItem key={article.id} direction="scale" className={idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
-                <AnimatedCard className="h-full">
-                  <Link href={`/article/${article.slug}`} className="group block h-full">
-                    <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
-                      <img
-                        src={article.featured_image || article.cover_url}
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 absolute inset-0"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                        {article.author_name && (
-                          <div className="flex items-center gap-2 mb-2">
-                            {article.author_avatar && (
-                              <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
-                            )}
-                            <span className="text-xs text-white/80">{article.author_name}</span>
-                          </div>
-                        )}
-                        <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
-                          {article.title}
-                        </h3>
+          {latestBlogs.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <div className="animate-spin w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p>Chargement des articles...</p>
+            </div>
+          ) : (
+            <StaggerContainer staggerDelay={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {latestBlogs.slice(0, 4).map((article, idx) => (
+                <StaggerItem key={article.id} direction="scale" className={idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
+                  <AnimatedCard className="h-full">
+                    <Link href={`/article/${article.slug}`} className="group block h-full">
+                      <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
+                        <img
+                          src={article.featured_image || article.cover_url}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 absolute inset-0"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                          {article.author_name && (
+                            <div className="flex items-center gap-2 mb-2">
+                              {article.author_avatar && (
+                                <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
+                              )}
+                              <span className="text-xs text-white/80">{article.author_name}</span>
+                            </div>
+                          )}
+                          <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
+                            {article.title}
+                          </h3>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </AnimatedCard>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+                    </Link>
+                  </AnimatedCard>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          )}
         </div>
       </section>
 
