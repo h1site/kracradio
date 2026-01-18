@@ -1,7 +1,7 @@
 // src/components/ads/GoogleAd.jsx
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const AD_CLIENT = 'ca-pub-8781698761921917';
 
@@ -16,66 +16,54 @@ export default function GoogleAd({
 }) {
   const adRef = useRef(null);
   const containerRef = useRef(null);
-  const [isReady, setIsReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pushedRef = useRef(false);
 
-  // Wait for container to be visible and have width before loading ad
+  // Only render on client to avoid hydration mismatch
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.boundingClientRect.width >= 250) {
-            setIsReady(true);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '200px' }
-    );
-
-    // Small delay to ensure container has dimensions
-    const timer = setTimeout(() => {
-      if (containerRef.current) {
-        const width = containerRef.current.offsetWidth;
-        if (width >= 250) {
-          setIsReady(true);
-        } else {
-          observer.observe(containerRef.current);
-        }
-      }
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      observer.disconnect();
-    };
+    setMounted(true);
   }, []);
 
-  // Push ad only when ready and not already pushed
+  // Push ad when mounted and container has width
   useEffect(() => {
-    if (!isReady || !adRef.current || pushedRef.current) return;
+    if (!mounted || !adRef.current || pushedRef.current) return;
 
-    // Check width one more time before pushing
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    if (containerWidth < 250) {
-      return;
-    }
+    const pushAd = () => {
+      const containerWidth = containerRef.current?.offsetWidth || 0;
+      if (containerWidth < 250) {
+        // Retry after a short delay if container not ready
+        return false;
+      }
 
-    try {
-      // Reset node so AdSense can fill it again (helps with React StrictMode)
-      adRef.current.innerHTML = '';
-      adRef.current.removeAttribute('data-adsbygoogle-status');
+      try {
+        // Reset node so AdSense can fill it again
+        if (adRef.current) {
+          adRef.current.innerHTML = '';
+          adRef.current.removeAttribute('data-adsbygoogle-status');
+        }
 
-      // Google AdSense requires a fresh push each time the component mounts
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-      pushedRef.current = true;
-    } catch (error) {
-      // Avoid breaking the UI if AdSense throws
-      console.warn('[GoogleAd] AdSense push failed', error);
-    }
-  }, [isReady, slot]);
+        // Google AdSense requires a fresh push
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        pushedRef.current = true;
+        return true;
+      } catch (error) {
+        console.warn('[GoogleAd] AdSense push failed', error);
+        return false;
+      }
+    };
+
+    // Try immediately
+    if (pushAd()) return;
+
+    // Retry with delays if needed
+    const timers = [
+      setTimeout(() => pushAd(), 100),
+      setTimeout(() => pushAd(), 500),
+      setTimeout(() => pushAd(), 1000),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [mounted, slot]);
 
   const dataAttrs = {
     'data-ad-client': AD_CLIENT,
@@ -87,9 +75,15 @@ export default function GoogleAd({
   if (layout) dataAttrs['data-ad-layout'] = layout;
   if (layoutKey) dataAttrs['data-ad-layout-key'] = layoutKey;
 
+  // Always render the same structure to avoid hydration mismatch
+  // The ad only gets pushed on the client side
   return (
-    <div ref={containerRef} style={{ minWidth: '250px', width: '100%' }}>
-      {isReady && (
+    <div
+      ref={containerRef}
+      style={{ minWidth: '250px', width: '100%', minHeight: '90px' }}
+      suppressHydrationWarning
+    >
+      {mounted && (
         <ins
           ref={adRef}
           className={['adsbygoogle', 'block', className].filter(Boolean).join(' ')}
