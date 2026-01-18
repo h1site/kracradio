@@ -86,7 +86,7 @@ export const metadata = {
   classification: 'Online Radio',
   other: {
     'theme-color': '#E50914',
-    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
     'apple-mobile-web-app-title': 'KracRadio',
     'application-name': 'KracRadio',
