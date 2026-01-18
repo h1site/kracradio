@@ -235,10 +235,12 @@ export default function Videos() {
 
   const loadVideos = useCallback(async () => {
     try {
+      console.log('[Videos] Loading approved videos...');
       const data = await getApprovedVideos();
-      setAllVideos(data);
+      console.log('[Videos] Loaded videos:', data?.length || 0, 'videos');
+      setAllVideos(data || []);
     } catch (err) {
-      console.error('Error loading videos:', err);
+      console.error('[Videos] Error loading videos:', err);
     } finally {
       setLoading(false);
     }

@@ -361,12 +361,14 @@ export function extractYouTubeId(url) {
  * Get approved videos (random order) with submitter profile info
  */
 export async function getApprovedVideos() {
+  console.log('[getApprovedVideos] Fetching videos with status=approved...');
   const { data: videos, error } = await supabase
     .from('videos')
     .select('*')
     .eq('status', 'approved')
     .order('created_at', { ascending: false });
 
+  console.log('[getApprovedVideos] Result:', { count: videos?.length, error });
   if (error) throw error;
 
   // Get unique user_ids to fetch profiles
