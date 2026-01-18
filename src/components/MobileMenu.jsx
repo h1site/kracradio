@@ -175,10 +175,10 @@ export default function MobileMenu({ open, onClose }) {
             <span className="text-sm font-medium">{t.nav.videos}</span>
           </NavItem>
 
-          <NavItem href="/charts" onClick={onClose} pathname={pathname} itemHover={itemHover} activeCls={activeCls}>
+          {/* <NavItem href="/charts" onClick={onClose} pathname={pathname} itemHover={itemHover} activeCls={activeCls}>
             <IconImg name="chart" />
             <span className="text-sm font-medium">{t.nav.charts}</span>
-          </NavItem>
+          </NavItem> */}
 
           <NavItem href="/spotify" onClick={onClose} pathname={pathname} itemHover={itemHover} activeCls={activeCls}>
             <IconImg name="spotify" />

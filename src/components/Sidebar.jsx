@@ -168,7 +168,7 @@ export default function Sidebar() {
             <Item href="/artists" iconName="artist" label={t.nav.members} pathname={pathname} />
             <Item href="/podcasts" iconName="mic" label={t.nav.podcasts} pathname={pathname} />
             <Item href="/videos" iconName="video" label={t.nav.videos} pathname={pathname} />
-            <Item href="/charts" iconName="chart" label={t.nav.charts} pathname={pathname} />
+            {/* <Item href="/charts" iconName="chart" label={t.nav.charts} pathname={pathname} /> */}
             <Item href="/spotify" iconName="spotify" label={t.nav.spotify} pathname={pathname} />
             <Item href="/schedule" iconName="calendar" label={t.nav.schedule} pathname={pathname} />
             <Item href="/about" iconName="info" label={t.nav.about} pathname={pathname} />
