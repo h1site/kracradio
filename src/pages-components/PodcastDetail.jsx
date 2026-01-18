@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
 import { FaPlay, FaGlobe, FaRss, FaSpinner, FaChevronRight } from 'react-icons/fa';
 import { useUI } from '../context/UIContext';
 import { podcastSeriesSchema, breadcrumbSchema } from '../seo/schemas';
-import GoogleAd from '../components/ads/GoogleAd';
+import { InFeedAd } from '../components/ads';
 
 const STRINGS = {
   fr: {
@@ -349,7 +349,7 @@ export default function PodcastDetail() {
                       {/* Insert ad after every 5 episodes */}
                       {(index + 1) % 5 === 0 && index < episodes.length - 1 && (
                         <div className="my-4">
-                          <GoogleAd slot="5041624401" />
+                          <InFeedAd />
                         </div>
                       )}
                     </React.Fragment>

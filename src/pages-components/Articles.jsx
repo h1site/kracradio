@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Seo from '../seo/Seo';
 import { listPublishedArticles } from '../lib/articles';
 import { useI18n } from '../i18n';
-import GoogleAd from '../components/ads/GoogleAd';
+import { InFeedAd, LeaderboardAd } from '../components/ads';
 import { useUI } from '../context/UIContext';
 import { collectionPageSchema, breadcrumbSchema } from '../seo/schemas';
 import {
@@ -303,8 +303,9 @@ export default function Articles() {
             })}
           </StaggerContainer>
 
+          {/* AD - Leaderboard en bas de page */}
           <div className="pb-10">
-            <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+            <LeaderboardAd />
           </div>
         </>
       )}

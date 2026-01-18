@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import Seo from '../seo/Seo';
 import VideoPlayer from '../components/VideoPlayer';
 import { useNotification } from '../context/NotificationContext';
-import GoogleAd from '../components/ads/GoogleAd';
+import { LeaderboardAd } from '../components/ads';
 import {
   getApprovedVideos,
   getVideoLikeCount,
@@ -463,9 +463,9 @@ export default function VideoDetail() {
               </div>
             )}
 
-            {/* Ad before comments */}
+            {/* AD - Leaderboard sous le player */}
             <div className="mt-8 mb-8">
-              <GoogleAd slot="5041624401" />
+              <LeaderboardAd />
             </div>
 
             {/* Comments Section */}

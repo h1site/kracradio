@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import Seo from '../seo/Seo';
 import { breadcrumbSchema } from '../seo/schemas';
-import GoogleAd from '../components/ads/GoogleAd';
+import { InFeedAd } from '../components/ads';
 import {
   getApprovedVideos,
   getVideoLikeCount
@@ -409,7 +409,7 @@ export default function Videos() {
                     {/* Insert ad after every 6 videos */}
                     {(index + 1) % 6 === 0 && index < visibleVideos.length - 1 && (
                       <div className="col-span-1 md:col-span-2 xl:col-span-3">
-                        <GoogleAd slot="5041624401" />
+                        <InFeedAd />
                       </div>
                     )}
                   </React.Fragment>

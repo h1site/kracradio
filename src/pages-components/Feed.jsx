@@ -11,7 +11,7 @@ import { useI18n } from '../i18n';
 import { useProfile } from '../hooks/useCommunity';
 import CreatePost from '../components/posts/CreatePost';
 import Seo from '../seo/Seo';
-import GoogleAd from '../components/ads/GoogleAd';
+import { InFeedAd } from '../components/ads';
 
 function FeedPostCard({ post, onUpdate, onDelete, currentUser }) {
   const { t, lang } = useI18n();
@@ -604,7 +604,7 @@ export default function Feed() {
                   {/* Insert ad after every 4 posts */}
                   {(index + 1) % 4 === 0 && index < posts.length - 1 && (
                     <div className="my-4">
-                      <GoogleAd slot="5041624401" />
+                      <InFeedAd />
                     </div>
                   )}
                 </React.Fragment>

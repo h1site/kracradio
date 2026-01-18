@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { getVideoLikeCount } from '../../lib/supabase';
-import GoogleAd from '../../components/ads/GoogleAd';
+import { InFeedAd } from '../../components/ads';
 
 const INITIAL_LOAD = 6;
 const LOAD_MORE = 6;
@@ -204,7 +204,7 @@ export default function VideosClientParts({ initialVideos }) {
                 {/* Insert ad after every 6 videos */}
                 {(index + 1) % 6 === 0 && index < visibleVideos.length - 1 && (
                   <div className="col-span-1 md:col-span-2 xl:col-span-3">
-                    <GoogleAd slot="5041624401" />
+                    <InFeedAd />
                   </div>
                 )}
               </React.Fragment>

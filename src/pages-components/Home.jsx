@@ -10,7 +10,7 @@ import { channels } from '../data/channels';
 import ChannelCarousel from '../components/ChannelCarousel';
 import ArticleCarousel from '../components/ArticleCarousel';
 import PodcastCarousel from '../components/PodcastCarousel';
-import GoogleAd from '../components/ads/GoogleAd';
+import { LeaderboardAd, InFeedAd } from '../components/ads';
 import daily from '../data/daily-schedule.json';
 import { useAudio } from '../context/AudioPlayerContext';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
@@ -439,6 +439,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* AD #1 - Leaderboard après Hero */}
+      <div className="py-4" style={{ backgroundColor: '#1E1E1E' }}>
+        <LeaderboardAd />
+      </div>
+
       {/* Carrousel des chaînes - Background #1E1E1E */}
       <section className="w-full relative z-10 overflow-visible py-16" style={{ backgroundColor: '#1E1E1E' }}>
         <FadeIn direction="up" className="max-w-4xl mx-auto text-center mb-12 px-5 md:px-0">
@@ -599,6 +604,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* AD #2 - In-feed après Podcasts */}
+      <div className="py-4" style={{ backgroundColor: '#1E1E1E' }}>
+        <div className="max-w-4xl mx-auto px-4">
+          <InFeedAd />
+        </div>
+      </div>
+
       {/* Section Feed - Background #1E1E1E */}
       <section className="w-full py-16 px-4 md:px-8" style={{ backgroundColor: '#1E1E1E' }}>
         <div className="max-w-7xl mx-auto">
@@ -728,6 +740,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* AD #3 - In-feed après Vidéos */}
+      <div className="py-4" style={{ backgroundColor: '#1E1E1E' }}>
+        <div className="max-w-4xl mx-auto px-4">
+          <InFeedAd />
+        </div>
+      </div>
 
       {/* Section Boutique - Background #1E1E1E */}
       {storeProducts.length > 0 && (
@@ -953,12 +972,6 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          {/* Google Ads */}
-          <FadeIn direction="up" delay={0.3}>
-            <div className="mt-10">
-              <GoogleAd slot="3411355648" className="mx-auto" />
-            </div>
-          </FadeIn>
         </div>
       </section>
 

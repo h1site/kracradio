@@ -9,7 +9,7 @@ import { fetchArticleBySlug, listPublishedArticles } from '../lib/articles';
 import { useI18n } from '../i18n';
 import { useUI } from '../context/UIContext';
 import { useAuth } from '../context/AuthContext';
-import GoogleAd from '../components/ads/GoogleAd';
+import { InArticleAd, LargeRectangleAd } from '../components/ads';
 import Seo from '../seo/Seo';
 import { articleSchema, breadcrumbSchema } from '../seo/schemas';
 
@@ -425,18 +425,19 @@ export default function Article() {
           </div>
         )}
 
-        <div className="my-12 flex justify-center">
-          <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
-        </div>
+        {/* AD #1 - In-article après introduction */}
+        <InArticleAd className="my-12" />
 
         {/* Article Content */}
         <div className="article-content">
           <div dangerouslySetInnerHTML={{ __html: langContent.content }} />
         </div>
 
-        <div className="my-16 flex justify-center">
-          <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
-        </div>
+        {/* AD #2 - In-article milieu/fin de contenu */}
+        <InArticleAd className="my-12" />
+
+        {/* AD #3 - Grand rectangle fin d'article */}
+        <LargeRectangleAd className="my-16" />
       </article>
 
       {/* Related Articles Section */}

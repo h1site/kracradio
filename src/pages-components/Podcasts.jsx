@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Seo from '../seo/Seo';
 import { useI18n } from '../i18n';
 import { supabase } from '../lib/supabase';
-import GoogleAd from '../components/ads/GoogleAd';
+import { LeaderboardAd } from '../components/ads';
 import { FadeIn, StaggerContainer, StaggerItem, motion } from '../components/animations';
 
 const STRINGS = {
@@ -330,8 +330,9 @@ export default function Podcasts() {
         </div>
       </header>
 
+      {/* AD - Leaderboard après hero */}
       <div className="py-8">
-        <GoogleAd slot="3411355648" className="mx-auto max-w-4xl" />
+        <LeaderboardAd />
       </div>
 
       {/* Info Section - Modern Design */}

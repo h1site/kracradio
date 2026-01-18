@@ -11,7 +11,7 @@ import Seo from '../seo/Seo';
 import { radioStationJsonLd } from '../seo/jsonld';
 import { useI18n } from '../i18n';
 import { getNowPlaying, getRecentTracks } from '../utils/azura';
-import GoogleAd from '../components/ads/GoogleAd';
+import { LeaderboardAd } from '../components/ads';
 import { useUI } from '../context/UIContext';
 
 const RED = '#E50914';
@@ -166,8 +166,9 @@ export default function Channel() {
           </div>
         </section>
 
+        {/* AD - Leaderboard après les sections */}
         <div className="mt-8">
-          <GoogleAd slot="3411355648" className="mx-auto max-w-full" />
+          <LeaderboardAd />
         </div>
       </div>
     </main>
