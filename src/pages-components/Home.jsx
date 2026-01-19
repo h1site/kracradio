@@ -92,64 +92,72 @@ export default function Home() {
   useEffect(() => {
     const loadLatestBlogs = async () => {
       console.log('[Home] Loading latest articles...');
-      const { data, error } = await supabase
-        .from('articles')
-        .select('id, slug, title, excerpt, content, cover_url, featured_image, user_id, created_at')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(4);
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .limit(4);
 
-      console.log('[Home] Articles result:', { count: data?.length, error: error?.message });
+        console.log('[Home] Articles result:', { count: data?.length, error: error?.message });
 
-      if (data && data.length > 0) {
-        // Charger les auteurs avec leur avatar
-        const userIds = [...new Set(data.map(a => a.user_id).filter(Boolean))];
-        console.log('🔍 Articles user_ids:', userIds);
-
-        if (userIds.length === 0) {
-          console.warn('⚠️ AUCUN user_id trouvé dans les articles! Les articles n\'ont pas d\'auteur assigné.');
-          setLatestBlogs(data.map(article => ({
-            ...article,
-            author_name: null,
-            author_avatar: null,
-            author_id: null
-          })));
+        if (error) {
+          console.error('[Home] Error loading articles:', error);
           return;
         }
 
-        const { data: authors, error: authorsError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds);
-
-        if (authorsError) {
-          console.error('❌ Erreur chargement auteurs:', authorsError);
+        if (!data || data.length === 0) {
+          console.log('[Home] No articles found');
+          return;
         }
 
-        console.log('👥 Auteurs chargés:', authors);
+        // Préparer les articles avec des valeurs par défaut pour l'auteur
+        const articlesWithDefaults = data.map(article => ({
+          ...article,
+          author_name: null,
+          author_avatar: null,
+          author_id: article.user_id
+        }));
 
-        const authorMap = {};
-        if (authors) {
-          authors.forEach(author => {
-            authorMap[author.id] = author;
-            console.log(`   - ${author.username} (${author.id}): avatar=${author.avatar_url || 'none'}`);
-          });
+        // Essayer de charger les auteurs (peut échouer à cause de RLS)
+        const userIds = [...new Set(data.map(a => a.user_id).filter(Boolean))];
+        console.log('[Home] Fetching authors for user_ids:', userIds);
+
+        if (userIds.length > 0) {
+          const { data: authors, error: authorsError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds);
+
+          if (authorsError) {
+            console.warn('[Home] Could not load authors (RLS?):', authorsError.message);
+          }
+
+          if (authors && authors.length > 0) {
+            console.log('[Home] Authors loaded:', authors.length);
+            const authorMap = {};
+            authors.forEach(author => {
+              authorMap[author.id] = author;
+            });
+
+            // Mettre à jour les articles avec les auteurs
+            articlesWithDefaults.forEach(article => {
+              const author = authorMap[article.user_id];
+              if (author) {
+                article.author_name = author.username;
+                article.author_avatar = author.avatar_url;
+              }
+            });
+          } else {
+            console.log('[Home] No authors returned (RLS blocking access?)');
+          }
         }
 
-        // Ajouter les auteurs aux articles
-        const articlesWithAuthors = data.map(article => {
-          const author = authorMap[article.user_id];
-          const result = {
-            ...article,
-            author_name: author?.username || null,
-            author_avatar: author?.avatar_url || null,
-            author_id: article.user_id
-          };
-          console.log(`📄 Article "${article.title}": author=${result.author_name}, avatar=${result.author_avatar}`);
-          return result;
-        });
-
-        setLatestBlogs(articlesWithAuthors);
+        console.log('[Home] Setting', articlesWithDefaults.length, 'articles');
+        setLatestBlogs(articlesWithDefaults);
+      } catch (err) {
+        console.error('[Home] Exception loading articles:', err);
       }
     };
 
@@ -195,34 +203,67 @@ export default function Home() {
   useEffect(() => {
     const loadLatestPosts = async () => {
       console.log('[Home] Loading latest posts...');
-      const { data: postsData, error } = await supabase
-        .from('posts')
-        .select('*')
-        .is('deleted_at', null)
-        .is('reply_to_id', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      try {
+        const { data: postsData, error } = await supabase
+          .from('posts')
+          .select('*')
+          .is('deleted_at', null)
+          .is('reply_to_id', null)
+          .order('created_at', { ascending: false })
+          .limit(5);
 
-      console.log('[Home] Posts result:', { count: postsData?.length, error: error?.message });
+        console.log('[Home] Posts result:', { count: postsData?.length, error: error?.message });
 
-      if (postsData && postsData.length > 0) {
-        const userIds = [...new Set(postsData.map(p => p.user_id))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, username, artist_slug, avatar_url')
-          .in('id', userIds);
-
-        const profilesMap = {};
-        if (profiles) {
-          profiles.forEach(p => { profilesMap[p.id] = p; });
+        if (error) {
+          console.error('[Home] Error loading posts:', error);
+          return;
         }
 
-        const postsWithAuthors = postsData.map(post => ({
+        if (!postsData || postsData.length === 0) {
+          console.log('[Home] No posts found');
+          return;
+        }
+
+        // Préparer les posts avec un auteur par défaut
+        const postsWithDefaults = postsData.map(post => ({
           ...post,
-          author: profilesMap[post.user_id] || null
+          author: { username: 'Utilisateur', avatar_url: null, artist_slug: null }
         }));
 
-        setLatestPosts(postsWithAuthors);
+        // Essayer de charger les profils (peut échouer à cause de RLS)
+        const userIds = [...new Set(postsData.map(p => p.user_id).filter(Boolean))];
+        console.log('[Home] Fetching profiles for user_ids:', userIds);
+
+        if (userIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, artist_slug, avatar_url')
+            .in('id', userIds);
+
+          if (profilesError) {
+            console.warn('[Home] Could not load profiles (RLS?):', profilesError.message);
+          }
+
+          if (profiles && profiles.length > 0) {
+            console.log('[Home] Profiles loaded:', profiles.length);
+            const profilesMap = {};
+            profiles.forEach(p => { profilesMap[p.id] = p; });
+
+            // Mettre à jour les posts avec les profils
+            postsWithDefaults.forEach(post => {
+              if (profilesMap[post.user_id]) {
+                post.author = profilesMap[post.user_id];
+              }
+            });
+          } else {
+            console.log('[Home] No profiles returned (RLS blocking access?)');
+          }
+        }
+
+        console.log('[Home] Setting', postsWithDefaults.length, 'posts');
+        setLatestPosts(postsWithDefaults);
+      } catch (err) {
+        console.error('[Home] Exception loading posts:', err);
       }
     };
 
