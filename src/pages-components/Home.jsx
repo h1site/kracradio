@@ -582,37 +582,35 @@ export default function Home() {
               <p>Chargement des articles...</p>
             </div>
           ) : (
-            <StaggerContainer staggerDelay={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {latestBlogs.slice(0, 4).map((article, idx) => (
-                <StaggerItem key={article.id} direction="scale" className={idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
-                  <AnimatedCard className="h-full">
-                    <Link href={`/article/${article.slug}`} className="group block h-full">
-                      <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
-                        <img
-                          src={article.featured_image || article.cover_url}
-                          alt={article.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 absolute inset-0"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                          {article.author_name && (
-                            <div className="flex items-center gap-2 mb-2">
-                              {article.author_avatar && (
-                                <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
-                              )}
-                              <span className="text-xs text-white/80">{article.author_name}</span>
-                            </div>
-                          )}
-                          <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
-                            {article.title}
-                          </h3>
-                        </div>
+                <div key={article.id} className={idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
+                  <Link href={`/article/${article.slug}`} className="group block h-full">
+                    <div className={`relative rounded-2xl overflow-hidden shadow-lg h-full ${idx === 0 ? 'min-h-[400px]' : 'min-h-[200px]'}`}>
+                      <img
+                        src={article.featured_image || article.cover_url || '/images/default-cover.jpg'}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 absolute inset-0"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                        {article.author_name && (
+                          <div className="flex items-center gap-2 mb-2">
+                            {article.author_avatar && (
+                              <img src={article.author_avatar} alt={article.author_name} className="w-6 h-6 rounded-full object-cover" />
+                            )}
+                            <span className="text-xs text-white/80">{article.author_name}</span>
+                          </div>
+                        )}
+                        <h3 className={`font-bold text-white leading-tight ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-base'}`}>
+                          {article.title}
+                        </h3>
                       </div>
-                    </Link>
-                  </AnimatedCard>
-                </StaggerItem>
+                    </div>
+                  </Link>
+                </div>
               ))}
-            </StaggerContainer>
+            </div>
           )}
         </div>
       </section>
@@ -689,7 +687,7 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          <StaggerContainer staggerDelay={0.08} className="space-y-4">
+          <div className="space-y-4">
             {latestPosts.slice(0, 5).map((post) => {
               const author = post.author;
               const profileLink = author?.artist_slug ? `/profile/${author.artist_slug}` : post.user_id ? `/profile/${post.user_id}` : '#';
@@ -706,36 +704,34 @@ export default function Home() {
               };
 
               return (
-                <StaggerItem key={post.id} direction="right">
-                  <motion.div
-                    whileHover={{ scale: 1.01, x: 5 }}
-                    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Link href={profileLink} className="shrink-0">
-                        {author?.avatar_url ? (
-                          <img src={author.avatar_url} alt={author.username} className="w-12 h-12 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                            {author?.username?.[0]?.toUpperCase() || '?'}
-                          </div>
-                        )}
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Link href={profileLink} className="font-semibold text-white hover:underline">
-                            {author?.username || 'User'}
-                          </Link>
-                          <span className="text-gray-500">·</span>
-                          <span className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</span>
+                <div
+                  key={post.id}
+                  className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <Link href={profileLink} className="shrink-0">
+                      {author?.avatar_url ? (
+                        <img src={author.avatar_url} alt={author.username} className="w-12 h-12 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                          {author?.username?.[0]?.toUpperCase() || '?'}
                         </div>
-                        <p className="text-gray-300 line-clamp-3">
-                          {post.content}
-                        </p>
+                      )}
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link href={profileLink} className="font-semibold text-white hover:underline">
+                          {author?.username || 'User'}
+                        </Link>
+                        <span className="text-gray-500">·</span>
+                        <span className="text-sm text-gray-500">{getRelativeTime(post.created_at)}</span>
                       </div>
+                      <p className="text-gray-300 line-clamp-3">
+                        {post.content}
+                      </p>
                     </div>
-                  </motion.div>
-                </StaggerItem>
+                  </div>
+                </div>
               );
             })}
             {latestPosts.length === 0 && (
@@ -743,7 +739,7 @@ export default function Home() {
                 {t.feed?.noPosts || 'Aucun post'}
               </p>
             )}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 
