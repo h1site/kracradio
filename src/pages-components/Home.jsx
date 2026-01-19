@@ -638,14 +638,19 @@ export default function Home() {
             </div>
           </FadeIn>
 
-          <StaggerContainer staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {latestPodcasts.slice(0, 3).map((podcast) => (
-              <StaggerItem key={podcast.id} direction="left">
-                <AnimatedCard hoverScale={1.03} className="h-full">
+          {latestPodcasts.length === 0 ? (
+            <div className="text-center py-12 text-white/60">
+              <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p>Chargement des podcasts...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {latestPodcasts.slice(0, 3).map((podcast) => (
+                <div key={podcast.id} className="h-full">
                   <Link href={`/podcast/${podcast.id}`} className="group flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all border border-white/10 h-full">
                     <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                       <img
-                        src={podcast.image_url}
+                        src={podcast.image_url || '/images/default-cover.jpg'}
                         alt={podcast.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
@@ -659,10 +664,10 @@ export default function Home() {
                       </p>
                     </div>
                   </Link>
-                </AnimatedCard>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
